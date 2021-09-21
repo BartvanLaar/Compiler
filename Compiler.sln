@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31710.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CLI", "CLI\CLI.csproj", "{212DBD05-4223-477B-A9DA-38518D21ACDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compiler", "Compiler\Compiler.csproj", "{55C431E1-3996-4937-B1DA-0B887E76E391}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compiler.Tests", "Compiler.Tests\Compiler.Tests.csproj", "{03240EB7-5389-4F65-A063-7050A7BA91BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{212DBD05-4223-477B-A9DA-38518D21ACDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{212DBD05-4223-477B-A9DA-38518D21ACDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{212DBD05-4223-477B-A9DA-38518D21ACDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{212DBD05-4223-477B-A9DA-38518D21ACDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55C431E1-3996-4937-B1DA-0B887E76E391}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55C431E1-3996-4937-B1DA-0B887E76E391}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55C431E1-3996-4937-B1DA-0B887E76E391}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55C431E1-3996-4937-B1DA-0B887E76E391}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03240EB7-5389-4F65-A063-7050A7BA91BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03240EB7-5389-4F65-A063-7050A7BA91BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03240EB7-5389-4F65-A063-7050A7BA91BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03240EB7-5389-4F65-A063-7050A7BA91BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {58944CF8-3027-405A-826C-AC440C6D945F}
+	EndGlobalSection
+EndGlobal
