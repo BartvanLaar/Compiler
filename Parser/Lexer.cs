@@ -236,7 +236,11 @@ namespace Compiler
             Token token;
             for (var counter = 0; counter < amount; counter++)
             {
-                (token, cursor, lineCounter, columnCounter) = cursor < _text.Length ? ConsumeNextToken(cursor, lineCounter, columnCounter) : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
+                (token, cursor, lineCounter, columnCounter) =
+                    cursor < _text.Length
+                    ? ConsumeNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
+                                                                           //I don't know if this is required, look back at this in the future.
+                    : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
                 tokens[counter] = token;
             }
 
