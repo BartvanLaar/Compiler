@@ -8,10 +8,17 @@ namespace Compiler.Tests
     internal class LexerTests
     {
 
-        [Test]
-        public async Task Lexer_Test()
+        [TestCase("this is a text divided into 8 tokens")]
+        [TestCase("this is a text \n divided into 8 tokens")]
+        [TestCase("this is a text\ndivided into 8 tokens")]
+        [TestCase("this is a text \ndivided into 8 tokens")]
+        [TestCase("this is a text\n divided into 8 tokens")]
+        [TestCase("this is a text \r\n divided into 8 tokens")]
+        [TestCase("this is a text\r\ndivided into 8 tokens")]
+        [TestCase("this is a text \r\ndivided into 8 tokens")]
+        [TestCase("this is a text\r\n divided into 8 tokens")]
+        public void Lexer_Test(string text)
         {
-            var text = "this is a text divided into 8 tokens";
             var lexer = new Lexer(text);
             var toks = lexer.PeekTokens(8);
             Assert.AreEqual(8, toks.Length);
@@ -59,7 +66,6 @@ namespace Compiler.Tests
             Assert.AreEqual("8", toks[4].Name);
             Assert.AreEqual("tokens", toks[5].Name);
 
-
             toks = lexer.ConsumeTokens(1);
             Assert.AreEqual(1, toks.Length);
             Assert.AreEqual(TokenType.EndOfFile, toks.First().TokenType);
@@ -75,7 +81,6 @@ namespace Compiler.Tests
             tok = lexer.ConsumeToken();
             Assert.AreEqual(TokenType.EndOfFile, tok.TokenType);
         }
-
 
     }
 }

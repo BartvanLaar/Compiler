@@ -224,25 +224,7 @@ namespace Compiler
                 throw new ArgumentException("amount must be greater than 0.");
             }
 
-            return TraverseTokensInternal(amount, shouldConsume);
-        }
-
-        private Token[] TraverseTokensInternal(int amount, bool shouldConsume)
-        {
-            Token[] tokens = new Token[amount];
-            int cursor = _cursor;
-            long lineCounter = _lineCounter;
-            long columnCounter = _columnCounter;
-            Token token;
-            for (var counter = 0; counter < amount; counter++)
-            {
-                (token, cursor, lineCounter, columnCounter) =
-                    cursor < _text.Length
-                    ? ConsumeNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
-                                                                           //I don't know if this is required, look back at this in the future.
-                    : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
-                tokens[counter] = token;
-            }
+            var (tokens, cursor, lineCounter, columnCounter) = TraverseTokensInternal(amount, _cursor, _lineCounter, _columnCounter);
 
             if (shouldConsume)
             {
@@ -254,7 +236,39 @@ namespace Compiler
             return tokens;
         }
 
+        private (Token[] Tokens, int Cursor, long LineCounter, long ColumnCounter) TraverseTokensInternal(int amount, int cursor, long lineCounter, long columnCounter)
+        {
+            Token[] tokens = new Token[amount];
+            for (var counter = 0; counter < amount; counter++)
+            {
+                (Token token, cursor, lineCounter, columnCounter) =
+                    cursor < _text.Length
+                    ? ConsumeNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
+                                                                           //I don't know if this is required, look back at this in the future.
+                    : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
+                tokens[counter] = token;
+            }
+
+            return (tokens, cursor, lineCounter, columnCounter);
+        }
+
         private (Token Token, int Cursor, long CurrentLineCount, long CurrentColumnCount) ConsumeNextToken(int cursor, long lineCount, long columnCount)
+        {
+            (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
+
+            var res = string.Empty;
+            var columnCountStart = columnCount;
+            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]))
+            {
+                res += _text[cursor];
+                columnCount++;
+                cursor++;
+            }
+
+            return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+        }
+
+        private (int cursor, long lineCount, long columnCount) SkipWhiteSpaces(int cursor, long lineCount, long columnCount)
         {
             while (cursor < _text.Length && char.IsWhiteSpace(_text[cursor]))
             {
@@ -270,41 +284,8 @@ namespace Compiler
 
                 cursor++;
             }
-            var res = string.Empty;
-            var columnCountStart = columnCount;
-            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]))
-            {
-                res += _text[cursor];
-                columnCount++;
-                cursor++;
-            }
 
-            //loop ups one too many... @todo: fix...
-            return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
-            //char? previousChar = null;
-            //char currentChar = _text[cursor];
-            //char? nextChar = cursor + 1 >= _text.Length ? _text[cursor + 1] : null;
-            ////currentColumnCount++; // todo: check if counts are ok....
-
-            //void AdvanceACharacter()
-            //{
-            //    cursor++;
-
-            //    previousChar = currentChar;
-            //    currentChar = _text[cursor];
-            //    nextChar = cursor + 1 >= _text.Length ? _text[cursor + 1] : null;
-
-            //    currentColumnCount++;
-            //}
-
-            //if (currentChar == LexerConstants.END_OF_STATEMENT)
-            //{
-            //    return (new Token(TokenType.EndOfStatement, currentLineCount, currentColumnCount - 1), cursor, currentLineCount, currentColumnCount);
-            //}
-
-
-
-            //throw new InvalidOperationException($"Could not determine next token. Should've hit end of file for char: {currentChar} at line {currentLineCount} column {currentColumnCount}?");
+            return (cursor, lineCount, columnCount);
         }
 
         private static bool IsHexIndicator(char currentChar, char nextChar)
