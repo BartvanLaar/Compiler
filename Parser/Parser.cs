@@ -8,7 +8,7 @@ namespace Compiler
 {
     internal interface IParser
     {
-        Task<IParserResults> ParseAsync(ILexerResults result);
+        IParserResults Parse(Lexer lexer);
     }
 
     internal interface IParserResults
@@ -24,7 +24,7 @@ namespace Compiler
     internal class Parser : IParser
     {
 
-        public async Task<IParserResults> ParseAsync(ILexerResults result)
+        public IParserResults Parse(Lexer lexer)
         {
             var results = new ParserResults();
             return results;
