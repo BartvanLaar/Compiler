@@ -80,16 +80,18 @@ namespace Compiler
         Float,
         EndOfStatement,
         ToDo,
+        TerniaryOperatorTrue,
+        TerniaryOperatorFalse,
     }
 
     internal static class LexerConstants
     {
-        public const string PARANTHESES_OPEN = "(";
-        public const string PARANTHESES_CLOSE = ")";
-        public const string ACCOLADES_OPEN = "{";
-        public const string ACCOLADES_CLOSE = "}";
-        public const string BACKETS_OPEN = "[";
-        public const string BACKETS_CLOSE = "]";
+        public const char PARANTHESES_OPEN = '(';
+        public const char PARANTHESES_CLOSE = ')';
+        public const char ACCOLADES_OPEN = '{';
+        public const char ACCOLADES_CLOSE = '}';
+        public const char BACKETS_OPEN = '[';
+        public const char BACKETS_CLOSE = ']';
 
         public const char END_OF_STATEMENT = ';';
 
@@ -112,8 +114,8 @@ namespace Compiler
 
         public const string BOOLEAN_INVERT = "!";
 
-        public const string TERINARY_OPERATOR_1 = "?";
-        public const string TERINARY_OPERATOR_2 = ":";
+        public const char TERNIARY_OPERATOR_TRUE = '?';
+        public const char TERNIARY_OPERATOR_FALSE = ':';
 
         public const string HEX_SIGN = "0x";
         public const char DECIMAL_SEPARATOR_SIGN = '.';
@@ -131,48 +133,30 @@ namespace Compiler
 
         public const string COMMENTS_INDICATOR = "///";
     }
-    internal struct TokenDefinition
-    {
-        public TokenDefinition(TokenType tokenType, string regex)
-        {
-            TokenType = tokenType;
-            Regex = regex;
-        }
-        public TokenType TokenType { get; }
-        public string Regex { get; }
 
-    }
     internal struct Token
     {
 
         public TokenType TokenType { get; init; }
-        public long Row { get; init; }
+        public long Line { get; init; }
         public long Column { get; init; }
         public string Name { get; init; }
         public string? StringValue { get; init; }
         public double? FloatValue { get; init; }
         public long? IntegerValue { get; init; }
+        public bool? BooleanValue { get; init; }
+        public Token(TokenType tokenType, long line, long column) : this(tokenType, tokenType.ToString(), line, column) { }
 
-        public Token(TokenType tokenType, string name, long row, long column, char charValue) : this(tokenType, row, column, name, charValue.ToString(), null, null) { }
-        public Token(TokenType tokenType, string name, long row, long column, string stringValue) : this(tokenType, row, column, name, stringValue, null, null) { }
-        public Token(TokenType tokenType, string name, long row, long column, double floatValue) : this(tokenType, row, column, name, null, floatValue, null) { }
-        public Token(TokenType tokenType, string name, long row, long column, long integerValue) : this(tokenType, row, column, name, null, null, integerValue) { }
-        public Token(TokenType tokenType, string name, long row, long column) : this(tokenType, row, column, name, null, null, null) { }
-        public Token(TokenType tokenType, long row, long column) : this(tokenType, row, column, tokenType.ToString(), null, null, null) { }
-        //public Token(TokenType tokenType, string name, long row, long column) : this(tokenType, row, column, tokenType.ToString(), null, null, null) { }
-        //public Token(TokenType tokenType, string name, long row, long column, string stringValue) : this(tokenType, row, column, tokenType.ToString(), stringValue, null, null) { }
-        //public Token(TokenType tokenType, string name, long row, long column, double floatValue) : this(tokenType, row, column, tokenType.ToString(), null, floatValue, null) { }
-        //public Token(TokenType tokenType, string name, long row, long column, long integerValue) : this(tokenType, row, column, tokenType.ToString(), null, null, integerValue) { }
-
-        private Token(TokenType tokenType, long row, long column, string name, string? stringValue, double? floatValue, long? integerValue)
+        public Token(TokenType tokenType, string name, long row, long column)
         {
             TokenType = tokenType;
-            Row = row;
+            Line = row;
             Column = column;
             Name = name;
-            StringValue = stringValue;
-            FloatValue = floatValue;
-            IntegerValue = integerValue;
+            StringValue = null;
+            FloatValue = null;
+            IntegerValue = null;
+            BooleanValue = null;
         }
 
         public override string? ToString()
@@ -243,8 +227,8 @@ namespace Compiler
             {
                 (Token token, cursor, lineCounter, columnCounter) =
                     cursor < _text.Length
-                    ? ConsumeNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
-                                                                           //I don't know if this is required, look back at this in the future.
+                    ? GetNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
+                                                                       //I don't know if this is required, look back at this in the future.
                     : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
                 tokens[counter] = token;
             }
@@ -252,20 +236,46 @@ namespace Compiler
             return (tokens, cursor, lineCounter, columnCounter);
         }
 
-        private (Token Token, int Cursor, long CurrentLineCount, long CurrentColumnCount) ConsumeNextToken(int cursor, long lineCount, long columnCount)
+        private (Token Token, int Cursor, long LineCount, long ColumnCount) GetNextToken(int cursor, long lineCount, long columnCount)
         {
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
             var res = string.Empty;
             var columnCountStart = columnCount;
+            var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
+            if (token.HasValue)
+            {
+                columnCount++;
+                cursor++;
+                return (token.Value, cursor, lineCount, columnCount);
+            }
+
+            //todo: how to determine if token is done? .... Whitespace check wont cut it... as functionname () should also be valid?
+
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]))
             {
                 res += _text[cursor];
                 columnCount++;
                 cursor++;
+
             }
 
             return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+        }
+
+        private Token? GetSingleCharacterToken(int cursor, long lineCount, long columnCount)
+        {
+            return _text[cursor] switch
+            {
+                LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount),
+                LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount),
+                LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount),
+                // todo: peek if next char is a dot (return null) or another ? sign? (also return false)?
+                LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount),
+                // todo: determine how our language should look syntactically, is there something that can be after a : thats got another meaning?
+                LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount),
+                _ => null,
+            };
         }
 
         private (int cursor, long lineCount, long columnCount) SkipWhiteSpaces(int cursor, long lineCount, long columnCount)
