@@ -6,7 +6,6 @@ namespace Compiler.Tests
 {
     internal class LexerTests
     {
-
         [TestCase("this is a text divided into 8 tokens")]
         [TestCase("this is a text \n divided into 8 tokens")]
         [TestCase("this is a text\ndivided into 8 tokens")]
@@ -16,7 +15,7 @@ namespace Compiler.Tests
         [TestCase("this is a text\r\ndivided into 8 tokens")]
         [TestCase("this is a text \r\ndivided into 8 tokens")]
         [TestCase("this is a text\r\n divided into 8 tokens")]
-        public void Lexer_Test(string text)
+        public static void Lexer_Test(string text)
         {
             var lexer = new Lexer(text);
             var toks = lexer.PeekTokens(8);
@@ -81,5 +80,88 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.EndOfFile, tok.TokenType);
         }
 
+
+        [TestCase("=", TokenType.Assign)]
+        [TestCase("==", TokenType.Equivalent)]
+        [TestCase("===", TokenType.Equals)]
+        [TestCase("!", TokenType.BooleanInvert)]
+        [TestCase("!=", TokenType.NotEquivalent)]
+        [TestCase("!==", TokenType.NotEquals)]
+        [TestCase("<", TokenType.LessThan)]
+        [TestCase("<=", TokenType.LessThanOrEqualTo)]
+        [TestCase(">", TokenType.GreaterThan)]
+        [TestCase(">=", TokenType.GreaterThanOrEqualTo)]
+        [TestCase("+", TokenType.Plus)]
+        [TestCase("+=", TokenType.PlusAssign)]
+        [TestCase("-", TokenType.Minus)]
+        [TestCase("-=", TokenType.MinusAssign)]
+        [TestCase("%", TokenType.Modulo)]
+        [TestCase("%=", TokenType.ModuloAssign)]
+        [TestCase("*", TokenType.Times)]
+        [TestCase("*=", TokenType.TimesAssign)]
+        [TestCase("/", TokenType.Divide)]
+        [TestCase("/=", TokenType.DivideAssign)]
+        [TestCase(":", TokenType.TerniaryOperatorFalse)]
+        [TestCase("?", TokenType.TerniaryOperatorTrue)]
+        [TestCase("??", TokenType.NullableCoalesce)]
+        [TestCase("//", TokenType.Comment)]
+        [TestCase("///", TokenType.Summary)]
+        public static void Lexer_Test_SingleToken(string text, TokenType expectedTokenType)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(2);
+
+            Assert.AreEqual(2, toks.Length);
+            Assert.AreEqual(expectedTokenType, toks.First().TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks.Last().TokenType);
+        }
+
+        [TestCase("= =", TokenType.Assign)]
+        [TestCase("== ==", TokenType.Equivalent)]
+        [TestCase("=== ===", TokenType.Equals)]
+        [TestCase("! !", TokenType.BooleanInvert)]
+        [TestCase("!= !=", TokenType.NotEquivalent)]
+        [TestCase("!== !==", TokenType.NotEquals)]
+        [TestCase("< <", TokenType.LessThan)]
+        [TestCase("<= <=", TokenType.LessThanOrEqualTo)]
+        [TestCase("> >", TokenType.GreaterThan)]
+        [TestCase(">= >=", TokenType.GreaterThanOrEqualTo)]
+        [TestCase("+ +", TokenType.Plus)]
+        [TestCase("+= +=", TokenType.PlusAssign)]
+        [TestCase("- -", TokenType.Minus)]
+        [TestCase("-= -=", TokenType.MinusAssign)]
+        [TestCase("% %", TokenType.Modulo)]
+        [TestCase("%= %=", TokenType.ModuloAssign)]
+        [TestCase("* *", TokenType.Times)]
+        [TestCase("*= *=", TokenType.TimesAssign)]
+        [TestCase("/ /", TokenType.Divide)]
+        [TestCase("/= /=", TokenType.DivideAssign)]
+        [TestCase(": :", TokenType.TerniaryOperatorFalse)]
+        [TestCase("? ?", TokenType.TerniaryOperatorTrue)]
+        [TestCase("?? ??", TokenType.NullableCoalesce)]
+        [TestCase("// //", TokenType.Comment)]
+        [TestCase("/// ///", TokenType.Summary)]
+        public static void Lexer_Test_Two_SingleTokens(string text, TokenType expectedTokenType)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(3);
+
+            Assert.AreEqual(3, toks.Length);
+            Assert.AreEqual(expectedTokenType, toks[0].TokenType);
+            Assert.AreEqual(expectedTokenType, toks[1].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[2].TokenType);
+        }
+
+
+        [TestCase("\'t\'", ExpectedResult ="t")]
+        [TestCase("\'t t\'", ExpectedResult ="t t")]
+        [TestCase("\'t \\n t\'", ExpectedResult ="t \\n t")]//todo: is this even right?
+        [TestCase("\'\'", ExpectedResult = "")]
+        public static string? Lexer_Test_Characters(string text)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(text.Length + 1);
+            return toks.First().StringValue;
+        }
     }
 }

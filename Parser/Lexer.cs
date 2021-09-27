@@ -1,27 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace Compiler
+﻿namespace Compiler
 {
-    //internal interface ILexerResults
-    //{
-    //    Token[] Tokens { get; }
-    //}
-    //internal class LexerResults : ILexerResults
-    //{
-    //    private List<Token> _tokens = new List<Token>();
-    //    public Token[] Tokens => _tokens.ToArray();
-
-    //    internal void AddToken(Token token)
-    //    {
-    //        _tokens.Add(token);
-    //    }
-    //}
-
     internal interface ILexer
     {
         Token ConsumeToken();
@@ -49,17 +27,15 @@ namespace Compiler
         BracketsClose, // ]
         ParanthesesOpen, // (
         ParanthesesClose, // )
-
+        Assign, // =
         Equivalent, // ==
         NotEquivalent, // !=
         Equals, // ===
         NotEquals, // !==
         GreaterThan,// >
-        GreaterThanOrEquivalentTo, // >=
-        GreaterThanOrEqualTo, // >==
+        GreaterThanOrEqualTo, // >=
         LessThan, // <
-        LessThanOrEquivalentTo, // <=
-        LessThanOrEqualTo, // <==
+        LessThanOrEqualTo, // <=
 
         Also, // &
         AndAlso, // &&
@@ -82,6 +58,21 @@ namespace Compiler
         ToDo,
         TerniaryOperatorTrue,
         TerniaryOperatorFalse,
+        NullableCoalesceAssign,
+        Plus,
+        Minus,
+        Times,
+        Divide,
+        Modulo,
+        PlusAssign,
+        MinusAssign,
+        TimesAssign,
+        DivideAssign,
+        ModuloAssign,
+        BooleanInvert,
+        NullableCoalesce,
+        Summary,
+        Comment,
     }
 
     internal static class LexerConstants
@@ -98,21 +89,23 @@ namespace Compiler
         /// Math signs
         public const string PRECENDENCE_BEGIN_SIGN = "(";
         public const string PRECENDENCE_END_SIGN = ")";
-        public const string PLUS_SIGN = "+";
-        public const string MINUS_SIGN = "-";
-        public const string TIMES_SIGN = "*";
-        public const string DIVIDE_SIGN = "/";
-        public const string MODULO_SIGN = "%";
-        public const string EQUALS_MATH_SIGN = "=";
+        public const char PLUS_SIGN = '+';
+        public const char MINUS_SIGN = '-';
+        public const char TIMES_SIGN = '*';
+        public const char DIVIDE_SIGN = '/';
+        public const char MODULO_SIGN = '%';
+        public const char ASSIGN_OPERATOR = '=';
 
-        public const string GREATER_THAN_SIGN = ">";
+        public const char GREATER_THAN_SIGN = '>';
         public const string GREATER_THAN_EQUAL_SIGN = ">=";
-        public const string LESS_THAN_SIGN = "<";
+        public const char LESS_THAN_SIGN = '<';
         public const string LESS_THAN_EQUAL_SIGN = "<=";
-        public const string EQUALS_COMPARISON_SIGN = "==";
-        public const string NOT_EQUALS_SIGN = "!=";
+        public const string EQUIVALENT_COMPARISON_SIGN = "==";
+        public const string EQUALS_COMPARISON_SIGN = "===";
+        public const string NOT_EQUIVALENT_SIGN = "!=";
+        public const string NOT_EQUALS_SIGN = "!==";
 
-        public const string BOOLEAN_INVERT = "!";
+        public const char NOT_SIGN = '!';
 
         public const char TERNIARY_OPERATOR_TRUE = '?';
         public const char TERNIARY_OPERATOR_FALSE = ':';
@@ -121,8 +114,8 @@ namespace Compiler
         public const char DECIMAL_SEPARATOR_SIGN = '.';
         public const string NUMBER_INDENTATION = "_";
 
-        public const string SINGLE_QOUTE = "\'";
-        public const string DOUBLE_QOUTE = "\"";
+        public const char SINGLE_QOUTE = '\'';
+        public const char DOUBLE_QOUTE = '\"';
 
         /// Explicit type indicators
         public const char DOUBLE_INDICATOR = 'd';
@@ -131,26 +124,28 @@ namespace Compiler
         public const char CHARACTER_INDICATOR = 'c';
         public const char STRING_INDICATOR = 's';
 
-        public const string COMMENTS_INDICATOR = "///";
+        public const string COMMENT_INDICATOR = "//";
+        public const string SUMMARY_INDICATOR = "///";
     }
 
     internal struct Token
     {
 
-        public TokenType TokenType { get; init; }
+        public TokenType TokenType { get; internal set; }
         public long Line { get; init; }
         public long Column { get; init; }
         public string Name { get; init; }
-        public string? StringValue { get; init; }
-        public double? FloatValue { get; init; }
-        public long? IntegerValue { get; init; }
-        public bool? BooleanValue { get; init; }
+        public string? StringValue { get; internal set; }
+        public double? FloatValue { get; internal set; }
+        public long? IntegerValue { get; internal set; }
+        public bool? BooleanValue { get; internal set; }
         public Token(TokenType tokenType, long line, long column) : this(tokenType, tokenType.ToString(), line, column) { }
-
-        public Token(TokenType tokenType, string name, long row, long column)
+        public Token(long line, long column) : this(default, ((TokenType)default).ToString(), line, column) { }
+        public Token(TokenType tokenType, char name, long line, long column) : this(tokenType, name.ToString(), line, column) { }
+        public Token(TokenType tokenType, string name, long line, long column)
         {
             TokenType = tokenType;
-            Line = row;
+            Line = line;
             Column = column;
             Name = name;
             StringValue = null;
@@ -161,7 +156,7 @@ namespace Compiler
 
         public override string? ToString()
         {
-            return $"{StringValue ?? FloatValue ?? IntegerValue as object ?? "Undefined"} - {TokenType}";
+            return $"{StringValue ?? FloatValue ?? IntegerValue as object ?? Name ?? TokenType.ToString()} - {TokenType}";
         }
     }
 
@@ -245,8 +240,16 @@ namespace Compiler
             var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
             if (token.HasValue)
             {
-                columnCount++;
                 cursor++;
+                columnCount++;
+                (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token.Value, cursor, lineCount, columnCount);
+                token = tokenExtended ?? token;
+                return (token.Value, cursor, lineCount, columnCount);
+            }
+
+            (token, cursor, lineCount, columnCount) = GetNumberToken(cursor, lineCount, columnCount);
+            if (token.HasValue)
+            {
                 return (token.Value, cursor, lineCount, columnCount);
             }
 
@@ -257,23 +260,254 @@ namespace Compiler
                 res += _text[cursor];
                 columnCount++;
                 cursor++;
-
             }
 
             return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
         }
 
+        private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
+        {
+            //todo: implement... don't forget hexadecimals!
+            return (null, cursor, lineCount, columnCount);
+        }
+
+        private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetMultipleCharacterToken(Token token, int cursor, long lineCount, long columnCount)
+        {
+            switch (token.TokenType)
+            {
+                case TokenType.Assign:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.Equivalent;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.Equals;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.BooleanInvert:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.NotEquivalent;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.NotEquals;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.TerniaryOperatorTrue:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.TerniaryOperatorTrue)
+                        {
+                            token.TokenType = TokenType.NullableCoalesce;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.NullableCoalesceAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.LessThan:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.LessThanOrEqualTo;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.GreaterThan:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.GreaterThanOrEqualTo;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Plus:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.PlusAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Minus:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.MinusAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Times:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.TimesAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Divide:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.DivideAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        if (singleCharTok?.TokenType == TokenType.Divide)
+                        {
+                            cursor++;
+                            columnCount++;
+                            token.TokenType = TokenType.Comment;
+
+                            singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                            if (singleCharTok?.TokenType == TokenType.Divide)
+                            {
+                                cursor++;
+                                columnCount++;
+                                token.TokenType = TokenType.Summary;
+                            }
+
+                        }
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Modulo:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        {
+                            token.TokenType = TokenType.ModuloAssign;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Character:
+                    {
+                        //todo: get rest of text till next single quote and combine in a token?
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        string result = null;
+                        while (cursor < _text.Length)
+                        {
+                            try
+                            {
+
+                                if (!singleCharTok.HasValue)
+                                {
+                                    //todo: handle newlines?
+                                    result += _text[cursor];
+                                    cursor++;
+                                    columnCount++;
+                                    continue;
+                                }
+
+                                if (singleCharTok.Value.TokenType == TokenType.EndOfFile)
+                                {
+                                    break;
+                                }
+
+                                if (singleCharTok.Value.TokenType == TokenType.Character)
+                                {
+                                    cursor++;
+                                    columnCount++;
+                                    token.TokenType = TokenType.Character;
+                                    break;
+                                }
+                            }
+                            finally
+                            {
+                                singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                            }
+                        }
+                        token.StringValue = result;
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.String:
+                    {
+                        //todo: get rest of text till next single quote and combine in a token?
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                default: return (null, cursor, lineCount, columnCount);
+            }
+        }
+
         private Token? GetSingleCharacterToken(int cursor, long lineCount, long columnCount)
         {
+            if (cursor >= _text.Length)
+            {
+                return new Token(TokenType.EndOfFile, lineCount, columnCount);
+            }
+
             return _text[cursor] switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount),
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount),
                 LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount),
-                // todo: peek if next char is a dot (return null) or another ? sign? (also return false)?
                 LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount),
-                // todo: determine how our language should look syntactically, is there something that can be after a : thats got another meaning?
                 LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount),
+                LexerConstants.PLUS_SIGN => new Token(TokenType.Plus, lineCount, columnCount),
+                LexerConstants.MINUS_SIGN => new Token(TokenType.Minus, lineCount, columnCount),
+                LexerConstants.TIMES_SIGN => new Token(TokenType.Times, lineCount, columnCount),
+                LexerConstants.DIVIDE_SIGN => new Token(TokenType.Divide, lineCount, columnCount),
+                LexerConstants.MODULO_SIGN => new Token(TokenType.Modulo, lineCount, columnCount),
+                LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assign, lineCount, columnCount),
+                LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount),
+                LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount),
+                LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount),
+                LexerConstants.SINGLE_QOUTE => new Token(TokenType.Character, lineCount, columnCount),
+                LexerConstants.DOUBLE_QOUTE => new Token(TokenType.String, lineCount, columnCount),
                 _ => null,
             };
         }
