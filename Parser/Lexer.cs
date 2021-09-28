@@ -661,8 +661,7 @@
         private bool IsNumberIndicator(char currentChar)
         {
             return currentChar == LexerConstants.FLOAT_INDICATOR ||
-                    currentChar == LexerConstants.DOUBLE_INDICATOR ||
-                    currentChar == LexerConstants.INTEGER_INDICATOR;
+                    currentChar == LexerConstants.DOUBLE_INDICATOR;
         }
 
     }
