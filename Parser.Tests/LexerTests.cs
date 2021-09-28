@@ -157,10 +157,22 @@ namespace Compiler.Tests
         [TestCase("\'t t\'", ExpectedResult ="t t")]
         [TestCase("\'t \\n t\'", ExpectedResult ="t \\n t")]//todo: is this even right?
         [TestCase("\'\'", ExpectedResult = "")]
-        public static string? Lexer_Test_Characters(string text)
+        public static string? Lexer_Test_Character(string text)
         {
             var lexer = new Lexer(text);
             var toks = lexer.ConsumeTokens(text.Length + 1);
+            return toks.First().StringValue;
+        }
+
+
+        [TestCase("\"t\"", ExpectedResult = "t")]
+        [TestCase("\"t t\"", ExpectedResult = "t t")]
+        [TestCase("\"\"", ExpectedResult = "")]
+        public static string? Lexer_Test_String(string text)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(2);
+            Assert.AreEqual(TokenType.EndOfFile, toks.Last().TokenType);
             return toks.First().StringValue;
         }
     }

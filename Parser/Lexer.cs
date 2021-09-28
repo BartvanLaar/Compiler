@@ -10,37 +10,44 @@
 
     internal enum TokenType
     {
+        ToDo = -1337,               // should be removed or repurposed...
         Error = -2,
 
         EndOfFile = -1,
         Undefined,
 
         Number,
+        Float,
+        Double,
+        Integer,
         Character,
         String,
         DateTime,
         Hexadecimal,
 
-        AccoladesOpen, // {
-        AccoladesClose, // }
-        BracketsOpen, // [
-        BracketsClose, // ]
-        ParanthesesOpen, // (
-        ParanthesesClose, // )
-        Assign, // =
-        Equivalent, // ==
-        NotEquivalent, // !=
-        Equals, // ===
-        NotEquals, // !==
-        GreaterThan,// >
-        GreaterThanOrEqualTo, // >=
-        LessThan, // <
-        LessThanOrEqualTo, // <=
+        AccoladesOpen,              // {
+        AccoladesClose,             // }
+        BracketsOpen,               // [
+        BracketsClose,              // ]
+        ParanthesesOpen,            // (
+        ParanthesesClose,           // )
+        Assign,                     // =
+        Equivalent,                 // ==
+        NotEquivalent,              // !=
+        Equals,                     // ===
+        NotEquals,                  // !==
+        GreaterThan,                // >
+        GreaterThanOrEqualTo,       // >=
+        LessThan,                   // <
+        LessThanOrEqualTo,          // <=
 
-        Also, // &
-        AndAlso, // &&
-        Or, // |
-        OrElse, // ||
+        Also,                       // &
+        AndAlso,                    // &&
+        Or,                         // |
+        OrElse,                     // ||
+        xOr,                        // ^
+        BitShiftLeft,               // <<
+        BitShiftRight,              // >>>
 
         If,
         While,
@@ -52,27 +59,31 @@
         Function_Name,
         Variable_Name,
         Variable_Type,
-        Letters,
-        Float,
-        EndOfStatement,
-        ToDo,
-        TerniaryOperatorTrue,
-        TerniaryOperatorFalse,
-        NullableCoalesceAssign,
-        Plus,
-        Minus,
-        Times,
-        Divide,
-        Modulo,
-        PlusAssign,
-        MinusAssign,
-        TimesAssign,
-        DivideAssign,
-        ModuloAssign,
-        BooleanInvert,
-        NullableCoalesce,
-        Summary,
-        Comment,
+        Letters,        
+        EndOfStatement,             // ;
+        TerniaryOperatorTrue,       // ?
+        TerniaryOperatorFalse,      // :
+        Plus,                       // +
+        Minus,                      // -
+        Times,                      // *
+        Divide,                     // /
+        Modulo,                     // %
+        NullableCoalesce,           // ??
+        PlusAssign,                 // +=
+        MinusAssign,                // -=
+        TimesAssign,                // *=
+        DivideAssign,               // /=
+        ModuloAssign,               // %=
+        NullableCoalesceAssign,     // ??=
+        BooleanInvert,              // !
+        Summary,                    ///        
+        Comment,                    //
+        VariableTypeInferred,       // var
+        PublicScope,                // public
+        PrivateScope,               // private
+        InternalScope,              // internal
+        ProtectedScope,             // protected
+
     }
 
     internal static class LexerConstants
@@ -126,6 +137,43 @@
 
         public const string COMMENT_INDICATOR = "//";
         public const string SUMMARY_INDICATOR = "///";
+
+        public class KeyWords
+        {
+            public const string VARIABLE_TYPE_INFERRED = "var";
+            public const string PUBLIC = "public";
+            public const string PROTECTED = "protected";
+            public const string INTERNAL = "internal";
+            public const string PRIVATE = "private";
+
+            //types ? todo: is this the right moment and place?
+            public const string DOUBLE = "double";
+            public const string FLOAT = "float";
+            public const string INTEGER = "int";
+
+            public const string Float = "float";
+            public const string Integer  = "integer";
+            public const string String = "string";
+            public const string Character = "char";
+        }
+
+        public static IDictionary<string, TokenType> PredefinedKeyWords = new Dictionary<string, TokenType>()
+        {
+            { KeyWords.VARIABLE_TYPE_INFERRED, TokenType.VariableTypeInferred },
+            { KeyWords.PUBLIC, TokenType.PublicScope},
+            { KeyWords.INTERNAL, TokenType.InternalScope },
+            { KeyWords.PROTECTED, TokenType.ProtectedScope },
+            { KeyWords.PRIVATE, TokenType.PrivateScope },
+
+            //types ? todo: is this the right moment and place?
+            { KeyWords.DOUBLE, TokenType.Double },
+            { KeyWords.Float, TokenType.Float },
+            { KeyWords.Integer, TokenType.Integer },
+            { KeyWords.String, TokenType.String },
+            { KeyWords.Character, TokenType.Character },
+
+
+        };
     }
 
     internal struct Token
@@ -233,9 +281,9 @@
 
         private (Token Token, int Cursor, long LineCount, long ColumnCount) GetNextToken(int cursor, long lineCount, long columnCount)
         {
+            //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
-            var res = string.Empty;
             var columnCountStart = columnCount;
             var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
             if (token.HasValue)
@@ -254,12 +302,24 @@
             }
 
             //todo: how to determine if token is done? .... Whitespace check wont cut it... as functionname () should also be valid?
-
+            //check against all pre defined keywords..
+            // If its not a match, then it's either a variable name, class name, Namespance? etc... or a function name...? 
+            // Those edge cases can be checked afterwards, first check all known words.
+            // todo: should this language be case sensitive?
+            var res = string.Empty;
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]))
             {
                 res += _text[cursor];
                 columnCount++;
                 cursor++;
+            }
+
+            //check against all pre defined keywords..
+            //todo: should this lang be case (in)sensitive?
+            if (LexerConstants.PredefinedKeyWords.TryGetValue(res, out var tokenType))
+            {
+                //todo: probably do something when encountering certain tokens?
+                return (new Token(tokenType, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
             }
 
             return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
@@ -273,6 +333,7 @@
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetMultipleCharacterToken(Token token, int cursor, long lineCount, long columnCount)
         {
+            //@incomplete
             switch (token.TokenType)
             {
                 case TokenType.Assign:
@@ -436,9 +497,8 @@
                     }
                 case TokenType.Character:
                     {
-                        //todo: get rest of text till next single quote and combine in a token?
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        string result = null;
+                        var result = string.Empty;
                         while (cursor < _text.Length)
                         {
                             try
@@ -448,8 +508,6 @@
                                 {
                                     //todo: handle newlines?
                                     result += _text[cursor];
-                                    cursor++;
-                                    columnCount++;
                                     continue;
                                 }
 
@@ -460,14 +518,14 @@
 
                                 if (singleCharTok.Value.TokenType == TokenType.Character)
                                 {
-                                    cursor++;
-                                    columnCount++;
                                     token.TokenType = TokenType.Character;
                                     break;
                                 }
                             }
                             finally
                             {
+                                cursor++;
+                                columnCount++;
                                 singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             }
                         }
@@ -476,7 +534,39 @@
                     }
                 case TokenType.String:
                     {
-                        //todo: get rest of text till next single quote and combine in a token?
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        var result = String.Empty;
+                        while (cursor < _text.Length)
+                        {
+                            try
+                            {
+
+                                if (!singleCharTok.HasValue)
+                                {
+                                    //todo: handle newlines?
+                                    result += _text[cursor];
+                                    continue;
+                                }
+
+                                if (singleCharTok.Value.TokenType == TokenType.EndOfFile)
+                                {
+                                    break;
+                                }
+
+                                if (singleCharTok.Value.TokenType == TokenType.String)
+                                {
+                                    token.TokenType = TokenType.Character;
+                                    break;
+                                }
+                            }
+                            finally
+                            {
+                                cursor++;
+                                columnCount++;
+                                singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                            }
+                        }
+                        token.StringValue = result;
                         return (token, cursor, lineCount, columnCount);
                     }
                 default: return (null, cursor, lineCount, columnCount);
@@ -489,7 +579,8 @@
             {
                 return new Token(TokenType.EndOfFile, lineCount, columnCount);
             }
-
+            
+            //@incomplete
             return _text[cursor] switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount),
