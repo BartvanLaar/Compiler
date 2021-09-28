@@ -59,7 +59,7 @@
         Function_Name,
         VariableName,
         Variable_Type,
-        Letters,        
+        Letters,
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
@@ -131,7 +131,7 @@
         /// Explicit type indicators
         public const char DOUBLE_INDICATOR = 'd';
         public const char FLOAT_INDICATOR = 'f';
-        public const char INTEGER_INDICATOR = 'i';
+        
         public const char CHARACTER_INDICATOR = 'c';
         public const char STRING_INDICATOR = 's';
 
@@ -152,7 +152,7 @@
             public const string INTEGER = "int";
 
             public const string Float = "float";
-            public const string Integer  = "integer";
+            public const string Integer = "integer";
             public const string String = "string";
             public const string Character = "char";
         }
@@ -330,7 +330,30 @@
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
         {
             //todo: implement... don't forget hexadecimals!
-            return (null, cursor, lineCount, columnCount);
+            //todo: support things like 20f, 20d
+            if (!char.IsDigit(_text[cursor]))
+            {
+                return (null, cursor, lineCount, columnCount);
+            }
+            var currentChar = _text[cursor];
+            var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
+            Func<char, bool> isValidCharacter = isHexadecimal ? c => char.IsLetterOrDigit(c) : c => char.IsDigit(c) || IsDecimalSeparator(c);
+
+            var originalColumnCount = columnCount;
+            var result = string.Empty;
+            while (cursor < _text.Length && isValidCharacter(_text[cursor]))
+            {
+                result += _text[cursor];
+                cursor++;
+                columnCount++;
+            }
+
+            // also support double? idk why
+            var tokenType = isHexadecimal
+                ? TokenType.Hexadecimal : result.Contains(LexerConstants.DECIMAL_SEPARATOR_SIGN)
+                      ? TokenType.Float : TokenType.Integer;
+
+            return (new Token(tokenType, result, lineCount, originalColumnCount), cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetMultipleCharacterToken(Token token, int cursor, long lineCount, long columnCount)
@@ -581,7 +604,7 @@
             {
                 return new Token(TokenType.EndOfFile, lineCount, columnCount);
             }
-            
+
             //@incomplete
             return _text[cursor] switch
             {

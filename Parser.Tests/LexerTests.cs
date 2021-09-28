@@ -186,11 +186,11 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.VariableTypeInferred, toks[0].TokenType);
             Assert.AreEqual(TokenType.VariableName, toks[1].TokenType);
             Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
-            Assert.AreEqual(TokenType.Number, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[3].TokenType);
             Assert.AreEqual(TokenType.Plus, toks[4].TokenType);
-            Assert.AreEqual(TokenType.Number, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[5].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[6].TokenType);
-            Assert.AreEqual(TokenType.EndOfFile, lexer.PeekToken());
+            Assert.AreEqual(TokenType.EndOfFile, lexer.PeekToken().TokenType);
         }
     }
 }
