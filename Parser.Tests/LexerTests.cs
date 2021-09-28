@@ -81,7 +81,7 @@ namespace Compiler.Tests
         }
 
 
-        [TestCase("=", TokenType.Assign)]
+        [TestCase("=", TokenType.Assignment)]
         [TestCase("==", TokenType.Equivalent)]
         [TestCase("===", TokenType.Equals)]
         [TestCase("!", TokenType.BooleanInvert)]
@@ -92,15 +92,15 @@ namespace Compiler.Tests
         [TestCase(">", TokenType.GreaterThan)]
         [TestCase(">=", TokenType.GreaterThanOrEqualTo)]
         [TestCase("+", TokenType.Plus)]
-        [TestCase("+=", TokenType.PlusAssign)]
+        [TestCase("+=", TokenType.PlusAssignment)]
         [TestCase("-", TokenType.Minus)]
-        [TestCase("-=", TokenType.MinusAssign)]
+        [TestCase("-=", TokenType.MinusAssignment)]
         [TestCase("%", TokenType.Modulo)]
-        [TestCase("%=", TokenType.ModuloAssign)]
+        [TestCase("%=", TokenType.ModuloAssignment)]
         [TestCase("*", TokenType.Times)]
-        [TestCase("*=", TokenType.TimesAssign)]
+        [TestCase("*=", TokenType.TimesAssignment)]
         [TestCase("/", TokenType.Divide)]
-        [TestCase("/=", TokenType.DivideAssign)]
+        [TestCase("/=", TokenType.DivideAssignment)]
         [TestCase(":", TokenType.TerniaryOperatorFalse)]
         [TestCase("?", TokenType.TerniaryOperatorTrue)]
         [TestCase("??", TokenType.NullableCoalesce)]
@@ -116,7 +116,7 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks.Last().TokenType);
         }
 
-        [TestCase("= =", TokenType.Assign)]
+        [TestCase("= =", TokenType.Assignment)]
         [TestCase("== ==", TokenType.Equivalent)]
         [TestCase("=== ===", TokenType.Equals)]
         [TestCase("! !", TokenType.BooleanInvert)]
@@ -127,15 +127,15 @@ namespace Compiler.Tests
         [TestCase("> >", TokenType.GreaterThan)]
         [TestCase(">= >=", TokenType.GreaterThanOrEqualTo)]
         [TestCase("+ +", TokenType.Plus)]
-        [TestCase("+= +=", TokenType.PlusAssign)]
+        [TestCase("+= +=", TokenType.PlusAssignment)]
         [TestCase("- -", TokenType.Minus)]
-        [TestCase("-= -=", TokenType.MinusAssign)]
+        [TestCase("-= -=", TokenType.MinusAssignment)]
         [TestCase("% %", TokenType.Modulo)]
-        [TestCase("%= %=", TokenType.ModuloAssign)]
+        [TestCase("%= %=", TokenType.ModuloAssignment)]
         [TestCase("* *", TokenType.Times)]
-        [TestCase("*= *=", TokenType.TimesAssign)]
+        [TestCase("*= *=", TokenType.TimesAssignment)]
         [TestCase("/ /", TokenType.Divide)]
-        [TestCase("/= /=", TokenType.DivideAssign)]
+        [TestCase("/= /=", TokenType.DivideAssignment)]
         [TestCase(": :", TokenType.TerniaryOperatorFalse)]
         [TestCase("? ?", TokenType.TerniaryOperatorTrue)]
         [TestCase("?? ??", TokenType.NullableCoalesce)]
@@ -174,6 +174,23 @@ namespace Compiler.Tests
             var toks = lexer.ConsumeTokens(2);
             Assert.AreEqual(TokenType.EndOfFile, toks.Last().TokenType);
             return toks.First().StringValue;
+        }
+
+        [Test]
+        public static void Lexer_Test_Code()
+        {
+            var code = "var variableName = 20 + 5;";
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(7);
+            Assert.AreEqual(TokenType.VariableTypeInferred, toks[0].TokenType);
+            Assert.AreEqual(TokenType.VariableName, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
+            Assert.AreEqual(TokenType.Number, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Plus, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Number, toks[5].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[6].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, lexer.PeekToken());
         }
     }
 }

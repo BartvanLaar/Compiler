@@ -31,7 +31,7 @@
         BracketsClose,              // ]
         ParanthesesOpen,            // (
         ParanthesesClose,           // )
-        Assign,                     // =
+        Assignment,                 // =
         Equivalent,                 // ==
         NotEquivalent,              // !=
         Equals,                     // ===
@@ -57,7 +57,7 @@
         In,
 
         Function_Name,
-        Variable_Name,
+        VariableName,
         Variable_Type,
         Letters,        
         EndOfStatement,             // ;
@@ -69,12 +69,12 @@
         Divide,                     // /
         Modulo,                     // %
         NullableCoalesce,           // ??
-        PlusAssign,                 // +=
-        MinusAssign,                // -=
-        TimesAssign,                // *=
-        DivideAssign,               // /=
-        ModuloAssign,               // %=
-        NullableCoalesceAssign,     // ??=
+        PlusAssignment,             // +=
+        MinusAssignment,            // -=
+        TimesAssignment,            // *=
+        DivideAssignment,           // /=
+        ModuloAssignment,           // %=
+        NullableCoalesceAssignment, // ??=
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
@@ -322,7 +322,9 @@
                 return (new Token(tokenType, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
             }
 
-            return (new Token(TokenType.ToDo, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+            // for now assume it's a variable name...
+            // todo: fix assumption
+            return (new Token(TokenType.VariableName, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
@@ -336,10 +338,10 @@
             //@incomplete
             switch (token.TokenType)
             {
-                case TokenType.Assign:
+                case TokenType.Assignment:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.Equivalent;
                             cursor++;
@@ -347,7 +349,7 @@
                         }
 
                         singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.Equals;
                             cursor++;
@@ -359,7 +361,7 @@
                 case TokenType.BooleanInvert:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.NotEquivalent;
                             cursor++;
@@ -367,7 +369,7 @@
                         }
 
                         singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.NotEquals;
                             cursor++;
@@ -387,9 +389,9 @@
                         }
 
                         singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.NullableCoalesceAssign;
+                            token.TokenType = TokenType.NullableCoalesceAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -399,7 +401,7 @@
                 case TokenType.LessThan:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.LessThanOrEqualTo;
                             cursor++;
@@ -411,7 +413,7 @@
                 case TokenType.GreaterThan:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.GreaterThanOrEqualTo;
                             cursor++;
@@ -423,9 +425,9 @@
                 case TokenType.Plus:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.PlusAssign;
+                            token.TokenType = TokenType.PlusAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -435,9 +437,9 @@
                 case TokenType.Minus:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.MinusAssign;
+                            token.TokenType = TokenType.MinusAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -447,9 +449,9 @@
                 case TokenType.Times:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.TimesAssign;
+                            token.TokenType = TokenType.TimesAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -459,9 +461,9 @@
                 case TokenType.Divide:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.DivideAssign;
+                            token.TokenType = TokenType.DivideAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -486,9 +488,9 @@
                 case TokenType.Modulo:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assign)
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.ModuloAssign;
+                            token.TokenType = TokenType.ModuloAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -593,7 +595,7 @@
                 LexerConstants.TIMES_SIGN => new Token(TokenType.Times, lineCount, columnCount),
                 LexerConstants.DIVIDE_SIGN => new Token(TokenType.Divide, lineCount, columnCount),
                 LexerConstants.MODULO_SIGN => new Token(TokenType.Modulo, lineCount, columnCount),
-                LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assign, lineCount, columnCount),
+                LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assignment, lineCount, columnCount),
                 LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount),
                 LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount),
                 LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount),
