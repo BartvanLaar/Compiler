@@ -57,7 +57,7 @@
         In,
 
         Function_Name,
-        VariableName,
+        Identifier,
         Variable_Type,
         Letters,
         EndOfStatement,             // ;
@@ -203,8 +203,8 @@
         public long Column { get; init; }
         public string Name { get; init; }
         public string? StringValue { get; internal set; }
-        public double? FloatValue { get; internal set; }
-        public long? IntegerValue { get; internal set; }
+        public float? FloatValue { get; internal set; }
+        public int? IntegerValue { get; internal set; } // todo: how to handle longs?
         public bool? BooleanValue { get; internal set; }
         public Token(TokenType tokenType, long line, long column) : this(tokenType, tokenType.ToString(), line, column) { }
         public Token(long line, long column) : this(default, ((TokenType)default).ToString(), line, column) { }
@@ -343,7 +343,7 @@
 
             // for now assume it's a variable name...
             // todo: fix assumption
-            return (new Token(TokenType.VariableName, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+            return (new Token(TokenType.Identifier, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)

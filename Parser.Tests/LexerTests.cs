@@ -184,7 +184,7 @@ namespace Compiler.Tests
 
             var toks = lexer.ConsumeTokens(7);
             Assert.AreEqual(TokenType.VariableTypeInferred, toks[0].TokenType);
-            Assert.AreEqual(TokenType.VariableName, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
             Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[3].TokenType);
             Assert.AreEqual(TokenType.Plus, toks[4].TokenType);

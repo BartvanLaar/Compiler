@@ -52,7 +52,27 @@
             return node;
         }
 
-        protected internal virtual ExpressionAST VisitNumberExpressionAST(NumberExpressionAST node)
+        protected internal virtual ExpressionAST VisitDoubleExpressionAST(DoubleExpressionAST node)
+        {
+            return node;
+        }
+
+        protected internal virtual ExpressionAST VisitFloatExpressionAST(FloatExpressionAST node)
+        {
+            return node;
+        }
+
+        protected internal virtual ExpressionAST VisitIntegerExpressionAST(IntegerExpressionAST node)
+        {
+            return node;
+        }
+
+        protected internal virtual ExpressionAST VisitStringExpressionAST(StringExpressionAST node)
+        {
+            return node;
+        }
+
+        protected internal virtual ExpressionAST VisitCharacterExpressionAST(CharacterExpressionAST node)
         {
             return node;
         }

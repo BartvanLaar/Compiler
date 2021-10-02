@@ -19,13 +19,17 @@ namespace Parser.AbstractSyntaxTree
         VariableEvaluation,
         Prototype,
         FunctionCall,
-        Number,
+        Double,
         DivideRest,
         GreaterThan,
         Equivalent,
         Equals,
         GreaterThanEqual,
-        LessThanEqual
+        LessThanEqual,
+        Float,
+        Integer,
+        String,
+        Character
     }
 
     internal abstract class ExpressionAST
@@ -48,17 +52,75 @@ namespace Parser.AbstractSyntaxTree
         }
     }
 
-    internal sealed class NumberExpressionAST : ExpressionAST
+    internal sealed class DoubleExpressionAST : ExpressionAST
     {
         public double Value { get; }
-        public NumberExpressionAST(double value) : base(ExpressionType.Number)
+        public DoubleExpressionAST(double value) : base(ExpressionType.Double)
         {
             Value = value;
         }
 
         protected internal override ExpressionAST Accept(ExpressionVisitor visitor)
         {
-            return visitor.VisitNumberExpressionAST(this);
+            return visitor.VisitDoubleExpressionAST(this);
+        }
+    }
+
+    internal sealed class FloatExpressionAST : ExpressionAST
+    {
+        public FloatExpressionAST(float value): base(ExpressionType.Float)
+        {
+            Value = value;
+        }
+        public float Value {  get; }
+
+        protected internal override ExpressionAST Accept(ExpressionVisitor visitor)
+        {
+            return visitor.VisitFloatExpressionAST(this);
+        }
+    }
+
+    internal sealed class IntegerExpressionAST : ExpressionAST
+    {
+        public IntegerExpressionAST(int value) : base(ExpressionType.Integer)
+        {
+            Value = value;
+        }
+        public int Value { get; }
+
+        protected internal override ExpressionAST Accept(ExpressionVisitor visitor)
+        {
+            return visitor.VisitIntegerExpressionAST(this);
+        }
+    }
+
+    internal sealed class StringExpressionAST : ExpressionAST
+    {
+        public StringExpressionAST(string value) : base(ExpressionType.String)
+        {
+            Value = value;
+        }
+
+        public string Value { get; }
+
+        protected internal override ExpressionAST Accept(ExpressionVisitor visitor)
+        {
+            return visitor.VisitStringExpressionAST(this);
+        }
+    }
+
+    internal sealed class CharacterExpressionAST : ExpressionAST
+    {
+        public CharacterExpressionAST(char value) : base(ExpressionType.Character)
+        {
+            Value = value;
+        }
+
+        public char Value { get; }
+
+        protected internal override ExpressionAST Accept(ExpressionVisitor visitor)
+        {
+            return visitor.VisitCharacterExpressionAST(this);
         }
     }
 
@@ -90,34 +152,21 @@ namespace Parser.AbstractSyntaxTree
 
         private static ExpressionType DetermineExpressionType(string @operator)
         {
-            switch (@operator)
+            return @operator switch
             {
-                case LexerConstants.PLUS_SIGN:
-                    return ExpressionType.Add;
-                case LexerConstants.MINUS_SIGN:
-                    return ExpressionType.Subtract;
-                case LexerConstants.TIMES_SIGN:
-                    return ExpressionType.Multiply;
-                case LexerConstants.DIVIDE_SIGN:
-                    return ExpressionType.Divide;
-                case LexerConstants.MODULO_SIGN:
-                    return ExpressionType.DivideRest;
-                case LexerConstants.GREATER_THAN_SIGN:
-                    return ExpressionType.GreaterThan;
-                case LexerConstants.GREATER_THAN_EQUAL_SIGN:
-                    return ExpressionType.GreaterThanEqual;
-                case LexerConstants.LESS_THAN_SIGN:
-                    return ExpressionType.LessThan;
-                case LexerConstants.LESS_THAN_EQUAL_SIGN:
-                    return ExpressionType.LessThanEqual;
-                case LexerConstants.EQUIVALENT_SIGN:
-                    return ExpressionType.Equivalent;
-                case LexerConstants.EQUALS_SIGN:
-                    return ExpressionType.Equals;
-
-                default:
-                    throw new ArgumentException($"Operator {@operator} is not supported.");
-            }
+                LexerConstants.PLUS_SIGN => ExpressionType.Add,
+                LexerConstants.MINUS_SIGN => ExpressionType.Subtract,
+                LexerConstants.TIMES_SIGN => ExpressionType.Multiply,
+                LexerConstants.DIVIDE_SIGN => ExpressionType.Divide,
+                LexerConstants.MODULO_SIGN => ExpressionType.DivideRest,
+                LexerConstants.GREATER_THAN_SIGN => ExpressionType.GreaterThan,
+                LexerConstants.GREATER_THAN_EQUAL_SIGN => ExpressionType.GreaterThanEqual,
+                LexerConstants.LESS_THAN_SIGN => ExpressionType.LessThan,
+                LexerConstants.LESS_THAN_EQUAL_SIGN => ExpressionType.LessThanEqual,
+                LexerConstants.EQUIVALENT_SIGN => ExpressionType.Equivalent,
+                LexerConstants.EQUALS_SIGN => ExpressionType.Equals,
+                _ => throw new ArgumentException($"Operator {@operator} is not supported."),
+            };
         }
 
     }
