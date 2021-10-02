@@ -88,57 +88,57 @@
 
     internal static class LexerConstants
     {
-        public const char PARANTHESES_OPEN = '(';
-        public const char PARANTHESES_CLOSE = ')';
-        public const char ACCOLADES_OPEN = '{';
-        public const char ACCOLADES_CLOSE = '}';
-        public const char BACKETS_OPEN = '[';
-        public const char BACKETS_CLOSE = ']';
+        public const string PARANTHESES_OPEN = "(";
+        public const string PARANTHESES_CLOSE = ")";
+        public const string ACCOLADES_OPEN = "{";
+        public const string ACCOLADES_CLOSE = "}";
+        public const string BACKETS_OPEN = "[";
+        public const string BACKETS_CLOSE = "]";
 
-        public const char END_OF_STATEMENT = ';';
+        public const string END_OF_STATEMENT = ";";
 
         /// Math signs
         public const string PRECENDENCE_BEGIN_SIGN = "(";
         public const string PRECENDENCE_END_SIGN = ")";
-        public const char PLUS_SIGN = '+';
-        public const char MINUS_SIGN = '-';
-        public const char TIMES_SIGN = '*';
-        public const char DIVIDE_SIGN = '/';
-        public const char MODULO_SIGN = '%';
-        public const char ASSIGN_OPERATOR = '=';
+        public const string PLUS_SIGN = "+";
+        public const string MINUS_SIGN = "-";
+        public const string TIMES_SIGN = "*";
+        public const string DIVIDE_SIGN = "/";
+        public const string MODULO_SIGN = "%";
 
-        public const char GREATER_THAN_SIGN = '>';
+        public const string GREATER_THAN_SIGN = ">";
         public const string GREATER_THAN_EQUAL_SIGN = ">=";
-        public const char LESS_THAN_SIGN = '<';
+        public const string LESS_THAN_SIGN = "<";
         public const string LESS_THAN_EQUAL_SIGN = "<=";
-        public const string EQUIVALENT_COMPARISON_SIGN = "==";
-        public const string EQUALS_COMPARISON_SIGN = "===";
+        public const string EQUIVALENT_SIGN = "==";
+        public const string EQUALS_SIGN = "===";
         public const string NOT_EQUIVALENT_SIGN = "!=";
         public const string NOT_EQUALS_SIGN = "!==";
+        public const string ASSIGN_OPERATOR = "=";
 
-        public const char NOT_SIGN = '!';
+        public const string NOT_SIGN = "!";
 
-        public const char TERNIARY_OPERATOR_TRUE = '?';
-        public const char TERNIARY_OPERATOR_FALSE = ':';
+        public const string TERNIARY_OPERATOR_TRUE = "?";
+        public const string TERNIARY_OPERATOR_FALSE = ":";
 
         public const string HEX_SIGN = "0x";
         public const char DECIMAL_SEPARATOR_SIGN = '.';
         public const string NUMBER_INDENTATION = "_";
 
-        public const char SINGLE_QOUTE = '\'';
-        public const char DOUBLE_QOUTE = '\"';
+        public const string SINGLE_QOUTE = "\'";
+        public const string DOUBLE_QOUTE = "\"";
 
         /// Explicit type indicators
         public const char DOUBLE_INDICATOR = 'd';
         public const char FLOAT_INDICATOR = 'f';
-        
+
         public const char CHARACTER_INDICATOR = 'c';
         public const char STRING_INDICATOR = 's';
 
         public const string COMMENT_INDICATOR = "//";
         public const string SUMMARY_INDICATOR = "///";
 
-        public class KeyWords
+        public static class KeyWords
         {
             public const string VARIABLE_TYPE_INFERRED = "var";
             public const string PUBLIC = "public";
@@ -155,6 +155,25 @@
             public const string Integer = "integer";
             public const string String = "string";
             public const string Character = "char";
+        }
+
+        public static class OperatorPrecedence
+        {
+            private static IReadOnlyDictionary<string, int> _precendences = new Dictionary<string, int>
+            {
+                [LESS_THAN_SIGN] = 10,
+                [LESS_THAN_EQUAL_SIGN] = 10,
+                [PLUS_SIGN] = 20,
+                [MINUS_SIGN] = 20,
+                [TIMES_SIGN] = 40,
+                [DIVIDE_SIGN] = 40,
+            };
+
+            public static int Get(string @operator)
+            {
+                const int DEFAULT_OPERATOR_PRECENDECE = -1;
+                return _precendences.TryGetValue(@operator, out var result) ? result : DEFAULT_OPERATOR_PRECENDECE;
+            }
         }
 
         public static IDictionary<string, TokenType> PredefinedKeyWords = new Dictionary<string, TokenType>()
@@ -606,7 +625,7 @@
             }
 
             //@incomplete
-            return _text[cursor] switch
+            return _text[cursor].ToString() switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount),
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount),

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Parser.AbstractSyntaxTree
+﻿namespace Parser.AbstractSyntaxTree
 {
     internal abstract class ExpressionVisitor
     {
@@ -14,12 +8,7 @@ namespace Parser.AbstractSyntaxTree
 
         public virtual ExpressionAST Visit(ExpressionAST node)
         {
-            if (node != null)
-            {
-                return node.Accept(this);
-            }
-
-            return null;
+            return node?.Accept(this);
         }
 
         protected internal virtual ExpressionAST VisitExtension(ExpressionAST node)
@@ -29,31 +18,31 @@ namespace Parser.AbstractSyntaxTree
 
         protected internal virtual ExpressionAST VisitBinaryExpressionAST(BinaryExpressionAST node)
         {
-            this.Visit(node.Lhs);
-            this.Visit(node.Rhs);
+            Visit(node.LeftHandSide);
+            Visit(node.RightHandSide);
 
             return node;
         }
 
-        protected internal virtual ExpressionAST VisitCallExpressionAST(CallExpressionAST node)
+        protected internal virtual ExpressionAST VisitMethodCallExpressionAST(MethodCallExpressionAST node)
         {
-            foreach (var argument in node.Arguments)
+            foreach (var argument in node.MethodArguments)
             {
-                this.Visit(argument);
+                Visit(argument);
             }
 
             return node;
         }
 
-        protected internal virtual ExpressionAST VisitFunctionAST(FunctionAST node)
+        protected internal virtual ExpressionAST VisitFunctionCallExpressionAST(FunctionCallExpressionAST node)
         {
-            this.Visit(node.Proto);
-            this.Visit(node.Body);
+            Visit(node.Prototype);
+            Visit(node.Body);
 
             return node;
         }
 
-        protected internal virtual ExpressionAST VisitVariableExpressionAST(VariableExpressionAST node)
+        protected internal virtual ExpressionAST VisitVariableEvaluationExpressionAST(VariableEvaluationExpressionAST node)
         {
             return node;
         }
