@@ -15,6 +15,7 @@ namespace Parser.LLVMSupport
 
 
         private delegate double D_FUNCTION_PTR(); // should we support all types of generic functions? probably..
+        private delegate float F_FUNCTION_PTR(); // should we support all types of generic functions? probably..
         public CodeGenerationParserListener(CodeGenerationVisitor visitor, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
         {
             _visitor = visitor;
@@ -31,8 +32,8 @@ namespace Parser.LLVMSupport
         public void ExitHandleAssignmentExpression(AssignmentExpression data)
         {
             _visitor.Visit(data);
-            //var function = _visitor.ResultStack.Pop();
-            // LLVM.DumpValue(function);  // Dump the function for exposition purposes.
+            var function = _visitor.ResultStack.Pop();
+            LLVM.DumpValue(function);  // Dump the function for exposition purposes.
         }
 
         public void EnterHandleTopLevelExpression(FunctionCallExpression data)
@@ -43,14 +44,12 @@ namespace Parser.LLVMSupport
         {
             _visitor.Visit(data);
             var anonymousFunction = _visitor.ResultStack.Pop();
-            LLVM.DumpValue(anonymousFunction);
-            //// LLVM.DumpValue(anonymousFunction); // Dump the function for exposition purposes.
-            //var dFunc = (D_FUNCTION_PTR)Marshal.GetDelegateForFunctionPointer(
-            //    LLVM.GetPointerToGlobal(_executionEngine, anonymousFunction), typeof(D_FUNCTION_PTR));
-            //LLVM.RunFunctionPassManager(_passManager, anonymousFunction);
+           
+            var dFunc = (D_FUNCTION_PTR)Marshal.GetDelegateForFunctionPointer(
+                LLVM.GetPointerToGlobal(_executionEngine, anonymousFunction), typeof(D_FUNCTION_PTR));
+            LLVM.RunFunctionPassManager(_passManager, anonymousFunction);
 
-            ////            LLVM.DumpValue(anonymousFunction); // Dump the function for exposition purposes.
-            //Console.WriteLine("Evaluated to " + dFunc());
+            Console.WriteLine("Evaluated to " + dFunc());
         }
     }
 }

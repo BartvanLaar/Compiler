@@ -14,7 +14,7 @@ namespace Parser
         {
             var (codeGenerationListener, llvmModule) = SetupLLVM();
             Run(text, codeGenerationListener);
-            LLVM.DumpModule(llvmModule);  // Print out all of the generated code.
+            //LLVM.DumpModule(llvmModule);  // Print out all of the generated code.
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
             LLVM.WriteBitcodeToFile(llvmModule, path);

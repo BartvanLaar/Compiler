@@ -175,7 +175,6 @@ namespace Parser.LLVMSupport
                 {
                     //todo: we should support method overloading...
                     throw new Exception($"Redefinition of function :'{node.Name}' with a different number of arguments.");
-
                 }
 
             }
