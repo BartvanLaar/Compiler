@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using System.Threading.Tasks;
 
 namespace Compiler.Tests
 {
@@ -7,7 +6,7 @@ namespace Compiler.Tests
     {      
 
         [Test]
-        public async Task Compile_Text()
+        public void Compile_Text()
         {
             Assert.Pass();
         }
