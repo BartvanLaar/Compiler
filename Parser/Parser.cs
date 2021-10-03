@@ -44,10 +44,10 @@ namespace Parser
         {
             _parserListener.EnterRule(nameof(HandleAssignmentExpression));
 
-            var assigntmentExpression = ParseAssignmentExpression(isReassignment);
-            _parserListener.ExitRule(assigntmentExpression);
+            var assignmentExpression = ParseAssignmentExpression(isReassignment);
+            _parserListener.ExitRule(assignmentExpression);
 
-            if (assigntmentExpression != null)
+            if (assignmentExpression != null)
             {
                 _parserListener.Listen();
             }
