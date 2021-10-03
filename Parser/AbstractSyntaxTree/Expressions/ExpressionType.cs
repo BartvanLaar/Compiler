@@ -23,7 +23,8 @@ namespace Parser.AbstractSyntaxTree.Expressions
         Float,
         Integer,
         String,
-        Character
+        Character,
+        Assignment
     }
 
 }

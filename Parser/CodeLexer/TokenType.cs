@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Parser.Lexer
+﻿namespace Parser.CodeLexer
 {
     internal enum TokenType
     {
@@ -56,7 +50,6 @@ namespace Parser.Lexer
 
         FunctionName,
         Identifier,
-        VariableType,
         Letters,
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
@@ -76,11 +69,12 @@ namespace Parser.Lexer
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
-        VariableTypeInferred,       // var
+        VariableDeclaration,       // var, auto
         PublicScope,                // public
         PrivateScope,               // private
         InternalScope,              // internal
         ProtectedScope,             // protected
-
+        FunctionDefinition,
+        ReAssignment,
     }
 }

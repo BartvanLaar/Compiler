@@ -1,7 +1,9 @@
-﻿using Parser.AbstractSyntaxTree.Expressions;
-using Parser.Lexer;
+﻿
+using Parser.AbstractSyntaxTree;
+using Parser.AbstractSyntaxTree.Expressions;
+using Parser.CodeLexer;
 
-namespace Compiler
+namespace Parser
 {
     internal interface IParser
     {
@@ -11,10 +13,11 @@ namespace Compiler
     internal sealed class Parser : IParser
     {
         private readonly Lexer _lexer;
-
-        public Parser(Lexer lexer)
+        private readonly ParserListener _parserListener;
+        public Parser(Lexer lexer, IParserListener parserListener)
         {
             _lexer = lexer;
+            _parserListener = new ParserListener(parserListener);
         }
 
         public void Parse()
@@ -30,27 +33,51 @@ namespace Compiler
                 {
                     case TokenType.EndOfFile: return;
                     case TokenType.EndOfStatement: ConsumeToken(); break;
+                    case TokenType.Identifier: HandleAssignmentExpression(true); break;
+                    case TokenType.VariableDeclaration: HandleAssignmentExpression(false); break;
                     default: HandleTopLevelExpression(); break;
                 }
             }
         }
 
-        private void HandleTopLevelExpression()
+        private void HandleAssignmentExpression(bool isReassignment)
         {
-            var functionAst = ParseTopLevelExpression();
-            if (functionAst != null)
+            _parserListener.EnterRule(nameof(HandleAssignmentExpression));
+
+            var assigntmentExpression = ParseAssignmentExpression(isReassignment);
+            _parserListener.ExitRule(assigntmentExpression);
+
+            if (assigntmentExpression != null)
             {
-                // Should we archive all our parsings?
+                _parserListener.Listen();
             }
-            else // if null then continue to next token..
+            else // on error resume next :)
             {
                 ConsumeToken();
             }
         }
 
-        private ExpressionBase ParsePrimary()
+        private void HandleTopLevelExpression()
         {
-            switch (_lexer.PeekToken().TokenType)
+            _parserListener.EnterRule(nameof(HandleTopLevelExpression));
+            var functionExpression = ParseTopLevelExpression();
+
+            _parserListener.ExitRule(functionExpression);
+
+            if (functionExpression != null)
+            {
+                _parserListener.Listen();
+            }
+            else // on error resume next :)
+            {
+                ConsumeToken();
+            }
+        }
+
+        private ExpressionBase? ParsePrimary()
+        {
+            var currentTokenType = PeekToken().TokenType;
+            switch (currentTokenType)
             {
                 case TokenType.Identifier: return ParseIdentifierExpression();
                 case TokenType.Double: return ParseDoubleExpression();
@@ -58,8 +85,38 @@ namespace Compiler
                 case TokenType.Integer: return ParseIntegerExpression();
                 case TokenType.String: return ParseStringExpression();
                 case TokenType.Character: return ParseCharacterExpression();
-                default: throw new InvalidOperationException("Encountered an unkown token when expeting an expression.");// todo: what to do here?                    
+                default: throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}.");// todo: what to do here?                    
             }
+        }
+
+        private ExpressionBase? ParseAssignmentExpression(bool isReassignment)
+        {
+            // todo: Check if the value thats being assigned a new value actually Exists in scope?
+            var declarationTypeToken = isReassignment ? new Token() { TokenType = TokenType.ReAssignment } : ConsumeToken();
+
+            var leftHandSideTok = PeekToken();
+            var leftHandSide = ParsePrimary(); // variable name...
+
+            if (leftHandSide == null)
+            {
+                LogParseError(leftHandSideTok, "variable name", "assignment of variable");
+            }
+
+            if (PeekToken().TokenType != TokenType.Assignment)
+            {
+                LogParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
+                return null;
+            }
+
+            var assignmentTok = ConsumeToken(); // consume assign operator
+            var valueExpression = ParseExpression();
+            if (valueExpression == null)
+            {
+                LogParseError(assignmentTok, "value expression", "assignment of variable");
+                return null;
+            }
+
+            return new AssignmentExpression(declarationTypeToken, assignmentTok, valueExpression);
         }
 
         private ExpressionBase? ParseExpression()
@@ -105,6 +162,7 @@ namespace Compiler
                 leftHandSide = new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide);
             }
         }
+
         private FunctionCallExpression? ParseTopLevelExpression()
         {
             var expression = ParseExpression();
@@ -211,7 +269,7 @@ namespace Compiler
 
         private void LogParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
-            Console.WriteLine($"Exptected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
+            Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
         }
 
         private Token PeekToken() => _lexer.PeekToken();

@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Parser.Lexer;
+using Parser.CodeLexer;
 using System;
 using System.Linq;
 
@@ -27,7 +27,7 @@ namespace Compiler.Tests
             Assert.AreEqual("text", toks[3].Name);
             Assert.AreEqual("divided", toks[4].Name);
             Assert.AreEqual("into", toks[5].Name);
-            Assert.AreEqual("8", toks[6].Name);
+            Assert.AreEqual(8, toks[6].IntegerValue);
             Assert.AreEqual("tokens", toks[7].Name);
 
             lexer.PeekTokens(100);
@@ -62,7 +62,7 @@ namespace Compiler.Tests
             Assert.AreEqual("text", toks[1].Name);
             Assert.AreEqual("divided", toks[2].Name);
             Assert.AreEqual("into", toks[3].Name);
-            Assert.AreEqual("8", toks[4].Name);
+            Assert.AreEqual(8, toks[4].IntegerValue);
             Assert.AreEqual("tokens", toks[5].Name);
 
             toks = lexer.ConsumeTokens(1);
@@ -140,8 +140,10 @@ namespace Compiler.Tests
         [TestCase(": :", TokenType.TerniaryOperatorFalse)]
         [TestCase("? ?", TokenType.TerniaryOperatorTrue)]
         [TestCase("?? ??", TokenType.NullableCoalesce)]
-        [TestCase("// //", TokenType.Comment)]
-        [TestCase("/// ///", TokenType.Summary)]
+        [TestCase("// \n //", TokenType.Comment)]
+        [TestCase("/// \n ///", TokenType.Summary)]
+        [TestCase("// \r\n //", TokenType.Comment)]
+        [TestCase("/// \r\n ///", TokenType.Summary)]
         public static void Lexer_Test_Two_SingleTokens(string text, TokenType expectedTokenType)
         {
             var lexer = new Lexer(text);
@@ -153,10 +155,9 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[2].TokenType);
         }
 
-
-        [TestCase("\'t\'", ExpectedResult ="t")]
-        [TestCase("\'t t\'", ExpectedResult ="t t")]
-        [TestCase("\'t \\n t\'", ExpectedResult ="t \\n t")]//todo: is this even right?
+        [TestCase("\'t\'", ExpectedResult = "t")]
+        [TestCase("\'t t\'", ExpectedResult = "t t")]
+        [TestCase("\'t \\n t\'", ExpectedResult = "t \\n t")]//todo: is this even right?
         [TestCase("\'\'", ExpectedResult = "")]
         public static string? Lexer_Test_Character(string text)
         {
@@ -184,14 +185,72 @@ namespace Compiler.Tests
             var lexer = new Lexer(code);
 
             var toks = lexer.ConsumeTokens(7);
-            Assert.AreEqual(TokenType.VariableTypeInferred, toks[0].TokenType);
+            Assert.AreEqual(TokenType.VariableDeclaration, toks[0].TokenType);
             Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
             Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[3].TokenType);
+            Assert.AreEqual(20, toks[3].IntegerValue);
             Assert.AreEqual(TokenType.Plus, toks[4].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[5].TokenType);
+            Assert.AreEqual(5, toks[5].IntegerValue);
             Assert.AreEqual(TokenType.EndOfStatement, toks[6].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, lexer.PeekToken().TokenType);
+        }
+
+        [TestCase("// this text is to be ignored", 1)]
+        [TestCase("// this text is to be ignored // so is this text ", 1)]
+        [TestCase("// this text is to be ignored \r // so is this text ", 1)]
+        [TestCase("// this text is to be ignored \n // so is this text ", 2)]
+        [TestCase("// this text is to be ignored \r\n // so is this text ", 2)]
+        public static void Lexer_Test_Comments(string text, int commentTokCount)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(50);
+            Assert.AreEqual(commentTokCount, toks.Count(x => x.TokenType is TokenType.Comment));
+            Assert.AreEqual(toks.Length - commentTokCount, toks.Count(x => x.TokenType is not TokenType.Comment));
+        }
+
+        [TestCase("// this text is to be ignored \n var x = 10;", 1)]
+        [TestCase("// this text is to be ignored \n // so is this text \n var x = 10;", 2)]
+        [TestCase("// this text is to be ignored \n // so is this text \r\n var x = 10;", 2)]
+        public static void Lexer_Test_Comments_And_Code(string text, int commentTokCount)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(commentTokCount);
+            Assert.AreEqual(commentTokCount, toks.Count(x => x.TokenType is TokenType.Comment));
+            Assert.AreEqual(TokenType.VariableDeclaration, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Identifier, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Assignment, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Integer, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, lexer.ConsumeToken().TokenType);
+        }
+
+        [TestCase("/// this text is to be ignored", 1)]
+        [TestCase("/// this text is to be ignored /// so is this text ", 1)]
+        [TestCase("/// this text is to be ignored \r /// so is this text ", 1)]
+        [TestCase("/// this text is to be ignored \n /// so is this text ", 2)]
+        [TestCase("/// this text is to be ignored \r\n /// so is this text ", 2)]
+        public static void Lexer_Test_Summaries(string text, int commentTokCount)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(50);
+            Assert.AreEqual(commentTokCount, toks.Count(x => x.TokenType is TokenType.Summary));
+            Assert.AreEqual(toks.Length - commentTokCount, toks.Count(x => x.TokenType is not TokenType.Summary));
+        }
+
+        [TestCase("/// this text is to be ignored \n var x = 10;", 1)]
+        [TestCase("/// this text is to be ignored \n /// so is this text \n var x = 10;", 2)]
+        [TestCase("/// this text is to be ignored \n /// so is this text \r\n var x = 10;", 2)]
+        public static void Lexer_Test_Summaries_And_Code(string text, int commentTokCount)
+        {
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(commentTokCount);
+            Assert.AreEqual(commentTokCount, toks.Count(x => x.TokenType is TokenType.Summary));
+            Assert.AreEqual(TokenType.VariableDeclaration, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Identifier, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Assignment, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.Integer, lexer.ConsumeToken().TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, lexer.ConsumeToken().TokenType);
         }
     }
 }

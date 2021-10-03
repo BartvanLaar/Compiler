@@ -1,6 +1,5 @@
-﻿using Parser.Lexer;
-
-namespace Compiler
+﻿
+namespace Parser.CodeLexer
 {
     internal interface ILexer
     {
@@ -64,7 +63,6 @@ namespace Compiler
 
             return tokens;
         }
-
         private (Token[] Tokens, int Cursor, long LineCounter, long ColumnCounter) TraverseTokensInternal(int amount, int cursor, long lineCounter, long columnCounter)
         {
             Token[] tokens = new Token[amount];
@@ -93,6 +91,13 @@ namespace Compiler
                 cursor++;
                 columnCount++;
                 (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token.Value, cursor, lineCount, columnCount);
+                
+                // we don't (yet) care about comments or summaries.. so get rid of them
+                if (tokenExtended?.TokenType is TokenType.Comment or TokenType.Summary)
+                {
+                    (cursor, lineCount, columnCount) = SkipTillNewLine(cursor, lineCount);
+                }
+
                 token = tokenExtended ?? token;
                 return (token.Value, cursor, lineCount, columnCount);
             }
@@ -139,7 +144,7 @@ namespace Compiler
             }
             var currentChar = _text[cursor];
             var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
-            Func<char, bool> isValidCharacter = isHexadecimal ? c => char.IsLetterOrDigit(c) : c => char.IsDigit(c) || IsDecimalSeparator(c);
+            Func<char, bool> isValidCharacter = isHexadecimal ? c => char.IsLetterOrDigit(c) : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || IsNumberIndicator(c);
 
             var originalColumnCount = columnCount;
             var result = string.Empty;
@@ -150,12 +155,33 @@ namespace Compiler
                 columnCount++;
             }
 
-            // also support double? idk why
-            var tokenType = isHexadecimal
-                ? TokenType.Hexadecimal : result.Contains(LexerConstants.DECIMAL_SEPARATOR_SIGN)
-                      ? TokenType.Float : TokenType.Integer;
+            TokenType tokenType;
 
-            return (new Token(tokenType, result, lineCount, originalColumnCount), cursor, lineCount, columnCount);
+            var numberIndicator = result.Last();
+            if (IsNumberIndicator(numberIndicator))
+            {
+                result = result.Substring(0, result.Length - 1);
+                tokenType = numberIndicator == LexerConstants.FLOAT_INDICATOR ? TokenType.Float : numberIndicator == LexerConstants.DOUBLE_INDICATOR ? TokenType.Double : TokenType.Integer;
+            }
+            else
+            {
+                // also support double? idk why
+                tokenType = isHexadecimal
+                    ? TokenType.Hexadecimal : result.Contains(LexerConstants.DECIMAL_SEPARATOR_SIGN)
+                          ? TokenType.Float : TokenType.Integer;
+            }
+
+            var token = new Token(tokenType, lineCount, originalColumnCount);
+
+            switch (tokenType)
+            {
+                case TokenType.Integer: token.IntegerValue = int.Parse(result); break;
+                case TokenType.Hexadecimal:
+                case TokenType.Double:
+                case TokenType.Float: token.FloatValue = float.Parse(result); break;
+            }
+
+            return (token, cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetMultipleCharacterToken(Token token, int cursor, long lineCount, long columnCount)
@@ -316,6 +342,7 @@ namespace Compiler
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.ModuloAssignment;
+                            token.StringValue = LexerConstants.MODULO_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -410,24 +437,34 @@ namespace Compiler
             //@incomplete
             return _text[cursor].ToString() switch
             {
-                LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount),
-                LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount),
-                LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount),
-                LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount),
-                LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount),
-                LexerConstants.PLUS_SIGN => new Token(TokenType.Plus, lineCount, columnCount),
-                LexerConstants.MINUS_SIGN => new Token(TokenType.Minus, lineCount, columnCount),
-                LexerConstants.TIMES_SIGN => new Token(TokenType.Times, lineCount, columnCount),
-                LexerConstants.DIVIDE_SIGN => new Token(TokenType.Divide, lineCount, columnCount),
-                LexerConstants.MODULO_SIGN => new Token(TokenType.Modulo, lineCount, columnCount),
-                LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assignment, lineCount, columnCount),
-                LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount),
-                LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount),
-                LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount),
-                LexerConstants.SINGLE_QOUTE => new Token(TokenType.Character, lineCount, columnCount),
-                LexerConstants.DOUBLE_QOUTE => new Token(TokenType.String, lineCount, columnCount),
+                LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount) { StringValue = LexerConstants.END_OF_STATEMENT },
+                LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_OPEN },
+                LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_CLOSE },
+                LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_TRUE },
+                LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_FALSE },
+                LexerConstants.PLUS => new Token(TokenType.Plus, lineCount, columnCount) { StringValue = LexerConstants.PLUS },
+                LexerConstants.MINUS => new Token(TokenType.Minus, lineCount, columnCount) { StringValue = LexerConstants.MINUS },
+                LexerConstants.TIMES => new Token(TokenType.Times, lineCount, columnCount) { StringValue = LexerConstants.TIMES },
+                LexerConstants.DIVIDE => new Token(TokenType.Divide, lineCount, columnCount) { StringValue = LexerConstants.DIVIDE },
+                LexerConstants.MODULO => new Token(TokenType.Modulo, lineCount, columnCount) { StringValue = LexerConstants.MODULO },
+                LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assignment, lineCount, columnCount) { StringValue = LexerConstants.ASSIGN_OPERATOR },
+                LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount) { StringValue = LexerConstants.NOT_SIGN },
+                LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount) { StringValue = LexerConstants.GREATER_THAN_SIGN },
+                LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount) { StringValue = LexerConstants.LESS_THAN_SIGN },
+                LexerConstants.SINGLE_QOUTE => new Token(TokenType.Character, lineCount, columnCount) { StringValue = LexerConstants.SINGLE_QOUTE },
+                LexerConstants.DOUBLE_QOUTE => new Token(TokenType.String, lineCount, columnCount) { StringValue = LexerConstants.DOUBLE_QOUTE },
                 _ => null,
             };
+        }
+
+        private (int cursor, long lineCount, long columnCount) SkipTillNewLine(int cursor, long lineCount)
+        {
+            while (cursor < _text.Length && _text[cursor] != '\n')
+            {
+                cursor++;
+            }
+
+            return (cursor, lineCount + 1, 0);
         }
 
         private (int cursor, long lineCount, long columnCount) SkipWhiteSpaces(int cursor, long lineCount, long columnCount)
@@ -457,7 +494,12 @@ namespace Compiler
 
         private static bool IsDecimalSeparator(char currentChar)
         {
-            return currentChar == LexerConstants.DECIMAL_SEPARATOR_SIGN;
+            return currentChar.ToString() == LexerConstants.DECIMAL_SEPARATOR_SIGN;
+        }
+
+        private static bool IsNumberIndentation(char currentChar)
+        {
+            return currentChar.ToString() == LexerConstants.NUMBER_INDENTATION;
         }
 
         private bool IsNumberIndicator(char currentChar)

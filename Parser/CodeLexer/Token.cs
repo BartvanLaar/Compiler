@@ -1,4 +1,4 @@
-﻿namespace Parser.Lexer
+﻿namespace Parser.CodeLexer
 {
     internal struct Token
     {

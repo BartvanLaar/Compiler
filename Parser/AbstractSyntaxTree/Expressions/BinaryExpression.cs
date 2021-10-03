@@ -1,11 +1,11 @@
-﻿using Compiler;
-using Parser.Lexer;
+﻿using Parser.CodeLexer;
+using System.Diagnostics;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
     internal sealed class BinaryExpression : ExpressionBase
     {
-        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase rightHandSide) : base(token, DetermineExpressionType(token.Name))
+        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase rightHandSide) : base(token, DetermineExpressionType(token.StringValue))
         {
             LeftHandSide = leftHandSide;
             RightHandSide = rightHandSide;
@@ -14,15 +14,16 @@ namespace Parser.AbstractSyntaxTree.Expressions
         public ExpressionBase LeftHandSide { get; }
         public ExpressionBase RightHandSide { get; }
 
-        private static ExpressionType DetermineExpressionType(string @operator)
+        private static ExpressionType DetermineExpressionType(string? @operator)
         {
+            Debug.Assert(@operator != null);
             return @operator switch
             {
-                LexerConstants.PLUS_SIGN => ExpressionType.Add,
-                LexerConstants.MINUS_SIGN => ExpressionType.Subtract,
-                LexerConstants.TIMES_SIGN => ExpressionType.Multiply,
-                LexerConstants.DIVIDE_SIGN => ExpressionType.Divide,
-                LexerConstants.MODULO_SIGN => ExpressionType.DivideRest,
+                LexerConstants.PLUS => ExpressionType.Add,
+                LexerConstants.MINUS => ExpressionType.Subtract,
+                LexerConstants.TIMES => ExpressionType.Multiply,
+                LexerConstants.DIVIDE => ExpressionType.Divide,
+                LexerConstants.MODULO => ExpressionType.DivideRest,
                 LexerConstants.GREATER_THAN_SIGN => ExpressionType.GreaterThan,
                 LexerConstants.GREATER_THAN_EQUAL_SIGN => ExpressionType.GreaterThanEqual,
                 LexerConstants.LESS_THAN_SIGN => ExpressionType.LessThan,

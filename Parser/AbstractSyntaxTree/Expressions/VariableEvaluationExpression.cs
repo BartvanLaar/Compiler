@@ -1,5 +1,4 @@
-﻿using Compiler;
-using Parser.Lexer;
+﻿using Parser.CodeLexer;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
