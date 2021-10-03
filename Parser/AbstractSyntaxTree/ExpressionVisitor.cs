@@ -35,7 +35,8 @@ namespace Parser.AbstractSyntaxTree
 
             return node;
         }
-
+        
+        // Why does this exist? Whats the difference between a Function call and a method call.. ?
         protected internal virtual ExpressionBase VisitFunctionCallExpression(FunctionCallExpression node)
         {
             Visit(node.Prototype);

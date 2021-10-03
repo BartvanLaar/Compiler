@@ -41,7 +41,12 @@ namespace Parser.Tests
             Driver.Run("auto x = 2 - 3; \n x = 2 - 3;");
             Driver.Run("auto x = 2 - 3; \r x = 2 - 3;");
             Driver.Run("auto x = 2 - 3; \r\n x = 2 - 3;");
+        }
 
+        [Test]
+        public void Driver_Test_LLVM_1()
+        {
+            Driver.RunLLVM("4.0 + 6.0;");
         }
     }
 }

@@ -4,7 +4,7 @@ using Parser.AbstractSyntaxTree.Expressions;
 
 namespace Parser.LLVMSupport
 {
-    internal sealed class CodeGenerationVisitor: ExpressionVisitor
+    internal sealed class CodeGenerationVisitor : ExpressionVisitor
     {
         private static readonly LLVMBool LLVMBoolFalse = new(0);
 
@@ -51,10 +51,10 @@ namespace Parser.LLVMSupport
 
         protected internal override ExpressionBase VisitVariableEvaluationExpression(VariableEvaluationExpression node)
         {
-            if(_namedValues.TryGetValue(node.VariableName, out var value))
+            if (_namedValues.TryGetValue(node.VariableName, out var value))
             {
                 _valueStack.Push(value);
-            } 
+            }
             else
             {
                 throw new ArgumentException($"Unknown variable name {node.VariableName}");
@@ -124,10 +124,112 @@ namespace Parser.LLVMSupport
                         break;
                     }
                 default:
-                    throw new ArgumentException("invalid binary operator");                    
+                    throw new ArgumentException("invalid binary operator");
             }
 
             _valueStack.Push(resultingValue);
+            return node;
+        }
+
+        protected internal override ExpressionBase VisitMethodCallExpression(MethodCallExpression node)
+        {
+            var calleeFunction = LLVM.GetNamedFunction(_module, node.Callee);
+
+            if (calleeFunction.Pointer == IntPtr.Zero)
+            {
+                throw new Exception($"Unknown function referenced: {node.Callee}");
+            }
+
+            var argumentCount = (uint)node.MethodArguments.Length;
+            if (LLVM.CountParams(calleeFunction) != argumentCount)
+            {
+                throw new Exception($"Incorrect # arguments passed to {node.Callee}");
+            }
+
+            var argumentValues = new LLVMValueRef[argumentCount];
+            for (int i = 0; i < argumentCount; ++i)
+            {
+                Visit(node.MethodArguments[i]);
+                argumentValues[i] = _valueStack.Pop();
+            }
+
+            _valueStack.Push(LLVM.BuildCall(_builder, calleeFunction, argumentValues, "calltmp"));
+
+            return node;
+        }
+
+        protected internal override ExpressionBase VisitPrototype(PrototypeExpression node)
+        {
+            var argumentCount = (uint)node.Arguments.Length;
+            var arguments = new LLVMTypeRef[argumentCount];
+
+            var function = LLVM.GetNamedFunction(_module, node.Name);
+            if (function.Pointer != IntPtr.Zero)
+            {
+                if (LLVM.CountBasicBlocks(function) != 0)
+                {
+                    throw new Exception($"Redefinition of function :'{node.Name}'");
+                }
+
+                if (LLVM.CountParams(function) != argumentCount)
+                {
+                    //todo: we should support method overloading...
+                    throw new Exception($"Redefinition of function :'{node.Name}' with a different number of arguments.");
+
+                }
+
+            }
+            else
+            {
+                //todo: support values other than doubles? We do have access to the tokens and their types... so why not?
+                for (int i = 0; i < argumentCount; ++i)
+                {
+                    arguments[i] = LLVM.DoubleType();
+                }
+
+                function = LLVM.AddFunction(_module, node.Name, LLVM.FunctionType(LLVM.DoubleType(), arguments, LLVMBoolFalse));
+                LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
+            }
+
+            for (int i = 0; i < argumentCount; ++i)
+            {
+                var argumentName = node.ArgumentNames[i];
+
+                LLVMValueRef param = LLVM.GetParam(function, (uint)i);
+                LLVM.SetValueName(param, argumentName);
+
+                _namedValues[argumentName] = param;
+            }
+
+            _valueStack.Push(function);
+            return node;
+        }
+
+        protected internal override ExpressionBase VisitFunctionCallExpression(FunctionCallExpression node)
+        {
+            _namedValues.Clear();
+            Visit(node.Prototype);
+
+            var function = _valueStack.Pop();
+            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry"));
+
+            try
+            {
+                Visit(node.Body);
+            }
+            catch (Exception)
+            {
+                LLVM.DeleteFunction(function);
+                throw;
+            }
+            
+            // Finish off the function.
+            LLVM.BuildRet(_builder, _valueStack.Pop());
+
+            // Validate the generated code, checking for consistency.
+            LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
+
+            _valueStack.Push(function);
             return node;
         }
 
