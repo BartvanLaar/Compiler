@@ -157,7 +157,7 @@ namespace Compiler.Tests
 
         [TestCase("\"t\"c", ExpectedResult = "t")]
         [TestCase("\"t t\"c", ExpectedResult = "t t")]
-        [TestCase("\"t \\n t\"c", ExpectedResult = "t \\n t")]//todo: is this even right?
+        [TestCase("\"t \\n t\"c", ExpectedResult = "t \\n t")]//todo: is this even right? Answer, yes, length check can be done in parser... We shouldn't care about that here... I think
         [TestCase("\"\"c", ExpectedResult = "")]
         public static string? Lexer_Test_Character(string text)
         {
