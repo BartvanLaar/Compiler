@@ -91,7 +91,7 @@ namespace Parser.CodeLexer
                 cursor++;
                 columnCount++;
                 (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token.Value, cursor, lineCount, columnCount);
-                
+
                 // we don't (yet) care about comments or summaries.. so get rid of them
                 if (tokenExtended?.TokenType is TokenType.Comment or TokenType.Summary)
                 {
@@ -349,7 +349,7 @@ namespace Parser.CodeLexer
 
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.Character:
+                case TokenType.String:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         var result = string.Empty;
@@ -370,46 +370,19 @@ namespace Parser.CodeLexer
                                     break;
                                 }
 
-                                if (singleCharTok.Value.TokenType == TokenType.Character)
-                                {
-                                    token.TokenType = TokenType.Character;
-                                    break;
-                                }
-                            }
-                            finally
-                            {
-                                cursor++;
-                                columnCount++;
-                                singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                            }
-                        }
-                        token.StringValue = result;
-                        return (token, cursor, lineCount, columnCount);
-                    }
-                case TokenType.String:
-                    {
-                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        var result = String.Empty;
-                        while (cursor < _text.Length)
-                        {
-                            try
-                            {
-
-                                if (!singleCharTok.HasValue)
-                                {
-                                    //todo: handle newlines?
-                                    result += _text[cursor];
-                                    continue;
-                                }
-
-                                if (singleCharTok.Value.TokenType == TokenType.EndOfFile)
-                                {
-                                    break;
-                                }
-
                                 if (singleCharTok.Value.TokenType == TokenType.String)
                                 {
-                                    token.TokenType = TokenType.Character;
+                                    if (cursor + 1 < _text.Length && _text[cursor + 1].ToString() == LexerConstants.CHARACTER_INDICATOR)
+                                    {
+                                        token.TokenType = TokenType.Character;
+                                        cursor++;
+                                        columnCount++;
+                                    }
+                                    else
+                                    {
+                                        token.TokenType = TokenType.String;
+                                    }
+
                                     break;
                                 }
                             }
@@ -451,7 +424,6 @@ namespace Parser.CodeLexer
                 LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount) { StringValue = LexerConstants.NOT_SIGN },
                 LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount) { StringValue = LexerConstants.GREATER_THAN_SIGN },
                 LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount) { StringValue = LexerConstants.LESS_THAN_SIGN },
-                LexerConstants.SINGLE_QOUTE => new Token(TokenType.Character, lineCount, columnCount) { StringValue = LexerConstants.SINGLE_QOUTE },
                 LexerConstants.DOUBLE_QOUTE => new Token(TokenType.String, lineCount, columnCount) { StringValue = LexerConstants.DOUBLE_QOUTE },
                 _ => null,
             };

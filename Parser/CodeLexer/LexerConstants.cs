@@ -53,8 +53,7 @@ namespace Parser.CodeLexer
         public const char DOUBLE_INDICATOR = 'd';
         public const char FLOAT_INDICATOR = 'f';
 
-        public const char CHARACTER_INDICATOR = 'c';
-        public const char STRING_INDICATOR = 's';
+        public const string CHARACTER_INDICATOR = "c";
 
         public const string COMMENT_INDICATOR = "//";
         public const string SUMMARY_INDICATOR = "///";

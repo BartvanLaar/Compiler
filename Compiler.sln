@@ -9,11 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compiler", "Compiler\Compil
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compiler.Tests", "Compiler.Tests\Compiler.Tests.csproj", "{03240EB7-5389-4F65-A063-7050A7BA91BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{1B7DF443-98F9-4F10-84DC-2C0564E6C82D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parser", "Parser\Parser.csproj", "{1B7DF443-98F9-4F10-84DC-2C0564E6C82D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E20D4D1A-ECA0-4903-AC0F-D2540BDCBA62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser.Tests", "Parser.Tests\Parser.Tests.csproj", "{AA711ABE-9D9C-433D-A6D9-9FB128264125}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parser.Tests", "Parser.Tests\Parser.Tests.csproj", "{AA711ABE-9D9C-433D-A6D9-9FB128264125}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -155,14 +155,15 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[2].TokenType);
         }
 
-        [TestCase("\'t\'", ExpectedResult = "t")]
-        [TestCase("\'t t\'", ExpectedResult = "t t")]
-        [TestCase("\'t \\n t\'", ExpectedResult = "t \\n t")]//todo: is this even right?
-        [TestCase("\'\'", ExpectedResult = "")]
+        [TestCase("\"t\"c", ExpectedResult = "t")]
+        [TestCase("\"t t\"c", ExpectedResult = "t t")]
+        [TestCase("\"t \\n t\"c", ExpectedResult = "t \\n t")]//todo: is this even right?
+        [TestCase("\"\"c", ExpectedResult = "")]
         public static string? Lexer_Test_Character(string text)
         {
             var lexer = new Lexer(text);
             var toks = lexer.ConsumeTokens(text.Length + 1);
+            Assert.IsTrue(toks.First().TokenType is TokenType.Character);
             return toks.First().StringValue;
         }
 

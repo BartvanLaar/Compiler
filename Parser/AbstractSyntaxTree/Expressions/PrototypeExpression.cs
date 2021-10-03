@@ -18,7 +18,7 @@ namespace Parser.AbstractSyntaxTree.Expressions
 
         protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
         {
-            return visitor.VisitPrototypeAST(this);
+            return visitor.VisitPrototype(this);
         }
     }
 }

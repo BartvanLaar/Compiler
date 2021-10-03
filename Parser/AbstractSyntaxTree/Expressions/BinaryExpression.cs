@@ -33,5 +33,10 @@ namespace Parser.AbstractSyntaxTree.Expressions
                 _ => throw new ArgumentException($"Operator {@operator} is not supported."),
             };
         }
+
+        protected internal override ExpressionBase? Accept(ExpressionVisitor visitor)
+        {
+            return visitor.VisitBinaryExpression(this);
+        }
     }
 }
