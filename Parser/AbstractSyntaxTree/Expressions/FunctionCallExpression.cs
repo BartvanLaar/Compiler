@@ -13,7 +13,7 @@
 
         protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
         {
-            return visitor.VisitFunctionCallExpressionAST(this);
+            return visitor.VisitFunctionCallExpression(this);
         }
     }
 }

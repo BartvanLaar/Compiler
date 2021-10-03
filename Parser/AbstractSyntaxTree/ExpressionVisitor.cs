@@ -18,7 +18,7 @@ namespace Parser.AbstractSyntaxTree
             return node.VisitChildren(this);
         }
 
-        protected internal virtual ExpressionBase VisitBinaryExpressionAST(BinaryExpression node)
+        protected internal virtual ExpressionBase VisitBinaryExpression(BinaryExpression node)
         {
             Visit(node.LeftHandSide);
             Visit(node.RightHandSide);
@@ -26,7 +26,7 @@ namespace Parser.AbstractSyntaxTree
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitMethodCallExpressionAST(MethodCallExpression node)
+        protected internal virtual ExpressionBase VisitMethodCallExpression(MethodCallExpression node)
         {
             foreach (var argument in node.MethodArguments)
             {
@@ -36,7 +36,7 @@ namespace Parser.AbstractSyntaxTree
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitFunctionCallExpressionAST(FunctionCallExpression node)
+        protected internal virtual ExpressionBase VisitFunctionCallExpression(FunctionCallExpression node)
         {
             Visit(node.Prototype);
             Visit(node.Body);
@@ -52,37 +52,37 @@ namespace Parser.AbstractSyntaxTree
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitVariableEvaluationExpressionAST(VariableEvaluationExpression node)
+        protected internal virtual ExpressionBase VisitVariableEvaluationExpression(VariableEvaluationExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitPrototypeAST(PrototypeExpression node)
+        protected internal virtual ExpressionBase VisitPrototype(PrototypeExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitDoubleExpressionAST(DoubleExpression node)
+        protected internal virtual ExpressionBase VisitDoubleExpression(DoubleExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitFloatExpressionAST(FloatExpression node)
+        protected internal virtual ExpressionBase VisitFloatExpression(FloatExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitIntegerExpressionAST(IntegerExpression node)
+        protected internal virtual ExpressionBase VisitIntegerExpression(IntegerExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitStringExpressionAST(StringExpression node)
+        protected internal virtual ExpressionBase VisitStringExpression(StringExpression node)
         {
             return node;
         }
 
-        protected internal virtual ExpressionBase VisitCharacterExpressionAST(CharacterExpression node)
+        protected internal virtual ExpressionBase VisitCharacterExpression(CharacterExpression node)
         {
             return node;
         }
