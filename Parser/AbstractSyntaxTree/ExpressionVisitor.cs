@@ -44,6 +44,14 @@ namespace Parser.AbstractSyntaxTree
             return node;
         }
 
+        protected internal virtual ExpressionBase? VisitAssignmentExpression(AssignmentExpression node)
+        {
+            Visit(node.IdentificationExpression);
+            Visit(node.ValueExpression);
+
+            return node;
+        }
+
         protected internal virtual ExpressionBase VisitVariableEvaluationExpressionAST(VariableEvaluationExpression node)
         {
             return node;

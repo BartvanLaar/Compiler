@@ -95,11 +95,19 @@ namespace Parser
             var declarationTypeToken = isReassignment ? new Token() { TokenType = TokenType.ReAssignment } : ConsumeToken();
 
             var leftHandSideTok = PeekToken();
-            var leftHandSide = ParsePrimary(); // variable name...
+            
+            if (PeekToken().TokenType != TokenType.Identifier)
+            {
+                LogParseError(PeekToken(), "identifier", "assignment of variable");
+                return null;
+            }
 
-            if (leftHandSide == null)
+            var leftHandSideIdentifierExpression = ParseIdentifierExpression(); // variable name...
+
+            if (leftHandSideIdentifierExpression == null)
             {
                 LogParseError(leftHandSideTok, "variable name", "assignment of variable");
+                return null;
             }
 
             if (PeekToken().TokenType != TokenType.Assignment)
@@ -116,7 +124,7 @@ namespace Parser
                 return null;
             }
 
-            return new AssignmentExpression(declarationTypeToken, assignmentTok, valueExpression);
+            return new AssignmentExpression(declarationTypeToken, leftHandSideIdentifierExpression,  assignmentTok, valueExpression);
         }
 
         private ExpressionBase? ParseExpression()
