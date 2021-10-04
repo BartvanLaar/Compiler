@@ -265,6 +265,25 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.Integer, toks[2].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[3].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Declare_Function()
+        {
+            var lexer = new Lexer("def func SomeFunc() -> void {}");
+
+            var toks = lexer.ConsumeTokens(8);
+            Assert.AreEqual(TokenType.FunctionDefinition, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.GreaterThan, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[5].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[6].TokenType);
+
+
+
+
 
         }
     }

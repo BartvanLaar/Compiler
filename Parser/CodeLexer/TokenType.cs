@@ -75,6 +75,8 @@
         InternalScope,              // internal
         ProtectedScope,             // protected
         FunctionDefinition,
+        ReturnTypeIndiciator,
         ReAssignment,
+        Definition,
     }
 }

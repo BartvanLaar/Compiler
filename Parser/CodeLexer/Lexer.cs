@@ -93,7 +93,7 @@ namespace Parser.CodeLexer
                 (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token.Value, cursor, lineCount, columnCount);
 
                 // we don't (yet) care about comments or summaries.. so get rid of them
-                if (tokenExtended?.TokenType is TokenType.Comment or TokenType.Summary)
+                if (tokenExtended?.TokenType is (TokenType.Comment or TokenType.Summary))
                 {
                     (cursor, lineCount, columnCount) = SkipTillNewLine(cursor, lineCount);
                 }
