@@ -42,7 +42,7 @@ namespace Parser
 
         private void HandleIdentifierExpression()
         {
-            if(_lexer.PeekTokens(2).Last().TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
+            if (_lexer.PeekTokens(2).Last().TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
             {
                 HandleTopLevelExpression();
                 return;
@@ -106,7 +106,7 @@ namespace Parser
             var declarationTypeToken = isReassignment ? new Token() { TokenType = TokenType.ReAssignment } : ConsumeToken();
 
             var leftHandSideTok = PeekToken();
-            
+
             if (PeekToken().TokenType != TokenType.Identifier)
             {
                 LogParseError(PeekToken(), "identifier", "assignment of variable");
@@ -121,7 +121,7 @@ namespace Parser
                 return null;
             }
 
-            if (PeekToken().TokenType != TokenType.Assignment)
+            if (PeekToken().TokenType is not (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
             {
                 LogParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
                 return null;
@@ -135,7 +135,7 @@ namespace Parser
                 return null;
             }
 
-            return new AssignmentExpression(declarationTypeToken, leftHandSideIdentifierExpression,  assignmentTok, valueExpression);
+            return new AssignmentExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
 
         private ExpressionBase? ParseExpression()

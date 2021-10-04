@@ -302,7 +302,7 @@ namespace Parser.CodeLexer
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.MultiplyAssignment;
+                            token.TokenType = TokenType.MultiplyAssign;
                             cursor++;
                             columnCount++;
                         }
@@ -314,7 +314,7 @@ namespace Parser.CodeLexer
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.DivideAssignment;
+                            token.TokenType = TokenType.DivideAssign;
                             cursor++;
                             columnCount++;
                         }

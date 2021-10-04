@@ -92,9 +92,9 @@ namespace Parser.CodeLexer
                 [TokenType.Subtract] = 20,
                 [TokenType.SubtractAssign] = 20,
                 [TokenType.Multiply] = 40,
-                [TokenType.MultiplyAssignment] = 40,
+                [TokenType.MultiplyAssign] = 40,
                 [TokenType.Divide] = 40,
-                [TokenType.DivideAssignment] = 40,
+                [TokenType.DivideAssign] = 40,
             };
 
             public static int Get(Token token)

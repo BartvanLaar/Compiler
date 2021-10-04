@@ -62,8 +62,8 @@
         NullableCoalesce,           // ??
         AddAssign,             // +=
         SubtractAssign,            // -=
-        MultiplyAssignment,            // *=
-        DivideAssignment,           // /=
+        MultiplyAssign,            // *=
+        DivideAssign,           // /=
         ModuloAssignment,           // %=
         NullableCoalesceAssignment, // ??=
         BooleanInvert,              // !
