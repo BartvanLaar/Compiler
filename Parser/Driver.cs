@@ -3,7 +3,6 @@ using Parser.AbstractSyntaxTree;
 using Parser.AbstractSyntaxTree.Expressions;
 using Parser.CodeLexer;
 using Parser.LLVMSupport;
-using System.Diagnostics;
 
 namespace Parser
 {

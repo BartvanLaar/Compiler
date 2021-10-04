@@ -10,12 +10,7 @@ namespace Compiler.CLI
         {
             Console.WriteLine("Press to start.");
             Console.ReadKey();
-            var code = "2 + 7;";
-            Driver.RunLLVM(code);
-            code = "2 * 7;";
-            Driver.RunLLVM(code);
-            
-            code = "2 / 6;";
+            var code = "var x = 5; x + 7;";
             Driver.RunLLVM(code);
 
             Console.WriteLine("Press to exit.");

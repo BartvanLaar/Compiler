@@ -253,5 +253,19 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.Integer, lexer.ConsumeToken().TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, lexer.ConsumeToken().TokenType);
         }
+
+        [Test]
+        public static void Lexer_Test_Use_Variable()
+        {
+            var lexer = new Lexer("x + 7;");
+            var toks = lexer.ConsumeTokens(5);
+
+            Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Plus, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[2].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[3].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);
+
+        }
     }
 }

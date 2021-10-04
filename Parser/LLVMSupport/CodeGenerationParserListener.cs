@@ -27,13 +27,11 @@ namespace Parser.LLVMSupport
         {
         }
 
-
-
         public void ExitHandleAssignmentExpression(AssignmentExpression data)
         {
             _visitor.Visit(data);
-            var function = _visitor.ResultStack.Pop();
-            LLVM.DumpValue(function);  // Dump the function for exposition purposes.
+            //var function = _visitor.ResultStack.Pop();
+            //LLVM.DumpValue(function);  // Dump the function for exposition purposes.
         }
 
         public void EnterHandleTopLevelExpression(FunctionCallExpression data)

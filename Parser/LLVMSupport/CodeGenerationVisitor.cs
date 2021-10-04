@@ -63,6 +63,18 @@ namespace Parser.LLVMSupport
             return node;
         }
 
+        protected internal override ExpressionBase? VisitAssignmentExpression(AssignmentExpression node)
+        {
+            //Visit(node.IdentificationExpression);
+            Visit(node.ValueExpression);
+            
+            //var rhsValue = _valueStack.Pop();
+            var lhsValue = _valueStack.Pop();
+            _namedValues.Add(node.IdentificationExpression.Token.Value.Name, lhsValue);
+
+            return node;
+        }
+
         protected internal override ExpressionBase VisitBinaryExpression(BinaryExpression node)
         {
             Visit(node.LeftHandSide);
