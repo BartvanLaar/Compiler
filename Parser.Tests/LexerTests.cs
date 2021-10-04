@@ -92,14 +92,14 @@ namespace Compiler.Tests
         [TestCase("<=", TokenType.LessThanOrEqualTo)]
         [TestCase(">", TokenType.GreaterThan)]
         [TestCase(">=", TokenType.GreaterThanOrEqualTo)]
-        [TestCase("+", TokenType.Plus)]
-        [TestCase("+=", TokenType.PlusAssignment)]
-        [TestCase("-", TokenType.Minus)]
-        [TestCase("-=", TokenType.MinusAssignment)]
+        [TestCase("+", TokenType.Add)]
+        [TestCase("+=", TokenType.AddAssign)]
+        [TestCase("-", TokenType.Subtract)]
+        [TestCase("-=", TokenType.SubtractAssign)]
         [TestCase("%", TokenType.Modulo)]
         [TestCase("%=", TokenType.ModuloAssignment)]
-        [TestCase("*", TokenType.Times)]
-        [TestCase("*=", TokenType.TimesAssignment)]
+        [TestCase("*", TokenType.Multiply)]
+        [TestCase("*=", TokenType.MultiplyAssignment)]
         [TestCase("/", TokenType.Divide)]
         [TestCase("/=", TokenType.DivideAssignment)]
         [TestCase(":", TokenType.TerniaryOperatorFalse)]
@@ -127,14 +127,14 @@ namespace Compiler.Tests
         [TestCase("<= <=", TokenType.LessThanOrEqualTo)]
         [TestCase("> >", TokenType.GreaterThan)]
         [TestCase(">= >=", TokenType.GreaterThanOrEqualTo)]
-        [TestCase("+ +", TokenType.Plus)]
-        [TestCase("+= +=", TokenType.PlusAssignment)]
-        [TestCase("- -", TokenType.Minus)]
-        [TestCase("-= -=", TokenType.MinusAssignment)]
+        [TestCase("+ +", TokenType.Add)]
+        [TestCase("+= +=", TokenType.AddAssign)]
+        [TestCase("- -", TokenType.Subtract)]
+        [TestCase("-= -=", TokenType.SubtractAssign)]
         [TestCase("% %", TokenType.Modulo)]
         [TestCase("%= %=", TokenType.ModuloAssignment)]
-        [TestCase("* *", TokenType.Times)]
-        [TestCase("*= *=", TokenType.TimesAssignment)]
+        [TestCase("* *", TokenType.Multiply)]
+        [TestCase("*= *=", TokenType.MultiplyAssignment)]
         [TestCase("/ /", TokenType.Divide)]
         [TestCase("/= /=", TokenType.DivideAssignment)]
         [TestCase(": :", TokenType.TerniaryOperatorFalse)]
@@ -191,7 +191,7 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[3].TokenType);
             Assert.AreEqual(20, toks[3].IntegerValue);
-            Assert.AreEqual(TokenType.Plus, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[4].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[5].TokenType);
             Assert.AreEqual(5, toks[5].IntegerValue);
             Assert.AreEqual(TokenType.EndOfStatement, toks[6].TokenType);
@@ -261,7 +261,7 @@ namespace Compiler.Tests
             var toks = lexer.ConsumeTokens(5);
 
             Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
-            Assert.AreEqual(TokenType.Plus, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[1].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[2].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[3].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);

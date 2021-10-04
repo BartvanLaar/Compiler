@@ -79,30 +79,33 @@ namespace Parser.CodeLexer
 
         public static class OperatorPrecedence
         {
-            private static IReadOnlyDictionary<string, int> _precendences = new Dictionary<string, int>
+            private static IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
-                [EQUIVALENT_SIGN] = 10,
-                [EQUALS_SIGN] = 10,
-                [LESS_THAN_SIGN] = 10,
-                [LESS_THAN_EQUAL_SIGN] = 10,
-                [GREATER_THAN_SIGN] = 10,
-                [GREATER_THAN_EQUAL_SIGN] = 10,
-                [PLUS] = 20,
-                [MINUS] = 20,
-                [TIMES] = 40,
-                [DIVIDE] = 40,
+                [TokenType.Equivalent] = 10,
+                [TokenType.Equals] = 10,
+                [TokenType.LessThan] = 10,
+                [TokenType.LessThanOrEqualTo] = 10,
+                [TokenType.GreaterThan] = 10,
+                [TokenType.GreaterThanOrEqualTo] = 10,
+                [TokenType.Add] = 20,
+                [TokenType.AddAssign] = 20,
+                [TokenType.Subtract] = 20,
+                [TokenType.SubtractAssign] = 20,
+                [TokenType.Multiply] = 40,
+                [TokenType.MultiplyAssignment] = 40,
+                [TokenType.Divide] = 40,
+                [TokenType.DivideAssignment] = 40,
             };
 
             public static int Get(Token token)
             {
-                Debug.Assert(token.StringValue != null);
-                return Get(token.StringValue);
+                return Get(token.TokenType);
             }
 
-            public static int Get(string @operator)
+            public static int Get(TokenType tokenType)
             {
                 const int DEFAULT_OPERATOR_PRECENDECE = -1;
-                return _precendences.TryGetValue(@operator, out var result) ? result : DEFAULT_OPERATOR_PRECENDECE;
+                return _precendences.TryGetValue(tokenType, out var result) ? result : DEFAULT_OPERATOR_PRECENDECE;
             }
         }
 

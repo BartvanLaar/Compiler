@@ -34,13 +34,21 @@ namespace Parser.Tests
 
         [TestCase("x + 5;")]
         [TestCase("x + y;")]
+        [TestCase("x += 5;")]
+        [TestCase("x += y;")]
         [TestCase("x - 5;")]
         [TestCase("x - y;")]
+        [TestCase("x -= 5;")]
+        [TestCase("x -= y;")]
         [TestCase("x * 5;")]
         [TestCase("x * y;")]
+        [TestCase("x *= 5;")]
+        [TestCase("x *= y;")]
         [TestCase("x / 5;")]
         [TestCase("x / y;")]
-        public void Test_valid_parsings(string code)
+        [TestCase("x /= 5;")]
+        [TestCase("x /= y;")]
+        public void Test_Valid_Parsings_No_Errors(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer, new DummyListener());

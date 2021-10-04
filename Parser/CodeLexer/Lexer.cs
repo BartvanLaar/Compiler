@@ -273,36 +273,36 @@ namespace Parser.CodeLexer
 
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.Plus:
+                case TokenType.Add:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.PlusAssignment;
+                            token.TokenType = TokenType.AddAssign;
                             cursor++;
                             columnCount++;
                         }
 
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.Minus:
+                case TokenType.Subtract:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.MinusAssignment;
+                            token.TokenType = TokenType.SubtractAssign;
                             cursor++;
                             columnCount++;
                         }
 
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.Times:
+                case TokenType.Multiply:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.TimesAssignment;
+                            token.TokenType = TokenType.MultiplyAssignment;
                             cursor++;
                             columnCount++;
                         }
@@ -415,9 +415,9 @@ namespace Parser.CodeLexer
                 LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_CLOSE },
                 LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_TRUE },
                 LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_FALSE },
-                LexerConstants.PLUS => new Token(TokenType.Plus, lineCount, columnCount) { StringValue = LexerConstants.PLUS },
-                LexerConstants.MINUS => new Token(TokenType.Minus, lineCount, columnCount) { StringValue = LexerConstants.MINUS },
-                LexerConstants.TIMES => new Token(TokenType.Times, lineCount, columnCount) { StringValue = LexerConstants.TIMES },
+                LexerConstants.PLUS => new Token(TokenType.Add, lineCount, columnCount) { StringValue = LexerConstants.PLUS },
+                LexerConstants.MINUS => new Token(TokenType.Subtract, lineCount, columnCount) { StringValue = LexerConstants.MINUS },
+                LexerConstants.TIMES => new Token(TokenType.Multiply, lineCount, columnCount) { StringValue = LexerConstants.TIMES },
                 LexerConstants.DIVIDE => new Token(TokenType.Divide, lineCount, columnCount) { StringValue = LexerConstants.DIVIDE },
                 LexerConstants.MODULO => new Token(TokenType.Modulo, lineCount, columnCount) { StringValue = LexerConstants.MODULO },
                 LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assignment, lineCount, columnCount) { StringValue = LexerConstants.ASSIGN_OPERATOR },

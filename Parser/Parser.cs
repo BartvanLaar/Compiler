@@ -33,11 +33,22 @@ namespace Parser
                 {
                     case TokenType.EndOfFile: return;
                     case TokenType.EndOfStatement: ConsumeToken(); break;
-                    case TokenType.Identifier: HandleAssignmentExpression(true); break;
+                    case TokenType.Identifier: HandleIdentifierExpression(); break;
                     case TokenType.VariableDeclaration: HandleAssignmentExpression(false); break;
                     default: HandleTopLevelExpression(); break;
                 }
             }
+        }
+
+        private void HandleIdentifierExpression()
+        {
+            if(_lexer.PeekTokens(2).Last().TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
+            {
+                HandleTopLevelExpression();
+                return;
+            }
+
+            HandleAssignmentExpression(true);
         }
 
         private void HandleAssignmentExpression(bool isReassignment)

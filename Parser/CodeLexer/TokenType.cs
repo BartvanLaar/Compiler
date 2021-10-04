@@ -54,15 +54,15 @@
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
-        Plus,                       // +
-        Minus,                      // -
-        Times,                      // *
+        Add,                       // +
+        Subtract,                      // -
+        Multiply,                      // *
         Divide,                     // /
         Modulo,                     // %
         NullableCoalesce,           // ??
-        PlusAssignment,             // +=
-        MinusAssignment,            // -=
-        TimesAssignment,            // *=
+        AddAssign,             // +=
+        SubtractAssign,            // -=
+        MultiplyAssignment,            // *=
         DivideAssignment,           // /=
         ModuloAssignment,           // %=
         NullableCoalesceAssignment, // ??=
