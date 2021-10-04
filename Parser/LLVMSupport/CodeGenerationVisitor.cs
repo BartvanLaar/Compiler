@@ -218,7 +218,8 @@ namespace Parser.LLVMSupport
 
         protected internal override ExpressionBase VisitFunctionCallExpression(FunctionCallExpression node)
         {
-            _namedValues.Clear();
+            //_namedValues.Clear(); // this was cleared.. But how about the variable i previously added to an outer scope..?
+            //todo: add scoping...
             Visit(node.Prototype);
 
             var function = _valueStack.Pop();

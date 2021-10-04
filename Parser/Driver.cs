@@ -3,6 +3,7 @@ using Parser.AbstractSyntaxTree;
 using Parser.AbstractSyntaxTree.Expressions;
 using Parser.CodeLexer;
 using Parser.LLVMSupport;
+using System.Diagnostics;
 
 namespace Parser
 {
@@ -11,16 +12,22 @@ namespace Parser
         public static void Run(string text) => Run(text, new ConsoleParserListener());
         public static void RunLLVM(string text)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var (codeGenerationListener, llvmModule) = SetupLLVM();
             Run(text, codeGenerationListener);
+
             //LLVM.DumpModule(llvmModule);  // Print out all of the generated code.
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
             LLVM.WriteBitcodeToFile(llvmModule, path);
             //var lldLink = Process.Start("lld-link.exe", $"{path} /nodefaultlib /subsystem:console /machine:x64 /out:{Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
             //lldLink.WaitForExit();
+            stopwatch.Stop();
+            Console.WriteLine($"Compiling took {stopwatch.Elapsed.Milliseconds} milliseconds");
         }
-        internal static void Run(string text, IParserListener listener)
+
+        private static void Run(string text, IParserListener listener)
         {
             var lexer = new Lexer(text);
             var parser = new Parser(lexer, listener);
