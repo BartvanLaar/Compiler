@@ -9,11 +9,11 @@ namespace Parser
 {
     public class Driver
     {
-        public static void Run(string text) => Run(text, new DummyByteCodeGenerator());
+        public static void Run(string text) => Run(text, new DummyAbstractSyntaxTreeVisitor(), new AbstractSyntaxTreeVisitorListener());
         public static void RunLLVM(string text)
         {
             //var (codeGenerationListener, module, builder) = SetupLLVM();
-            Run(text, new DummyByteCodeGenerator());// todo: replace with LLVM bytecode generator.
+            Run(text, new DummyAbstractSyntaxTreeVisitor(), new AbstractSyntaxTreeVisitorListener());// todo: replace with LLVM bytecode generator.
 
             //var module = LLVM.ModuleCreateWithName("NativeBinary");
             //var functype = LLVM.FunctionType(LLVM.Int32Type(), new LLVMTypeRef[] { }, false);
@@ -39,7 +39,7 @@ namespace Parser
             //lldLink.Start();
             //lldLink.WaitForExit();
         }
-        internal static void Run(string text, IByteCodeGenerator byteCodeGenerator)
+        internal static void Run(string text, IAbstractSyntaxTreeVisitorExecuter byteCodeGenerator, IByteCodeGeneratorListener byteCodeGeneratorListener)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -48,24 +48,252 @@ namespace Parser
             Queue<ExpressionBase> abstractSyntaxTrees = parser.Parse();
             stopwatch.Stop();
             Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
-            
+
             stopwatch.Restart();
-            string[] byteCodeFiles = byteCodeGenerator.Generate(abstractSyntaxTrees);
+            // For now one file is enough to support.
+            // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
+            string byteCodeFile = byteCodeGenerator.Execute(abstractSyntaxTrees, byteCodeGeneratorListener);
             stopwatch.Stop();
 
             Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
 
         }
-        internal interface IByteCodeGenerator
+        internal interface IAbstractSyntaxTreeVisitorExecuter : IAbstractSyntaxTreeVisitor
         {
-            string[] Generate(Queue<ExpressionBase> abstractSyntaxTrees);
+            string Execute(Queue<ExpressionBase> abstractSyntaxTrees, IByteCodeGeneratorListener listener);
         }
 
-        internal class DummyByteCodeGenerator : IByteCodeGenerator
+        internal interface IAbstractSyntaxTreeVisitor
         {
-            public string[] Generate(Queue<ExpressionBase> abstractSyntaxTrees)
+            void VisitIntegerExpression(IntegerExpression expression);
+            void VisitDoubleExpression(DoubleExpression expression);
+            void VisitFloatExpression(FloatExpression expression);
+            void VisitStringExpression(StringExpression expression);
+            void VisitCharacterExpression(CharacterExpression expression);
+            void VisitBinaryExpression(BinaryExpression expression);
+            void VisitPrototypeExpression(PrototypeExpression expression);
+            void VisitMethodCallExpression(MethodCallExpression expression);
+            void VisitFunctionCallExpression(FunctionCallExpression expression);
+            void VisitAssignmentExpression(AssignmentExpression expression);
+            void VisitIdentifierExpression(IdentifierExpression expression);
+
+        }
+
+        internal interface IByteCodeGeneratorListener : IAbstractSyntaxTreeVisitor
+        {
+        }
+
+
+        internal class AbstractSyntaxTreeVisitorListener : IByteCodeGeneratorListener
+        {
+            public void VisitDoubleExpression(DoubleExpression expression)
             {
-                return Array.Empty<string>();
+                Log(expression);
+            }
+
+            public void VisitFloatExpression(FloatExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitIntegerExpression(IntegerExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitStringExpression(StringExpression expression)
+            {
+                Log(expression);
+            }
+            public void VisitCharacterExpression(CharacterExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitBinaryExpression(BinaryExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitPrototypeExpression(PrototypeExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitMethodCallExpression(MethodCallExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitFunctionCallExpression(FunctionCallExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitAssignmentExpression(AssignmentExpression expression)
+            {
+                Log(expression);
+            }
+
+            public void VisitIdentifierExpression(IdentifierExpression expression)
+            {
+                Log(expression);
+            }
+
+            private static void Log(ExpressionBase baseExp)
+            {
+                Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
+            }
+        }
+
+        internal class DummyAbstractSyntaxTreeVisitor : IAbstractSyntaxTreeVisitorExecuter
+        {
+            private Queue<ExpressionBase> _abstractSyntaxTrees;
+            private IByteCodeGeneratorListener _listener;
+
+            public string Execute(Queue<ExpressionBase> abstractSyntaxTrees, IByteCodeGeneratorListener listener)
+            {
+                _abstractSyntaxTrees = abstractSyntaxTrees;
+                _listener = listener;
+
+                while (_abstractSyntaxTrees.Any())
+                {
+                    Visit(_abstractSyntaxTrees.Dequeue());
+                }
+
+                var resultFilePath = string.Empty;
+                return resultFilePath; // for now support a single file.
+            }
+
+            public void Visit(ExpressionBase expression)
+            {
+                if (expression == null)
+                {
+                    return;
+                }
+
+                switch (expression.NodeExpressionType)
+                {
+                    // These are all handled by binary operator expressions.
+                    case ExpressionType.Add:
+                    case ExpressionType.Subtract:
+                    case ExpressionType.Multiply:
+                    case ExpressionType.Divide:
+                    case ExpressionType.DivideRest:
+                        break;
+                    // These are all handled by binary operator expressions.
+                    case ExpressionType.Equivalent:
+                    case ExpressionType.Equals:
+                    case ExpressionType.GreaterThan:
+                    case ExpressionType.GreaterThanEqual:
+                    case ExpressionType.LessThan:
+                    case ExpressionType.LessThanEqual:
+                        break;
+                    case ExpressionType.MethodCall:
+                        VisitMethodCallExpression((MethodCallExpression)expression);
+                        break;
+                    case ExpressionType.Identifier:
+                        VisitIdentifierExpression((IdentifierExpression)expression);
+                        break;
+                    case ExpressionType.Prototype:
+                        VisitPrototypeExpression((PrototypeExpression)expression);
+                        break;
+                    case ExpressionType.FunctionCall:
+                        VisitFunctionCallExpression((FunctionCallExpression)expression);
+                        break;
+                    case ExpressionType.Double:
+                        VisitDoubleExpression((DoubleExpression)expression);
+                        break;
+                    case ExpressionType.Float:
+                        VisitFloatExpression((FloatExpression)expression);
+                        break;
+                    case ExpressionType.Integer:
+                        VisitIntegerExpression((IntegerExpression)expression);
+                        break;
+                    case ExpressionType.String:
+                        VisitStringExpression((StringExpression)expression);
+                        break;
+                    case ExpressionType.Character:
+                        VisitCharacterExpression((CharacterExpression)expression);
+                        break;
+                    case ExpressionType.Assignment:
+                        VisitAssignmentExpression((AssignmentExpression)expression);
+                        break;
+                    default:
+                        // should this be visiting a top level?
+                        throw new ArgumentException($"Unknown expression type encountered: '{expression.GetType()}'");
+                }
+            }
+
+
+            public void VisitIntegerExpression(IntegerExpression expression)
+            {
+                _listener.VisitIntegerExpression(expression);
+            }
+
+            public void VisitDoubleExpression(DoubleExpression expression)
+            {
+                _listener.VisitDoubleExpression(expression);
+            }
+
+            public void VisitFloatExpression(FloatExpression expression)
+            {
+                _listener.VisitFloatExpression(expression);
+            }
+
+            public void VisitStringExpression(StringExpression expression)
+            {
+                _listener.VisitStringExpression(expression);
+            }
+
+            public void VisitCharacterExpression(CharacterExpression expression)
+            {
+                _listener.VisitCharacterExpression(expression);
+            }
+
+            public void VisitBinaryExpression(BinaryExpression expression)
+            {
+                _listener.VisitBinaryExpression(expression);
+
+                Visit(expression.LeftHandSide);
+                Visit(expression.RightHandSide);
+            }
+
+            public void VisitPrototypeExpression(PrototypeExpression expression)
+            {
+                //Visit(expression); \\ this triggers an overflow for obvious reasons...
+                _listener.VisitPrototypeExpression(expression);
+            }
+
+            public void VisitMethodCallExpression(MethodCallExpression expression)
+            {
+                _listener.VisitMethodCallExpression(expression);
+
+                foreach (var argument in expression.MethodArguments)
+                {
+                    Visit(argument);
+                }
+            }
+
+            public void VisitFunctionCallExpression(FunctionCallExpression expression)
+            {
+                _listener.VisitFunctionCallExpression(expression);
+                
+                Visit(expression.Prototype);
+                Visit(expression.Body);
+            }
+
+            public void VisitAssignmentExpression(AssignmentExpression expression)
+            {
+                _listener.VisitAssignmentExpression(expression);
+               
+                Visit(expression.IdentificationExpression);
+                Visit(expression.ValueExpression);
+            }
+
+            public void VisitIdentifierExpression(IdentifierExpression expression)
+            {
+                _listener.VisitIdentifierExpression(expression);
             }
         }
 

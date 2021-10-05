@@ -34,9 +34,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
             };
         }
 
-        //protected internal override ExpressionBase? Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitBinaryExpression(this);
-        //}
     }
 }

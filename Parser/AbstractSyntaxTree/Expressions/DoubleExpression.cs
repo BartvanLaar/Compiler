@@ -13,9 +13,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
             Value = token.FloatValue.Value;
         }
 
-        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitDoubleExpression(this);
-        //}
     }
 }

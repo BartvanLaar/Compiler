@@ -1,0 +1,15 @@
+﻿using Parser.CodeLexer;
+
+namespace Parser.AbstractSyntaxTree.Expressions
+{
+    internal sealed class IdentifierExpression : ExpressionBase
+    {
+        public IdentifierExpression(Token token) : base(token, ExpressionType.Identifier)
+        {
+            Identifier = token.Name;
+        }
+
+        public string Identifier { get; }
+
+    }
+}

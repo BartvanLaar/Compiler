@@ -13,9 +13,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
         }
         public int Value { get; }
 
-        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitIntegerExpression(this);
-        //}
     }
 }

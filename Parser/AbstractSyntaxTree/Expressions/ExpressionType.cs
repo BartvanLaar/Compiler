@@ -10,7 +10,7 @@ namespace Parser.AbstractSyntaxTree.Expressions
         Divide,
         LessThan,
         MethodCall,
-        VariableEvaluation,
+        Identifier,
         Prototype,
         FunctionCall,
         Double,

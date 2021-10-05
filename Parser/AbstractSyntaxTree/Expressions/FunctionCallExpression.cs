@@ -10,10 +10,5 @@
 
         public PrototypeExpression Prototype { get; }
         public ExpressionBase Body { get; }
-
-        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitFunctionCallExpression(this);
-        //}
     }
 }

@@ -23,9 +23,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
         public ExpressionBase IdentificationExpression {  get; }
         public ExpressionBase ValueExpression {  get; }
 
-        //protected internal override ExpressionBase? Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitAssignmentExpression(this);
-        //}
     }
 }

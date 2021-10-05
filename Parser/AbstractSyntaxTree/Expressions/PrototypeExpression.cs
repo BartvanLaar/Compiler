@@ -15,10 +15,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
         public Token[] Arguments { get; }
 
         public string[] ArgumentNames => Arguments.Select(t => t.Name).ToArray();
-
-        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitPrototype(this);
-        //}
     }
 }

@@ -256,7 +256,7 @@ namespace Parser
         {
             //todo: make smarter so it knows whether this is a function call? Or should the lexer handle this for me, as it can also peek forward...
             //todo: how to handle nullables?
-            var result = new VariableEvaluationExpression(ConsumeToken());
+            var result = new IdentifierExpression(ConsumeToken());
 
             return result;
         }

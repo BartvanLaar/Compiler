@@ -12,10 +12,5 @@ namespace Parser.AbstractSyntaxTree.Expressions
             Value = token.FloatValue.Value;
         }
         public float Value { get; }
-
-        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        //{
-        //    return visitor.VisitFloatExpression(this);
-        //}
     }
 }
