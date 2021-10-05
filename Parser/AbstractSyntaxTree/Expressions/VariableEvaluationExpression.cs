@@ -11,9 +11,9 @@ namespace Parser.AbstractSyntaxTree.Expressions
 
         public string VariableName { get; }
 
-        protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        {
-            return visitor.VisitVariableEvaluationExpression(this);
-        }
+        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
+        //{
+        //    return visitor.VisitVariableEvaluationExpression(this);
+        //}
     }
 }

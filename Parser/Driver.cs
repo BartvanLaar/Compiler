@@ -9,11 +9,11 @@ namespace Parser
 {
     public class Driver
     {
-        public static void Run(string text) => Run(text, new ConsoleParserListener());
+        public static void Run(string text) => Run(text, new DummyByteCodeGenerator());
         public static void RunLLVM(string text)
         {
-            var (codeGenerationListener, module, builder) = SetupLLVM();
-            Run(text, codeGenerationListener);
+            //var (codeGenerationListener, module, builder) = SetupLLVM();
+            Run(text, new DummyByteCodeGenerator());// todo: replace with LLVM bytecode generator.
 
             //var module = LLVM.ModuleCreateWithName("NativeBinary");
             //var functype = LLVM.FunctionType(LLVM.Int32Type(), new LLVMTypeRef[] { }, false);
@@ -33,73 +33,94 @@ namespace Parser
 
             //LLVM.DumpModule(llvmModule);  // Print out all of the generated code.
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
-            LLVM.WriteBitcodeToFile(module, path);
-            var lldLink = Process.Start("clang++", $"{path} -v -o {Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
+            //var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
+            //LLVM.WriteBitcodeToFile(module, path);
+            //var lldLink = Process.Start("clang++", $"{path} -v -o {Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
             //lldLink.Start();
-            lldLink.WaitForExit();
+            //lldLink.WaitForExit();
         }
         internal static void Run(string text, IByteCodeGenerator byteCodeGenerator)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var lexer = new Lexer(text);
             var parser = new Parser(lexer);
-            Queue<ExpressionBase> abstractSyntaxTrees =  parser.Parse();
+            Queue<ExpressionBase> abstractSyntaxTrees = parser.Parse();
+            stopwatch.Stop();
+            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
+            
+            stopwatch.Restart();
+            string[] byteCodeFiles = byteCodeGenerator.Generate(abstractSyntaxTrees);
+            stopwatch.Stop();
 
-            byteCodeGenerator.
+            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
+
         }
-
-        private static (CodeGenerationParserListener CodeGenerationListener, LLVMModuleRef Module, LLVMBuilderRef Builder) SetupLLVM()
+        internal interface IByteCodeGenerator
         {
-            LLVMModuleRef module = LLVM.ModuleCreateWithName("B#");
-            LLVMBuilderRef builder = LLVM.CreateBuilder();
-
-
-            LLVM.LinkInMCJIT();
-            LLVM.InitializeX86TargetMC();
-            LLVM.InitializeX86Target();
-            LLVM.InitializeX86TargetInfo();
-            LLVM.InitializeX86AsmParser();
-            LLVM.InitializeX86AsmPrinter();
-
-            if (LLVM.CreateExecutionEngineForModule(out var engine, module, out var errorMessage).Value == 1)
-            {
-                Console.WriteLine(errorMessage);
-                // LLVM.DisposeMessage(errorMessage);
-                throw new Exception("Unable to setup LLVM.", new Exception(errorMessage));
-            }
-
-            // Create a function pass manager for this engine
-            LLVMPassManagerRef passManager = LLVM.CreateFunctionPassManagerForModule(module);
-
-            // Set up the optimizer pipeline.  Start with registering info about how the
-            // target lays out data structures.
-            //LLVM.DisposeTargetData(LLVM.GetExecutionEngineTargetData(engine));
-
-            // Provide basic AliasAnalysis support for GVN.
-            LLVM.AddBasicAliasAnalysisPass(passManager);
-
-            // Promote allocations to registers.
-            LLVM.AddPromoteMemoryToRegisterPass(passManager);
-
-            // Do simple "peephole" optimizations and bit-twiddling optzns.
-            LLVM.AddInstructionCombiningPass(passManager);
-
-            // Reassociate expressions.
-            LLVM.AddReassociatePass(passManager);
-
-            // Eliminate Common SubExpressions.
-            LLVM.AddGVNPass(passManager);
-
-            // Simplify the control flow graph (deleting unreachable blocks, etc).
-            LLVM.AddCFGSimplificationPass(passManager);
-
-            LLVM.InitializeFunctionPassManager(passManager);
-       
-
-            var codeGenerationListener = new CodeGenerationParserListener(new CodeGenerationVisitor(module, builder), engine, passManager);
-
-            return (codeGenerationListener, module, builder);
+            string[] Generate(Queue<ExpressionBase> abstractSyntaxTrees);
         }
+
+        internal class DummyByteCodeGenerator : IByteCodeGenerator
+        {
+            public string[] Generate(Queue<ExpressionBase> abstractSyntaxTrees)
+            {
+                return Array.Empty<string>();
+            }
+        }
+
+        //private static (CodeGenerationParserListener CodeGenerationListener, LLVMModuleRef Module, LLVMBuilderRef Builder) SetupLLVM()
+        //{
+        //    LLVMModuleRef module = LLVM.ModuleCreateWithName("B#");
+        //    LLVMBuilderRef builder = LLVM.CreateBuilder();
+
+
+        //    LLVM.LinkInMCJIT();
+        //    LLVM.InitializeX86TargetMC();
+        //    LLVM.InitializeX86Target();
+        //    LLVM.InitializeX86TargetInfo();
+        //    LLVM.InitializeX86AsmParser();
+        //    LLVM.InitializeX86AsmPrinter();
+
+        //    if (LLVM.CreateExecutionEngineForModule(out var engine, module, out var errorMessage).Value == 1)
+        //    {
+        //        Console.WriteLine(errorMessage);
+        //        // LLVM.DisposeMessage(errorMessage);
+        //        throw new Exception("Unable to setup LLVM.", new Exception(errorMessage));
+        //    }
+
+        //    // Create a function pass manager for this engine
+        //    LLVMPassManagerRef passManager = LLVM.CreateFunctionPassManagerForModule(module);
+
+        //    // Set up the optimizer pipeline.  Start with registering info about how the
+        //    // target lays out data structures.
+        //    //LLVM.DisposeTargetData(LLVM.GetExecutionEngineTargetData(engine));
+
+        //    // Provide basic AliasAnalysis support for GVN.
+        //    LLVM.AddBasicAliasAnalysisPass(passManager);
+
+        //    // Promote allocations to registers.
+        //    LLVM.AddPromoteMemoryToRegisterPass(passManager);
+
+        //    // Do simple "peephole" optimizations and bit-twiddling optzns.
+        //    LLVM.AddInstructionCombiningPass(passManager);
+
+        //    // Reassociate expressions.
+        //    LLVM.AddReassociatePass(passManager);
+
+        //    // Eliminate Common SubExpressions.
+        //    LLVM.AddGVNPass(passManager);
+
+        //    // Simplify the control flow graph (deleting unreachable blocks, etc).
+        //    LLVM.AddCFGSimplificationPass(passManager);
+
+        //    LLVM.InitializeFunctionPassManager(passManager);
+
+
+        //    var codeGenerationListener = new CodeGenerationParserListener(new CodeGenerationVisitor(module, builder), engine, passManager);
+
+        //    return (codeGenerationListener, module, builder);
+        //}
 
         private class ConsoleParserListener : IParserListener
         {

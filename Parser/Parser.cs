@@ -7,22 +7,24 @@ namespace Parser
 {
     internal interface IParser
     {
-        void Parse();
+        Queue<ExpressionBase> Parse();
     }
 
     internal sealed class Parser : IParser
     {
         private readonly Lexer _lexer;
-        private readonly ParserListener _parserListener;
-        public Parser(Lexer lexer, IParserListener parserListener)
+        private readonly Queue<ExpressionBase> _expressions;
+        
+        public Parser(Lexer lexer)
         {
             _lexer = lexer;
-            _parserListener = new ParserListener(parserListener);
+            _expressions = new();
         }
 
-        public void Parse()
+        public Queue<ExpressionBase> Parse()
         {
             MainLoop();
+            return _expressions;
         }
 
         private void MainLoop()
@@ -53,14 +55,11 @@ namespace Parser
 
         private void HandleAssignmentExpression(bool isReassignment)
         {
-            _parserListener.EnterRule(nameof(HandleAssignmentExpression));
-
             var assignmentExpression = ParseAssignmentExpression(isReassignment);
-            _parserListener.ExitRule(assignmentExpression);
 
             if (assignmentExpression != null)
             {
-                _parserListener.Listen();
+                _expressions.Enqueue(assignmentExpression);
             }
             else // on error resume next :)
             {
@@ -70,14 +69,11 @@ namespace Parser
 
         private void HandleTopLevelExpression()
         {
-            _parserListener.EnterRule(nameof(HandleTopLevelExpression));
             var functionExpression = ParseTopLevelExpression();
-
-            _parserListener.ExitRule(functionExpression);
 
             if (functionExpression != null)
             {
-                _parserListener.Listen();
+                _expressions.Enqueue(functionExpression);
             }
             else // on error resume next :)
             {

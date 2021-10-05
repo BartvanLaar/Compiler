@@ -13,9 +13,9 @@ namespace Parser.AbstractSyntaxTree.Expressions
         }
         public float Value { get; }
 
-        protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        {
-            return visitor.VisitFloatExpression(this);
-        }
+        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
+        //{
+        //    return visitor.VisitFloatExpression(this);
+        //}
     }
 }

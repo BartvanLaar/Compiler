@@ -268,7 +268,7 @@ namespace Compiler.Tests
         }
 
         [Test]
-        public static void Lexer_Test_Declare_Function()
+        public static void Lexer_Test_Declare_Function() // Known broken, fix... ~Bart 05-10-2021
         {
             var lexer = new Lexer("def func SomeFunc() -> void {}");
 
@@ -280,11 +280,6 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.GreaterThan, toks[4].TokenType);
             Assert.AreEqual(TokenType.AccoladesOpen, toks[5].TokenType);
             Assert.AreEqual(TokenType.AccoladesClose, toks[6].TokenType);
-
-
-
-
-
         }
     }
 }

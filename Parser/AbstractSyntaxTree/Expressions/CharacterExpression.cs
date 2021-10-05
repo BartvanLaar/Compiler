@@ -13,9 +13,9 @@ namespace Parser.AbstractSyntaxTree.Expressions
 
         public char Value { get; }
 
-        protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        {
-            return visitor.VisitCharacterExpression(this);
-        }
+        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
+        //{
+        //    return visitor.VisitCharacterExpression(this);
+        //}
     }
 }

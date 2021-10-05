@@ -13,25 +13,6 @@ namespace Parser.Tests
 {
     internal class ParserTests
     {
-        private class DummyListener : IParserListener
-        {
-            public void EnterHandleAssignmentExpression(AssignmentExpression data)
-            {
-            }
-
-            public void EnterHandleTopLevelExpression(FunctionCallExpression data)
-            {
-            }
-
-            public void ExitHandleAssignmentExpression(AssignmentExpression data)
-            {
-            }
-
-            public void ExitHandleTopLevelExpression(FunctionCallExpression data)
-            {
-            }
-        }
-
         [TestCase("x + 5;")]
         [TestCase("x + y;")]
         [TestCase("x += 5;")]
@@ -51,7 +32,7 @@ namespace Parser.Tests
         public void Test_Valid_Parsings_No_Errors(string code)
         {
             var lexer = new Lexer(code);
-            var parser = new Parser(lexer, new DummyListener());
+            var parser = new Parser(lexer);
 
             using var sw = new StringWriter();
             Console.SetOut(sw);

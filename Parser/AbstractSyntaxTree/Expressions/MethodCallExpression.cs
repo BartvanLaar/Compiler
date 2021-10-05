@@ -13,9 +13,9 @@ namespace Parser.AbstractSyntaxTree.Expressions
         public string Callee { get; }
         public ExpressionBase[] MethodArguments { get; }
 
-        protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
-        {
-            return visitor.VisitMethodCallExpression(this);
-        }
+        //protected internal override ExpressionBase Accept(ExpressionVisitor visitor)
+        //{
+        //    return visitor.VisitMethodCallExpression(this);
+        //}
     }
 }
