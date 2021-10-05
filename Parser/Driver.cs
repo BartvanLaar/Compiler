@@ -12,32 +12,48 @@ namespace Parser
         public static void Run(string text) => Run(text, new ConsoleParserListener());
         public static void RunLLVM(string text)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var (codeGenerationListener, llvmModule) = SetupLLVM();
+            var (codeGenerationListener, module, builder) = SetupLLVM();
             Run(text, codeGenerationListener);
+
+            //var module = LLVM.ModuleCreateWithName("NativeBinary");
+            //var functype = LLVM.FunctionType(LLVM.Int32Type(), new LLVMTypeRef[] { }, false);
+            //var main = LLVM.AddFunction(module, "main", functype);
+            //var entrypoint = LLVM.AppendBasicBlock(main, "entrypoint");
+            //LLVMBuilderRef build = LLVM.CreateBuilder();
+            //LLVM.PositionBuilderAtEnd(build, entrypoint);
+            //var fortytwo = LLVM.ConstInt(LLVM.Int32Type(), 42, new LLVMBool(0));
+
+            //LLVM.BuildRet(build, fortytwo);
+
+            //LLVM.DumpModule(module);
+            //LLVM.WriteBitcodeToFile(module, "test.bc");
+
+
+            //LLVM.PositionBuilderAtEnd(builder, entrypoint);
 
             //LLVM.DumpModule(llvmModule);  // Print out all of the generated code.
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
-            LLVM.WriteBitcodeToFile(llvmModule, path);
-            //var lldLink = Process.Start("lld-link.exe", $"{path} /nodefaultlib /subsystem:console /machine:x64 /out:{Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
-            //lldLink.WaitForExit();
-            stopwatch.Stop();
-            Console.WriteLine($"Compiling took {stopwatch.Elapsed.Milliseconds} milliseconds");
+            LLVM.WriteBitcodeToFile(module, path);
+            var lldLink = Process.Start("clang++", $"{path} -v -o {Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
+            //lldLink.Start();
+            lldLink.WaitForExit();
         }
-
-        private static void Run(string text, IParserListener listener)
+        internal static void Run(string text, IByteCodeGenerator byteCodeGenerator)
         {
             var lexer = new Lexer(text);
-            var parser = new Parser(lexer, listener);
-            parser.Parse();
+            var parser = new Parser(lexer);
+            Queue<ExpressionBase> abstractSyntaxTrees =  parser.Parse();
+
+            byteCodeGenerator.
         }
 
-        private static (CodeGenerationParserListener CodeGenerationListener, LLVMModuleRef Module) SetupLLVM()
+        private static (CodeGenerationParserListener CodeGenerationListener, LLVMModuleRef Module, LLVMBuilderRef Builder) SetupLLVM()
         {
             LLVMModuleRef module = LLVM.ModuleCreateWithName("B#");
             LLVMBuilderRef builder = LLVM.CreateBuilder();
+
+
             LLVM.LinkInMCJIT();
             LLVM.InitializeX86TargetMC();
             LLVM.InitializeX86Target();
@@ -57,12 +73,12 @@ namespace Parser
 
             // Set up the optimizer pipeline.  Start with registering info about how the
             // target lays out data structures.
-            // LLVM.DisposeTargetData(LLVM.GetExecutionEngineTargetData(engine));
+            //LLVM.DisposeTargetData(LLVM.GetExecutionEngineTargetData(engine));
 
             // Provide basic AliasAnalysis support for GVN.
             LLVM.AddBasicAliasAnalysisPass(passManager);
 
-            // Promote allocas to registers.
+            // Promote allocations to registers.
             LLVM.AddPromoteMemoryToRegisterPass(passManager);
 
             // Do simple "peephole" optimizations and bit-twiddling optzns.
@@ -78,10 +94,11 @@ namespace Parser
             LLVM.AddCFGSimplificationPass(passManager);
 
             LLVM.InitializeFunctionPassManager(passManager);
+       
 
             var codeGenerationListener = new CodeGenerationParserListener(new CodeGenerationVisitor(module, builder), engine, passManager);
 
-            return (codeGenerationListener, module);
+            return (codeGenerationListener, module, builder);
         }
 
         private class ConsoleParserListener : IParserListener
