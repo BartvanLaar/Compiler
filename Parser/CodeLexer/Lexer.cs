@@ -81,6 +81,7 @@ namespace Parser.CodeLexer
 
         private (Token Token, int Cursor, long LineCount, long ColumnCount) GetNextToken(int cursor, long lineCount, long columnCount)
         {
+            // todo: should this language be case sensitive?
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
@@ -108,13 +109,10 @@ namespace Parser.CodeLexer
                 return (token.Value, cursor, lineCount, columnCount);
             }
 
-            //todo: how to determine if token is done? .... Whitespace check wont cut it... as functionname () should also be valid?
-            //check against all pre defined keywords..
-            // If its not a match, then it's either a variable name, class name, Namespance? etc... or a function name...? 
-            // Those edge cases can be checked afterwards, first check all known words.
-            // todo: should this language be case sensitive?
+                        
+            
             var res = string.Empty;
-            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]))
+            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && !GetSingleCharacterToken(cursor, columnCount, lineCount).HasValue)
             {
                 res += _text[cursor];
                 columnCount++;
@@ -412,6 +410,8 @@ namespace Parser.CodeLexer
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount) { StringValue = LexerConstants.END_OF_STATEMENT },
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_OPEN },
+                LexerConstants.PARANTHESES_OPEN => new Token(TokenType.ParanthesesOpen, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_OPEN },
+                LexerConstants.PARANTHESES_CLOSE => new Token(TokenType.ParanthesesClose, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_CLOSE },
                 LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_CLOSE },
                 LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_TRUE },
                 LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_FALSE },

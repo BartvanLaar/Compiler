@@ -254,10 +254,11 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.EndOfStatement, lexer.ConsumeToken().TokenType);
         }
 
-        [Test]
-        public static void Lexer_Test_Use_Variable()
+        [TestCase("x + 7;")]
+        [TestCase("x+7;")]
+        public static void Lexer_Test_Use_Variable(string code)
         {
-            var lexer = new Lexer("x + 7;");
+            var lexer = new Lexer(code);
             var toks = lexer.ConsumeTokens(5);
 
             Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
@@ -265,6 +266,63 @@ namespace Compiler.Tests
             Assert.AreEqual(TokenType.Integer, toks[2].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[3].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_EndOfStatement()
+        {
+            var lexer = new Lexer("var x=x+7;");
+            var toks = lexer.ConsumeTokens(8);
+
+            Assert.AreEqual(TokenType.VariableDeclaration, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[5].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[6].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[7].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_EndOfFile()
+        {
+            var lexer = new Lexer("var x=x+7");
+            var toks = lexer.ConsumeTokens(8);
+
+            Assert.AreEqual(TokenType.VariableDeclaration, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[5].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[6].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[7].TokenType);
+        }
+
+        [TestCase("var x=x+(7-(8+2));")]
+        [TestCase("var x = x + ( 7 - ( 8 + 2 ) ) ;")]
+        public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_PrecedenceOperators(string code)
+        {
+            var lexer = new Lexer(code);
+            var toks = lexer.ConsumeTokens(16);
+
+            Assert.AreEqual(TokenType.VariableDeclaration, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[4].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[6].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[7].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[8].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[9].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[10].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[11].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[12].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[13].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[14].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[15].TokenType);
         }
 
         [Test]

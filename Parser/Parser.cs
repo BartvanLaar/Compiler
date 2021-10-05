@@ -2,6 +2,7 @@
 using Parser.AbstractSyntaxTree;
 using Parser.AbstractSyntaxTree.Expressions;
 using Parser.CodeLexer;
+using System.Diagnostics;
 
 namespace Parser
 {
@@ -14,7 +15,7 @@ namespace Parser
     {
         private readonly Lexer _lexer;
         private readonly Queue<ExpressionBase> _expressions;
-        
+
         public Parser(Lexer lexer)
         {
             _lexer = lexer;
@@ -23,62 +24,86 @@ namespace Parser
 
         public Queue<ExpressionBase> Parse()
         {
-            MainLoop();
+            var isFinished = false;
+            while (!isFinished)
+            {
+                isFinished = ProcessToken();
+            }
+
             return _expressions;
         }
 
-        private void MainLoop()
+        private bool ProcessToken()
         {
-            while (true)
+            var peekedTokens = PeekTokens(2);
+            Debug.Assert(peekedTokens.Length == 2);
+
+            switch (PeekToken().TokenType)
             {
-                switch (PeekToken().TokenType)
-                {
-                    case TokenType.EndOfFile: return;
-                    case TokenType.EndOfStatement: ConsumeToken(); break;
-                    case TokenType.Identifier: HandleIdentifierExpression(); break;
-                    case TokenType.VariableDeclaration: HandleAssignmentExpression(false); break;
-                    default: HandleTopLevelExpression(); break;
-                }
+                case TokenType.EndOfFile:
+                    {
+                        return true;
+                    }
+                case TokenType.EndOfStatement:
+                    {
+                        ConsumeToken();
+                        return false;
+                    }
+                case TokenType.Identifier:
+                    {
+                        //todo: handle assignment variants?
+                        if (peekedTokens[1].TokenType is (TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide))
+                        {
+                            ConsumeIdentifierExpression();
+                            return false;
+                        }
+
+                        ConsumeAssignmentExpression(true);
+                        return false;
+                    }
+                case TokenType.VariableDeclaration:
+                    {
+                        ConsumeAssignmentExpression(false);
+                        return false;
+                    }
+                default:
+                    {
+                        //Shouldn't getting here throw an exception?
+                        ConsumeFunctionCallExpression();
+                        return false;
+                    }
             }
         }
 
-        private void HandleIdentifierExpression()
+        private void ConsumeExpression(ExpressionBase? expression)
         {
-            if (_lexer.PeekTokens(2).Last().TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
+            if (expression == null)
             {
-                HandleTopLevelExpression();
-                return;
+                // on error resume next :)
+                ConsumeToken();
             }
-
-            HandleAssignmentExpression(true);
+            else
+            {
+                _expressions.Enqueue(expression);
+            }
         }
 
-        private void HandleAssignmentExpression(bool isReassignment)
+        private void ConsumeIdentifierExpression()
+        {
+            var expr = ParseExpression();
+            ConsumeExpression(expr);
+        }
+
+        private void ConsumeAssignmentExpression(bool isReassignment)
         {
             var assignmentExpression = ParseAssignmentExpression(isReassignment);
-
-            if (assignmentExpression != null)
-            {
-                _expressions.Enqueue(assignmentExpression);
-            }
-            else // on error resume next :)
-            {
-                ConsumeToken();
-            }
+            ConsumeExpression(assignmentExpression);
         }
 
-        private void HandleTopLevelExpression()
+        private void ConsumeFunctionCallExpression()
         {
-            var functionExpression = ParseTopLevelExpression();
-
-            if (functionExpression != null)
-            {
-                _expressions.Enqueue(functionExpression);
-            }
-            else // on error resume next :)
-            {
-                ConsumeToken();
-            }
+            var functionExpression = ParseFunctionCallExpression();
+            ConsumeExpression(functionExpression);
         }
 
         private ExpressionBase? ParsePrimary()
@@ -178,7 +203,7 @@ namespace Parser
             }
         }
 
-        private FunctionCallExpression? ParseTopLevelExpression()
+        private FunctionCallExpression? ParseFunctionCallExpression()
         {
             var expression = ParseExpression();
             if (expression == null)
@@ -287,6 +312,7 @@ namespace Parser
             Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
         }
 
+        private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);
         private Token PeekToken() => _lexer.PeekToken();
         private Token ConsumeToken() => _lexer.ConsumeToken();
     }
