@@ -24,7 +24,8 @@ namespace Parser.AbstractSyntaxTree.Expressions
         Integer,
         String,
         Character,
-        Assignment
+        Assignment,
+        Body
     }
 
 }
