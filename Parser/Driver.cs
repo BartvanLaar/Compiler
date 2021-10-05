@@ -55,7 +55,7 @@ namespace Parser
             string byteCodeFile = byteCodeGenerator.Execute(abstractSyntaxTrees, byteCodeGeneratorListener);
             stopwatch.Stop();
 
-            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
+            Console.WriteLine($"Generating bytecode took {stopwatch.ElapsedMilliseconds} milliseconds");
 
         }
         internal interface IAbstractSyntaxTreeVisitorExecuter : IAbstractSyntaxTreeVisitor
@@ -88,31 +88,31 @@ namespace Parser
         {
             public void VisitDoubleExpression(DoubleExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
 
             public void VisitFloatExpression(FloatExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
 
             public void VisitIntegerExpression(IntegerExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
 
             public void VisitStringExpression(StringExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
             public void VisitCharacterExpression(CharacterExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
 
             public void VisitBinaryExpression(BinaryExpression expression)
             {
-                Log(expression);
+                LogValue(expression);
             }
 
             public void VisitPrototypeExpression(PrototypeExpression expression)
@@ -139,7 +139,10 @@ namespace Parser
             {
                 Log(expression);
             }
-
+            private static void LogValue(ExpressionBase baseExp)
+            {
+                Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}' with token: '{baseExp?.Token}'.");
+            }
             private static void Log(ExpressionBase baseExp)
             {
                 Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
@@ -180,6 +183,7 @@ namespace Parser
                     case ExpressionType.Multiply:
                     case ExpressionType.Divide:
                     case ExpressionType.DivideRest:
+                        VisitBinaryExpression((BinaryExpression)expression);
                         break;
                     // These are all handled by binary operator expressions.
                     case ExpressionType.Equivalent:
@@ -188,7 +192,8 @@ namespace Parser
                     case ExpressionType.GreaterThanEqual:
                     case ExpressionType.LessThan:
                     case ExpressionType.LessThanEqual:
-                        break;
+                        VisitBinaryExpression((BinaryExpression)expression);
+                        break;                  
                     case ExpressionType.MethodCall:
                         VisitMethodCallExpression((MethodCallExpression)expression);
                         break;

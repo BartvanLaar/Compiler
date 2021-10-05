@@ -69,7 +69,9 @@ namespace Parser
                 default:
                     {
                         //Shouldn't getting here throw an exception?
-                        ConsumeFunctionCallExpression();
+                        //ParseFunctionCallExpression(); 
+                        var exp = ParseExpression();
+                        ConsumeExpression(exp);
                         return false;
                     }
             }
