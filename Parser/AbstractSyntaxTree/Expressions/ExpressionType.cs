@@ -25,7 +25,10 @@ namespace Parser.AbstractSyntaxTree.Expressions
         String,
         Character,
         Assignment,
-        Body
+        [Obsolete("Is this even useful?")]
+        Body,
+        IfStatementExpression,
+        ForStatementExpression
     }
 
 }

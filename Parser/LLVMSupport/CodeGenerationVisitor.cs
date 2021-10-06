@@ -2,6 +2,7 @@
 using Parser.AbstractSyntaxTree.Expressions;
 using Parser.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Parser.LLVMSupport
 {
@@ -15,15 +16,19 @@ namespace Parser.LLVMSupport
         private readonly LLVMModuleRef _module;
 
         private readonly LLVMBuilderRef _builder;
-
+        private readonly LLVMExecutionEngineRef _executionEngine;
+        private readonly LLVMPassManagerRef _passManager;
         private readonly Dictionary<string, LLVMValueRef> _namedValues = new();
+        private delegate double D_FUNCTION_PTR(); // temp?
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
 
-        public CodeGenerationVisitor(LLVMModuleRef module, LLVMBuilderRef builder)
+        public CodeGenerationVisitor(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
         {
             _module = module;
             _builder = builder;
+            _executionEngine = executionEngine;
+            _passManager = passManager;
         }
 
         public Stack<LLVMValueRef> ResultStack => _valueStack;
@@ -100,7 +105,7 @@ namespace Parser.LLVMSupport
             if (!LLVM.VerifyFunction(protoTypeFunction, LLVMVerifierFailureAction.LLVMPrintMessageAction))
             {
                 LLVM.DeleteFunction(protoTypeFunction);
-                throw new Exception("Encoutered a bad function..?"); // clarify message?
+                throw new Exception("Encountered a bad function..?"); // clarify message?
             }
 
             _valueStack.Push(protoTypeFunction);
@@ -247,6 +252,17 @@ namespace Parser.LLVMSupport
             }
 
             _valueStack.Push(resultingValue);
+
+         }
+
+        public void VisitIfStatementExpression(IfStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitForStatementExpression(ForStatementExpression expression)
+        {
+            throw new NotImplementedException();
         }
     }
 }

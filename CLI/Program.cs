@@ -10,7 +10,7 @@ namespace Compiler.CLI
         {
             Console.WriteLine("Press to start.");
             Console.ReadKey();
-            var code = "2.0 + 7.0;";
+            var code = "2.0 + 5.0 / 5.0;";
             Driver.RunLLVM(code);
             //code = "2.0 * 7.0;";
             //Driver.RunLLVM(code);

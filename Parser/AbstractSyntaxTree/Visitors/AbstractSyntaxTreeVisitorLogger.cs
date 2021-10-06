@@ -63,13 +63,25 @@ namespace Parser.AbstractSyntaxTree.Visitors
             LogValue(expression.Expression);
         }
 
+        public void VisitIfStatementExpression(IfStatementExpression expression)
+        {
+            Log(expression);
+        }
+
         private static void LogValue(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}' with token: '{baseExp?.Token}'.");
         }
+        
+        public void VisitForStatementExpression(ForStatementExpression expression)
+        {
+            Log(expression);
+        }
+
         private static void Log(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
+
     }
 }

@@ -75,6 +75,12 @@ namespace Parser.AbstractSyntaxTree.Visitors
                 case ExpressionType.Assignment:
                     VisitAssignmentExpression((AssignmentExpression)expression);
                     break;
+                case ExpressionType.IfStatementExpression:
+                    VisitIfStatementExpression((IfStatementExpression)expression);
+                    break;
+                case ExpressionType.ForStatementExpression:
+                    VisitForStatementExpression((ForStatementExpression)expression);
+                    break;
                 case ExpressionType.Body:
                     VisitBodyExpression((BodyExpression)expression);
                     break;
@@ -83,6 +89,8 @@ namespace Parser.AbstractSyntaxTree.Visitors
                     throw new ArgumentException($"Unknown expression type encountered: '{expression.GetType()}'");
             }
         }
+
+       
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
@@ -158,6 +166,18 @@ namespace Parser.AbstractSyntaxTree.Visitors
         {
             Visit(expression.Expression);
             _listener?.VisitBodyExpression(expression);
+        }
+
+        public void VisitForStatementExpression(ForStatementExpression expression)
+        {
+            _listener?.VisitForStatementExpression(expression);
+            throw new NotImplementedException();
+        }
+
+        public void VisitIfStatementExpression(IfStatementExpression expression)
+        {
+            _listener?.VisitIfStatementExpression(expression);
+            throw new NotImplementedException();
         }
     }
 }

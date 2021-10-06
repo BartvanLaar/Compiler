@@ -15,7 +15,10 @@ namespace Parser.AbstractSyntaxTree.Visitors
         void VisitFunctionCallExpression(FunctionCallExpression expression);
         void VisitAssignmentExpression(AssignmentExpression expression);
         void VisitIdentifierExpression(IdentifierExpression expression);
+        [Obsolete("Is this one even required?")]
         void VisitBodyExpression(BodyExpression expression);
+        void VisitIfStatementExpression(IfStatementExpression expression);
+        void VisitForStatementExpression(ForStatementExpression expression);
 
     }
 }

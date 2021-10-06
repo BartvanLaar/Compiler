@@ -4,30 +4,21 @@ using Parser.AbstractSyntaxTree.Visitors;
 using Parser.CodeLexer;
 using Parser.LLVMSupport;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace Parser
 {
     public class Driver
     {   
-        private delegate double D_FUNCTION_PTR();
         public static void Run(string text) => Run(text, new AbstractSyntaxTreeVisitorExecutor(), new AbstractSyntaxTreeVisitorLogger());
         public static void RunLLVM(string text)
         {
             var (module, builder, executionEngine, passManager) = SetupLLVM();
-            var visitor = new CodeGenerationVisitor(module, builder);
+            var visitor = new CodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
-            var anonymousFunction = visitor.ResultStack.Pop();
 
-            var dFunc = (D_FUNCTION_PTR)Marshal.GetDelegateForFunctionPointer(
-                LLVM.GetPointerToGlobal(executionEngine, anonymousFunction), typeof(D_FUNCTION_PTR));
-            LLVM.RunFunctionPassManager(passManager, anonymousFunction);
+
             LLVM.DumpModule(module);
-            LLVM.WriteBitcodeToFile(module, "test.bc");
-
-       
-
-            Console.WriteLine("Evaluated to " + dFunc());
+            LLVM.WriteBitcodeToFile(module, "test.bc");                    
 
             //var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
             //LLVM.WriteBitcodeToFile(module, path);
