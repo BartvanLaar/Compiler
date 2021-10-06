@@ -60,12 +60,28 @@
         {
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
-            public const string VARIABLE_DECLARATION = "decl";
             public const string FUNCTION_DEFINITION = "def";
             public const string PUBLIC = "public";
             public const string PROTECTED = "protected";
             public const string INTERNAL = "internal";
             public const string PRIVATE = "private";
+
+            public const string PARAMS = "params";
+            public const string IMPLEMENTED = "implemented";
+            public const string CLASS = "class";
+            public const string STRUCT = "struct";
+
+            public const string IF = "if";
+            public const string ELSE = "else";
+
+            public const string FOR = "for";
+            public const string EACH = "each";
+            
+            public const string WHILE = "while";
+            public const string DO = "do";
+            public const string CONTINUE = "continue";
+            public const string BREAK = "break";
+            public const string RETURN = "return";
 
             //types ? todo: is this the right moment and place?
             public const string DOUBLE = "double";
@@ -75,9 +91,48 @@
             public const string CHARACTER = "char";
         }
 
+        private static IDictionary<string, TokenType> _predefinedKeywords = new Dictionary<string, TokenType>()
+        {
+            { KeyWords.VARIABLE_TYPE_INFERRED_1, TokenType.VariableDeclaration },
+            { KeyWords.VARIABLE_TYPE_INFERRED_2, TokenType.VariableDeclaration },
+            { KeyWords.FUNCTION_DEFINITION, TokenType.FunctionDefinition },
+
+            {KeyWords.WHILE, TokenType.While },
+            {KeyWords.DO, TokenType.Do },
+
+            {KeyWords.IF, TokenType.If },
+            {KeyWords.ELSE, TokenType.Else },
+
+            { KeyWords.CONTINUE, TokenType.Continue},
+            { KeyWords.BREAK, TokenType.Break},
+            { KeyWords.RETURN, TokenType.Return},
+
+            { KeyWords.PUBLIC, TokenType.PublicScope},
+            { KeyWords.INTERNAL, TokenType.InternalScope },
+            { KeyWords.PROTECTED, TokenType.ProtectedScope },
+            { KeyWords.PRIVATE, TokenType.PrivateScope },
+
+            //types ? todo: is this the right moment and place?
+            { KeyWords.DOUBLE, TokenType.Double },
+            { KeyWords.FLOAT, TokenType.Float },
+            { KeyWords.INTEGER, TokenType.Integer },
+            { KeyWords.STRING, TokenType.String },
+            { KeyWords.CHARACTER, TokenType.Character },
+        };
+
+        public static bool IsPredefinedKeyword(string keyword)
+        {
+            return IsPredefinedKeyword(keyword, out _);
+        }
+
+        public static bool IsPredefinedKeyword(string keyword, out TokenType tokenType)
+        {
+            return _predefinedKeywords.TryGetValue(keyword, out tokenType);
+        }
+
         public static class OperatorPrecedence
         {
-            private static IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
+            private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
                 [TokenType.Equivalent] = 10,
                 [TokenType.Equals] = 10,
@@ -93,6 +148,8 @@
                 [TokenType.MultiplyAssign] = 40,
                 [TokenType.Divide] = 40,
                 [TokenType.DivideAssign] = 40,
+                //[TokenType.ParanthesesOpen] = 999,
+                //[TokenType.ParanthesesClose] = 999,
             };
 
             public static int Get(Token token)
@@ -107,26 +164,6 @@
             }
         }
 
-        public static IDictionary<string, TokenType> PredefinedKeyWords = new Dictionary<string, TokenType>()
-        {
-            { KeyWords.VARIABLE_TYPE_INFERRED_1, TokenType.VariableDeclaration },
-            { KeyWords.VARIABLE_TYPE_INFERRED_2, TokenType.VariableDeclaration },
-            { KeyWords.VARIABLE_DECLARATION, TokenType.VariableDeclaration },
-            { KeyWords.FUNCTION_DEFINITION, TokenType.FunctionDefinition },
-
-            { KeyWords.PUBLIC, TokenType.PublicScope},
-            { KeyWords.INTERNAL, TokenType.InternalScope },
-            { KeyWords.PROTECTED, TokenType.ProtectedScope },
-            { KeyWords.PRIVATE, TokenType.PrivateScope },
-
-            //types ? todo: is this the right moment and place?
-            { KeyWords.DOUBLE, TokenType.Double },
-            { KeyWords.FLOAT, TokenType.Float },
-            { KeyWords.INTEGER, TokenType.Integer },
-            { KeyWords.STRING, TokenType.String },
-            { KeyWords.CHARACTER, TokenType.Character },
-
-
-        };
+     
     }
 }

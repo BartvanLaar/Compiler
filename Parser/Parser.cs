@@ -111,6 +111,8 @@ namespace Parser
             var currentTokenType = PeekToken().TokenType;
             switch (currentTokenType)
             {
+                case TokenType.EndOfStatement: return null;
+                case TokenType.EndOfFile: return null;
                 case TokenType.Identifier: return ParseIdentifierExpression();
                 case TokenType.Double: return ParseDoubleExpression();
                 case TokenType.Float: return ParseFloatExpression();
@@ -168,19 +170,21 @@ namespace Parser
                 : ParseBinaryOperatorRightHandSide(leftHandSide, DEFAULT_OPERATOR_PRECENDENCE);
         }
 
-        private ExpressionBase? ParseBinaryOperatorRightHandSide(ExpressionBase leftHandSide, int expressionPrecedence)
+        private ExpressionBase? ParseBinaryOperatorRightHandSide(ExpressionBase leftHandSide, int previousExpressionPrecedence)
         {
             while (true)
             {
+               
                 // Peek instead of consume to determine precedence
-                var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(_lexer.PeekToken());
+                var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
 
-                if (currentTokenPrecendence < expressionPrecedence)
+                if (currentTokenPrecendence < previousExpressionPrecedence)
                 {
                     return leftHandSide;
                 }
 
                 var binaryOperatorToken = ConsumeToken();// binary operator needs to be consumed before we can parse the right hand side.
+
                 var rightHandSide = ParsePrimary();
 
                 if (rightHandSide == null)
@@ -216,6 +220,7 @@ namespace Parser
             return new FunctionCallExpression(prototype, expression);
         }
 
+        //what is a prototype?
         private PrototypeExpression? ParsePrototype()
         {
             if (PeekToken().TokenType != TokenType.Identifier)

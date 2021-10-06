@@ -108,8 +108,6 @@ namespace Parser.CodeLexer
             {
                 return (token.Value, cursor, lineCount, columnCount);
             }
-
-                        
             
             var res = string.Empty;
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && !GetSingleCharacterToken(cursor, columnCount, lineCount).HasValue)
@@ -121,9 +119,18 @@ namespace Parser.CodeLexer
 
             //check against all pre defined keywords..
             //todo: should this lang be case (in)sensitive?
-            if (LexerConstants.PredefinedKeyWords.TryGetValue(res, out var tokenType))
+            if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
             {
-                //todo: probably do something when encountering certain tokens?
+                //todo: probably do something when encountering certain tokens? -> yes.. For now hack it together!
+                if(tokenType == TokenType.Else)
+                {
+                    var result = GetNextToken(cursor, lineCount, columnCount);
+                    if(result.Token.TokenType == TokenType.If)
+                    {
+                        tokenType = TokenType.ElseIf;
+                    }
+                }
+
                 return (new Token(tokenType, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
             }
 

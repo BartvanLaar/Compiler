@@ -42,11 +42,15 @@
         BitShiftRight,              // >>>
 
         If,                         // If
+        Else,                       // If
+        ElseIf,                     // If
         While,                      // While
         Do,                         // While... Do..
         For,                        // For
         ForEach,                    // Foreach
         In,                         // Foreach x in [x,x,x]
+        Continue,
+        Break,
 
         FunctionName,
         Identifier,
@@ -78,5 +82,6 @@
         ReturnTypeIndiciator,
         ReAssignment,
         Definition,
+        Return,
     }
 }
