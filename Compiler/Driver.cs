@@ -5,7 +5,7 @@ using Parser.CodeLexer;
 using Parser.LLVMSupport;
 using System.Diagnostics;
 
-namespace Parser
+namespace Compiler
 {
     public class Driver
     {   
@@ -31,7 +31,7 @@ namespace Parser
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var lexer = new Lexer(text);
-            var parser = new Parser(lexer);
+            var parser = new Parser.Parser(lexer);
             Queue<ExpressionBase> abstractSyntaxTrees = parser.Parse();
             stopwatch.Stop();
             Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");

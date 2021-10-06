@@ -4,12 +4,12 @@ using System.Diagnostics;
 
 namespace Parser
 {
-    internal interface IParser
+    public interface IParser
     {
         Queue<ExpressionBase> Parse();
     }
 
-    internal sealed class Parser : IParser
+    public sealed class Parser : IParser
     {
         private readonly Lexer _lexer;
         private readonly Queue<ExpressionBase> _expressions;

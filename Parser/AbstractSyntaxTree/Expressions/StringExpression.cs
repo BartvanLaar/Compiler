@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal sealed class StringExpression : ExpressionBase
+    public sealed class StringExpression : ExpressionBase
     {
         public StringExpression(Token token) : base(token, ExpressionType.String)
         {

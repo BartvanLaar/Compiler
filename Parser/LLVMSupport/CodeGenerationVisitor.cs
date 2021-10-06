@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Parser.LLVMSupport
 {
-    internal class CodeGenerationVisitor : IByteCodeGeneratorListener
+    public class CodeGenerationVisitor : IByteCodeGeneratorListener
     {
 
         private static readonly LLVMBool LLVMBoolFalse = new(0);

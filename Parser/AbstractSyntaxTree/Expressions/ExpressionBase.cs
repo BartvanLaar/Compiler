@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal abstract class ExpressionBase
+    public abstract class ExpressionBase
     {
         protected ExpressionBase(ExpressionType expressionType) : this(null, expressionType) { }
 

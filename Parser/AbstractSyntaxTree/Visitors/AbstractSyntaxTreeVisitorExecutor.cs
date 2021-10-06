@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Visitors
 {
-    internal class AbstractSyntaxTreeVisitorExecutor : IAbstractSyntaxTreeVisitorExecuter
+    public class AbstractSyntaxTreeVisitorExecutor : IAbstractSyntaxTreeVisitorExecuter
     {
         private IByteCodeGeneratorListener? _listener;
 

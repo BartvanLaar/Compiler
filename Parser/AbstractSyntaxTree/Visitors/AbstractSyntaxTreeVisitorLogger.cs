@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Visitors
 {
-    internal class AbstractSyntaxTreeVisitorLogger : IByteCodeGeneratorListener
+    public class AbstractSyntaxTreeVisitorLogger : IByteCodeGeneratorListener
     {
         public void VisitDoubleExpression(DoubleExpression expression)
         {

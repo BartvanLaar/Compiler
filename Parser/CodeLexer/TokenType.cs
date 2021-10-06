@@ -1,6 +1,6 @@
 ﻿namespace Parser.CodeLexer
 {
-    internal enum TokenType
+    public enum TokenType
     {
         ToDo = -1337,               // should be removed or repurposed...
         Error = -2,

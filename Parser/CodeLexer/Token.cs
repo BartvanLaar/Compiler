@@ -1,6 +1,6 @@
 ﻿namespace Parser.CodeLexer
 {
-    internal struct Token
+    public struct Token
     {
 
         public TokenType TokenType { get; internal set; }

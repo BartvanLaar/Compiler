@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal sealed class FloatExpression : ExpressionBase
+    public sealed class FloatExpression : ExpressionBase
     {
         public FloatExpression(Token token) : base(token, ExpressionType.Float)
         {

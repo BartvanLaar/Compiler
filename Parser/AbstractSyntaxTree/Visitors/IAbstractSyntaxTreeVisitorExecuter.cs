@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Visitors
 {
-    internal interface IAbstractSyntaxTreeVisitorExecuter : IAbstractSyntaxTreeVisitor
+    public interface IAbstractSyntaxTreeVisitorExecuter : IAbstractSyntaxTreeVisitor
     {
         string Execute(Queue<ExpressionBase> abstractSyntaxTrees, IByteCodeGeneratorListener listener);
     }

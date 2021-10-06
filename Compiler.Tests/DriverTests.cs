@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Compiler;
 
-namespace Parser.Tests
+namespace Compiler.Tests
 {
     internal class DriverTests
     {

@@ -1,7 +1,7 @@
 ﻿
 namespace Parser.CodeLexer
 {
-    internal interface ILexer
+    public interface ILexer
     {
         Token ConsumeToken();
         Token PeekToken();
@@ -9,7 +9,7 @@ namespace Parser.CodeLexer
         Token[] PeekTokens(int amount);
     }
 
-    internal class Lexer : ILexer
+    public class Lexer : ILexer
     {
         /// Represents a single file.
         private string _text;

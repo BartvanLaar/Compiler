@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Visitors
 {
-    internal interface IAbstractSyntaxTreeVisitor
+    public interface IAbstractSyntaxTreeVisitor
     {
         void VisitIntegerExpression(IntegerExpression expression);
         void VisitDoubleExpression(DoubleExpression expression);

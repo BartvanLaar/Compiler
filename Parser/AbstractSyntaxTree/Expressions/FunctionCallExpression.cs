@@ -1,6 +1,6 @@
 ﻿namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal sealed class FunctionCallExpression : ExpressionBase
+    public sealed class FunctionCallExpression : ExpressionBase
     {
         public FunctionCallExpression(PrototypeExpression prototype, ExpressionBase body) : base(ExpressionType.FunctionCall)
         {
@@ -12,7 +12,8 @@
         public BodyExpression Body { get; }
     }
 
-    internal sealed class BodyExpression : ExpressionBase
+    [Obsolete]
+    public sealed class BodyExpression : ExpressionBase
     {
         public BodyExpression(ExpressionBase expression) : base(ExpressionType.Body)
         {

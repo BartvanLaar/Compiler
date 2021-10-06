@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal sealed class BinaryExpression : ExpressionBase
+    public sealed class BinaryExpression : ExpressionBase
     {
         public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase rightHandSide) : base(token, DetermineExpressionType(token.StringValue))
         {

@@ -3,7 +3,7 @@
 namespace Parser.AbstractSyntaxTree.Expressions
 {
     //todo: name is copied from example on the internet.. What is this actually?
-    internal sealed class PrototypeExpression : ExpressionBase
+    public sealed class PrototypeExpression : ExpressionBase
     {
         public PrototypeExpression(Token token, Token[] arguments) : base(token, ExpressionType.Prototype)
         {

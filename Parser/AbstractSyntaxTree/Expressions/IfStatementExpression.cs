@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal class IfStatementExpression : ExpressionBase
+    public class IfStatementExpression : ExpressionBase
     {
         public IfStatementExpression(ExpressionBase ifCondition, ExpressionBase then, ExpressionBase @else) : base(ExpressionType.IfStatementExpression)
         {

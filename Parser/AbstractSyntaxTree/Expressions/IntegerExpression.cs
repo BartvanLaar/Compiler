@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal sealed class IntegerExpression : ExpressionBase
+    public sealed class IntegerExpression : ExpressionBase
     {
         public IntegerExpression(Token token) : base(token, ExpressionType.Integer)
         {

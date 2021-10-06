@@ -2,7 +2,7 @@
 
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal class AssignmentExpression : ExpressionBase
+    public class AssignmentExpression : ExpressionBase
     {
         
         public AssignmentExpression(Token declarationTypeToken, ExpressionBase identificationExpression, Token assignmentToken, ExpressionBase valueExpression) : base(declarationTypeToken, ExpressionType.Assignment) // todo: do we/should we pass a token to the base?

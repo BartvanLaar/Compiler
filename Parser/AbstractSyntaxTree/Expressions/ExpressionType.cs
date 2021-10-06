@@ -1,7 +1,7 @@
 ﻿
 namespace Parser.AbstractSyntaxTree.Expressions
 {
-    internal enum ExpressionType
+    public enum ExpressionType
     {
 
         Add,
