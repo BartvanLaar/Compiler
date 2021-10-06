@@ -1,6 +1,4 @@
-﻿
-using Parser.AbstractSyntaxTree;
-using Parser.AbstractSyntaxTree.Expressions;
+﻿using Parser.AbstractSyntaxTree.Expressions;
 using Parser.CodeLexer;
 using System.Diagnostics;
 

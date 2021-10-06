@@ -1,9 +1,4 @@
-﻿using LLVMSharp;
-using Parser.AbstractSyntaxTree;
-using Parser.AbstractSyntaxTree.Expressions;
-using System.Runtime.InteropServices;
-
-namespace Parser.LLVMSupport
+﻿namespace Parser.LLVMSupport
 {
     //internal sealed class CodeGenerationParserListener : IParserListener
     //{
@@ -42,7 +37,7 @@ namespace Parser.LLVMSupport
     //    {
     //        _visitor.Visit(data);
     //        var anonymousFunction = _visitor.ResultStack.Pop();
-           
+
     //        var dFunc = (D_FUNCTION_PTR)Marshal.GetDelegateForFunctionPointer(
     //            LLVM.GetPointerToGlobal(_executionEngine, anonymousFunction), typeof(D_FUNCTION_PTR));
     //        LLVM.RunFunctionPassManager(_passManager, anonymousFunction);

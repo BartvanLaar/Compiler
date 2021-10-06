@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Parser.CodeLexer
+﻿namespace Parser.CodeLexer
 {
     internal static class LexerConstants
     {
