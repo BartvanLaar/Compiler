@@ -428,5 +428,40 @@ namespace Parsing.Tests
             Assert.AreEqual(TokenType.AccoladesClose, toks[15].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[16].TokenType);
         }
+
+        [TestCase("while(true){}")]
+        [TestCase("while ( true ) { } ")]
+        [TestCase("\nwhile\n(\ntrue\n)\n{\n}\n")]
+        public static void Lexer_Test_While_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(7);
+            Assert.AreEqual(TokenType.While, toks[0].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[5].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[6].TokenType);
+        }
+
+        [TestCase("do{}while(true)")]
+        [TestCase(" do { } while ( true )")]
+        [TestCase("\ndo\n{\n}\nwhile\n(\ntrue\n)\n")]
+        public static void Lexer_Test_Do_While_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(8);
+            Assert.AreEqual(TokenType.Do, toks[0].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[2].TokenType);
+            Assert.AreEqual(TokenType.While, toks[3].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.True, toks[5].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[6].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[7].TokenType);
+        }
     }
 }
