@@ -1,0 +1,16 @@
+﻿using Lexing;
+using System.Diagnostics;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
+{
+    public sealed class FloatExpression : ExpressionBase
+    {
+        public FloatExpression(Token token) : base(token, ExpressionType.Float)
+        {
+            // todo: how to handle nullables?
+            Debug.Assert(token.FloatValue.HasValue);
+            Value = token.FloatValue.Value;
+        }
+        public float Value { get; }
+    }
+}

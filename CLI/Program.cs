@@ -1,5 +1,6 @@
-﻿
-namespace Compiler.CLI
+﻿using Compiling;
+
+namespace CLI
 {
 
     public class Program
@@ -13,7 +14,7 @@ namespace Compiler.CLI
             Driver.RunLLVM(code);
             //code = "2.0 * 7.0;";
             //Driver.RunLLVM(code);
-            
+
             //code = "2.0 / 6.0;";
             //Driver.RunLLVM(code);
 
