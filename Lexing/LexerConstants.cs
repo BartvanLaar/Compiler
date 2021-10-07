@@ -9,6 +9,7 @@
         public const string BACKETS_OPEN = "[";
         public const string BACKETS_CLOSE = "]";
 
+        public const string VARIABLE_SEPARATOR = ",";
         public const string END_OF_STATEMENT = ";";
 
         /// Math signs
@@ -60,6 +61,7 @@
         {
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
+
             public const string FUNCTION_DEFINITION = "func";
             public const string PUBLIC = "public";
             public const string PROTECTED = "protected";
@@ -75,21 +77,21 @@
             public const string ELSE = "else";
 
             public const string FOR = "for";
-            public const string EACH = "each";
-            
+            public const string FOREACH = "each";
+
             public const string WHILE = "while";
             public const string DO = "do";
             public const string CONTINUE = "continue";
             public const string BREAK = "break";
             public const string RETURN = "return";
 
-            //types ? todo: is this the right moment and place?
             public const string DOUBLE = "double";
             public const string FLOAT = "float";
             public const string INTEGER = "int";
             public const string STRING = "string";
             public const string CHARACTER = "char";
-            
+            public const string BOOLEAN = "bool";
+
             public const string TRUE = "true";
             public const string FALSE = "false";
             public const string VOID = "void";
@@ -102,6 +104,8 @@
             { KeyWords.VARIABLE_TYPE_INFERRED_2, TokenType.VariableDeclaration },
             { KeyWords.FUNCTION_DEFINITION, TokenType.FunctionDefinition },
 
+            {KeyWords.FOR, TokenType.For},
+            {KeyWords.FOREACH, TokenType.ForEach},
             {KeyWords.WHILE, TokenType.While },
             {KeyWords.DO, TokenType.Do },
 
@@ -123,7 +127,8 @@
             { KeyWords.INTEGER, TokenType.Integer },
             { KeyWords.STRING, TokenType.String },
             { KeyWords.CHARACTER, TokenType.Character },
-            
+            { KeyWords.BOOLEAN, TokenType.Boolean },
+
             { KeyWords.TRUE, TokenType.True },
             { KeyWords.FALSE, TokenType.False },
             { KeyWords.VOID, TokenType.Void },
@@ -131,6 +136,7 @@
 
 
         };
+
 
         public static bool IsPredefinedKeyword(string keyword)
         {
@@ -176,6 +182,6 @@
             }
         }
 
-     
+
     }
 }

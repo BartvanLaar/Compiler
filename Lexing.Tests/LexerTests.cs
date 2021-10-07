@@ -326,7 +326,7 @@ namespace Lexing.Tests
         }
 
         [Test]
-        public static void Lexer_Test_Declare_Void_Function()
+        public static void Lexer_Test_Declare_Void_Function_No_Params()
         {
             var lexer = new Lexer("func SomeFunc() -> void {}");
 
@@ -339,6 +339,34 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.Void, toks[5].TokenType);
             Assert.AreEqual(TokenType.AccoladesOpen, toks[6].TokenType);
             Assert.AreEqual(TokenType.AccoladesClose, toks[7].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Declare_Void_Function_With_Params()
+        {
+            var lexer = new Lexer("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> void {}");
+
+            var toks = lexer.ConsumeTokens(50);
+            var counter = 0;
+            Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Boolean, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.VariableSeparator, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Double, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.VariableSeparator, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.VariableSeparator, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.String, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Void, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[counter++].TokenType);
         }
 
         [TestCase("if(true){}")]
@@ -449,6 +477,7 @@ namespace Lexing.Tests
         [TestCase("do{}while(true)")]
         [TestCase(" do { } while ( true )")]
         [TestCase("\ndo\n{\n}\nwhile\n(\ntrue\n)\n")]
+        [TestCase("\r\ndo\r\n{\r\n}\r\nwhile\r\n(\r\ntrue\r\n)\r\n")]
         public static void Lexer_Test_Do_While_Statement(string code)
         {
             var lexer = new Lexer(code);
@@ -462,6 +491,53 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.True, toks[5].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[6].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[7].TokenType);
+        }
+
+        [TestCase("for(var i =0; i<100; i++){}")]
+        [TestCase("for(auto i =0; i<100; i++){}")]
+        public static void Lexer_Test_For_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+            
+            var toks = lexer.ConsumeTokens(17);
+            var counter = 0;
+            Assert.AreEqual(TokenType.For, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.VariableDeclaration, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.LessThan, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[counter++].TokenType);
+        }
+
+
+
+
+        [TestCase("true?true:false")]
+        [TestCase("true ? true : false")]
+        [TestCase("\ntrue\n ?\n true\n :\n false")]
+        [TestCase("\r\ntrue\r\n ?\r\n true\r\n :\r\n false")]
+        public static void Lexer_Test_Terniary_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(6);
+            Assert.AreEqual(TokenType.True, toks[0].TokenType);
+            Assert.AreEqual(TokenType.TerniaryOperatorTrue, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.TerniaryOperatorFalse, toks[3].TokenType);
+            Assert.AreEqual(TokenType.False, toks[4].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
         }
     }
 }

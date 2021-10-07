@@ -273,6 +273,12 @@ namespace Lexing
                             token.TokenType = TokenType.AddAssign;
                             cursor++;
                             columnCount++;
+                        } 
+                        else if (singleCharTok?.TokenType == TokenType.Add)
+                        {
+                            token.TokenType = TokenType.AddAdd;
+                            cursor++;
+                            columnCount++;
                         }
 
                         return (token, cursor, lineCount, columnCount);
@@ -289,6 +295,12 @@ namespace Lexing
                         else if(singleCharTok?.TokenType == TokenType.GreaterThan)
                         {
                             token.TokenType = TokenType.ReturnTypeIndicator;
+                            cursor++;
+                            columnCount++;
+                        }
+                        else if (singleCharTok?.TokenType == TokenType.Subtract)
+                        {
+                            token.TokenType = TokenType.SubtractSubtract;
                             cursor++;
                             columnCount++;
                         }
@@ -406,9 +418,11 @@ namespace Lexing
             }
 
             //@incomplete
+            // todo: Why not make this a static dictionary in LexerConstants as this is accessed a **** lot... and then set line + columnCount afterwards...
             return _text[cursor].ToString() switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount) { StringValue = LexerConstants.END_OF_STATEMENT },
+                LexerConstants.VARIABLE_SEPARATOR => new Token(TokenType.VariableSeparator, lineCount, columnCount) { StringValue = LexerConstants.VARIABLE_SEPARATOR },
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_OPEN },
                 LexerConstants.PARANTHESES_OPEN => new Token(TokenType.ParanthesesOpen, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_OPEN },
                 LexerConstants.PARANTHESES_CLOSE => new Token(TokenType.ParanthesesClose, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_CLOSE },

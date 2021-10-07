@@ -2,20 +2,18 @@
 {
     public enum TokenType
     {
-        ToDo = -1337,               // should be removed or repurposed...
-        Error = -2,
+        EndOfFile,
 
-        EndOfFile = -1,
-        Undefined,
-
-        Number,
         Float,
         Double,
+        Boolean,
         Integer,
         Character,
         String,
-        DateTime,
+        DateTime, // !notimplemented
+        Void,
         Hexadecimal,
+
 
         AccoladesOpen,              // {
         AccoladesClose,             // }
@@ -57,34 +55,37 @@
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
-        Add,                       // +
-        Subtract,                      // -
-        Multiply,                      // *
+        Add,                        // +
+        AddAdd,                     // ++
+        Subtract,                   // -
+        SubtractSubtract,           // --
+        Multiply,                   // *
         Divide,                     // /
         Modulo,                     // %
         NullableCoalesce,           // ??
-        AddAssign,             // +=
-        SubtractAssign,            // -=
-        MultiplyAssign,            // *=
-        DivideAssign,           // /=
+        AddAssign,                  // +=
+        SubtractAssign,             // -=
+        MultiplyAssign,             // *=
+        DivideAssign,               // /=
         ModuloAssignment,           // %=
         NullableCoalesceAssignment, // ??=
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
-        VariableDeclaration,       // var, auto
+        VariableDeclaration,        // var, auto
         PublicScope,                // public
         PrivateScope,               // private
         InternalScope,              // internal
         ProtectedScope,             // protected
         FunctionDefinition,         // func
         ReturnTypeIndicator,        // ->
-        ReAssignment,
+        ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
+        VariableSeparator,          // ,
         Definition,
         Return,
+       
         True, 
         False,
         Null,
-        Void
     }
 }
