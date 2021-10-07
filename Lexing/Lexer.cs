@@ -134,7 +134,9 @@ namespace Lexing
 
             var currentChar = _text[cursor];
             var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
-            Func<char, bool> isValidCharacter = isHexadecimal ? c => char.IsLetterOrDigit(c) : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || global::Lexing.Lexer.IsNumberIndicator(c);
+            Func<char, bool> isValidCharacter = isHexadecimal 
+                ? c => char.IsLetterOrDigit(c) 
+                : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || global::Lexing.Lexer.IsNumberIndicator(c);
 
             var originalColumnCount = columnCount;
             var result = string.Empty;

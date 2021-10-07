@@ -3,7 +3,7 @@ using NUnit.Framework;
 using System;
 using System.Linq;
 
-namespace Parsing.Tests
+namespace Lexing.Tests
 {
     internal class LexerTests
     {
@@ -456,11 +456,11 @@ namespace Parsing.Tests
             var toks = lexer.ConsumeTokens(8);
             Assert.AreEqual(TokenType.Do, toks[0].TokenType);
             Assert.AreEqual(TokenType.AccoladesOpen, toks[1].TokenType);
-            Assert.AreEqual(TokenType.ParanthesesClose, toks[2].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[2].TokenType);
             Assert.AreEqual(TokenType.While, toks[3].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[4].TokenType);
             Assert.AreEqual(TokenType.True, toks[5].TokenType);
-            Assert.AreEqual(TokenType.AccoladesClose, toks[6].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[6].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[7].TokenType);
         }
     }
