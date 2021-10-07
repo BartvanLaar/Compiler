@@ -2,6 +2,7 @@
 {
     public enum TokenType
     {
+        Error,
         EndOfFile,
 
         Float,
@@ -17,8 +18,8 @@
 
         AccoladesOpen,              // {
         AccoladesClose,             // }
-        BracketsOpen,               // [
-        BracketsClose,              // ]
+        BracketOpen,               // [
+        BracketClose,              // ]
         ParanthesesOpen,            // (
         ParanthesesClose,           // )
         Assignment,                 // =
@@ -83,9 +84,10 @@
         VariableSeparator,          // ,
         Definition,
         Return,
-       
-        True, 
+
+        True,
         False,
         Null,
+        Params,
     }
 }

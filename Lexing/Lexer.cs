@@ -66,12 +66,12 @@ namespace Lexing
         private (Token[] Tokens, int Cursor, long LineCounter, long ColumnCounter) TraverseTokensInternal(int amount, int cursor, long lineCounter, long columnCounter)
         {
             Token[] tokens = new Token[amount];
-            for (var counter = 0; counter < amount; counter++)
+            // @FutureMe, if doing this for a single token peek is a performance bottleneck, you're doing some crazy fast stuff... and you're allowed to refactor this for the PeekToken() and ConsumeToken() methods :), for now idc.... ~Bart, 07-10-2021
+            for (var counter = 0; counter < amount; counter++) 
             {
                 (Token token, cursor, lineCounter, columnCounter) =
                     cursor < _text.Length
-                    ? GetNextToken(cursor, lineCounter, columnCounter) //@speed :ugly way to fill the rest of the list with values, so the calling side can expect the amount of indexes..
-                                                                       //I don't know if this is required, look back at this in the future.
+                    ? GetNextToken(cursor, lineCounter, columnCounter)
                     : (new Token(TokenType.EndOfFile, lineCounter, columnCounter), cursor, lineCounter, columnCounter);
                 tokens[counter] = token;
             }
@@ -108,7 +108,7 @@ namespace Lexing
             {
                 return (token.Value, cursor, lineCount, columnCount);
             }
-            
+
             var res = string.Empty;
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && !GetSingleCharacterToken(cursor, columnCount, lineCount).HasValue)
             {
@@ -134,8 +134,8 @@ namespace Lexing
 
             var currentChar = _text[cursor];
             var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
-            Func<char, bool> isValidCharacter = isHexadecimal 
-                ? c => char.IsLetterOrDigit(c) 
+            Func<char, bool> isValidCharacter = isHexadecimal
+                ? c => char.IsLetterOrDigit(c)
                 : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || global::Lexing.Lexer.IsNumberIndicator(c);
 
             var originalColumnCount = columnCount;
@@ -273,7 +273,7 @@ namespace Lexing
                             token.TokenType = TokenType.AddAssign;
                             cursor++;
                             columnCount++;
-                        } 
+                        }
                         else if (singleCharTok?.TokenType == TokenType.Add)
                         {
                             token.TokenType = TokenType.AddAdd;
@@ -291,8 +291,8 @@ namespace Lexing
                             token.TokenType = TokenType.SubtractAssign;
                             cursor++;
                             columnCount++;
-                        } 
-                        else if(singleCharTok?.TokenType == TokenType.GreaterThan)
+                        }
+                        else if (singleCharTok?.TokenType == TokenType.GreaterThan)
                         {
                             token.TokenType = TokenType.ReturnTypeIndicator;
                             cursor++;
@@ -426,6 +426,8 @@ namespace Lexing
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_OPEN },
                 LexerConstants.PARANTHESES_OPEN => new Token(TokenType.ParanthesesOpen, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_OPEN },
                 LexerConstants.PARANTHESES_CLOSE => new Token(TokenType.ParanthesesClose, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_CLOSE },
+                LexerConstants.BACKETS_OPEN => new Token(TokenType.BracketOpen, lineCount, columnCount) { StringValue = LexerConstants.BACKETS_OPEN },
+                LexerConstants.BACKETS_CLOSE => new Token(TokenType.BracketClose, lineCount, columnCount) { StringValue = LexerConstants.BACKETS_CLOSE },
                 LexerConstants.ACCOLADES_CLOSE => new Token(TokenType.AccoladesClose, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_CLOSE },
                 LexerConstants.TERNIARY_OPERATOR_TRUE => new Token(TokenType.TerniaryOperatorTrue, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_TRUE },
                 LexerConstants.TERNIARY_OPERATOR_FALSE => new Token(TokenType.TerniaryOperatorFalse, lineCount, columnCount) { StringValue = LexerConstants.TERNIARY_OPERATOR_FALSE },

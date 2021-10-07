@@ -1,4 +1,6 @@
-﻿namespace Lexing
+﻿using System.Collections.Generic;
+
+namespace Lexing
 {
     public static class LexerConstants
     {
@@ -128,6 +130,7 @@
             { KeyWords.STRING, TokenType.String },
             { KeyWords.CHARACTER, TokenType.Character },
             { KeyWords.BOOLEAN, TokenType.Boolean },
+            { KeyWords.PARAMS, TokenType.Params },
 
             { KeyWords.TRUE, TokenType.True },
             { KeyWords.FALSE, TokenType.False },
