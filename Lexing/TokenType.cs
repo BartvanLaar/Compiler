@@ -43,7 +43,6 @@
 
         If,                         // If
         Else,                       // If
-        ElseIf,                     // If
         While,                      // While
         Do,                         // While... Do..
         For,                        // For
@@ -78,10 +77,14 @@
         PrivateScope,               // private
         InternalScope,              // internal
         ProtectedScope,             // protected
-        FunctionDefinition,
-        ReturnTypeIndiciator,
+        FunctionDefinition,         // func
+        ReturnTypeIndicator,        // ->
         ReAssignment,
         Definition,
         Return,
+        True, 
+        False,
+        Null,
+        Void
     }
 }

@@ -8,8 +8,8 @@
         public long Column { get; init; }
         public string Name { get; init; }
         public string? StringValue { get; set; }
-        public float? FloatValue { get; set; }
-        public int? IntegerValue { get; set; } // todo: how to handle longs?
+        public float? FloatValue { get; set; } // whats better, float or double?
+        public long? IntegerValue { get; set; } // todo: how to handle longs?
         public bool? BooleanValue { get; set; }
         public Token(TokenType tokenType, long line, long column) : this(tokenType, tokenType.ToString(), line, column) { }
         public Token(long line, long column) : this(default, ((TokenType)default).ToString(), line, column) { }

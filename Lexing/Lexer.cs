@@ -117,36 +117,21 @@ namespace Lexing
                 cursor++;
             }
 
-            //check against all pre defined keywords..
-            //todo: should this lang be case (in)sensitive?
             if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
             {
-                //todo: probably do something when encountering certain tokens? -> yes.. For now hack it together!
-                if(tokenType == TokenType.Else)
-                {
-                    var result = GetNextToken(cursor, lineCount, columnCount);
-                    if(result.Token.TokenType == TokenType.If)
-                    {
-                        tokenType = TokenType.ElseIf;
-                    }
-                }
-
                 return (new Token(tokenType, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
             }
 
-            // for now assume it's an identifier...
-            // todo: fix assumption and check whether its a functionname etc? it's easy to check and might save headaches in the parser.. who knows..
             return (new Token(TokenType.Identifier, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
         {
-            //todo: implement... don't forget hexadecimals!
-            //todo: support things like 20f, 20d
             if (!char.IsDigit(_text[cursor]))
             {
                 return (null, cursor, lineCount, columnCount);
             }
+
             var currentChar = _text[cursor];
             var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
             Func<char, bool> isValidCharacter = isHexadecimal ? c => char.IsLetterOrDigit(c) : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || global::Lexing.Lexer.IsNumberIndicator(c);
@@ -170,10 +155,10 @@ namespace Lexing
             }
             else
             {
-                // also support double? idk why
+                // also support float? idk why
                 tokenType = isHexadecimal
                     ? TokenType.Hexadecimal : result.Contains(LexerConstants.DECIMAL_SEPARATOR_SIGN)
-                          ? TokenType.Float : TokenType.Integer;
+                          ? TokenType.Double : TokenType.Integer;
             }
 
             var token = new Token(tokenType, lineCount, originalColumnCount);
@@ -296,6 +281,12 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.SubtractAssign;
+                            cursor++;
+                            columnCount++;
+                        } 
+                        else if(singleCharTok?.TokenType == TokenType.GreaterThan)
+                        {
+                            token.TokenType = TokenType.ReturnTypeIndicator;
                             cursor++;
                             columnCount++;
                         }

@@ -60,7 +60,7 @@
         {
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
-            public const string FUNCTION_DEFINITION = "def";
+            public const string FUNCTION_DEFINITION = "func";
             public const string PUBLIC = "public";
             public const string PROTECTED = "protected";
             public const string INTERNAL = "internal";
@@ -89,6 +89,11 @@
             public const string INTEGER = "int";
             public const string STRING = "string";
             public const string CHARACTER = "char";
+            
+            public const string TRUE = "true";
+            public const string FALSE = "false";
+            public const string VOID = "void";
+            public const string NULL = "null";
         }
 
         private static readonly IDictionary<string, TokenType> _predefinedKeywords = new Dictionary<string, TokenType>()
@@ -118,6 +123,13 @@
             { KeyWords.INTEGER, TokenType.Integer },
             { KeyWords.STRING, TokenType.String },
             { KeyWords.CHARACTER, TokenType.Character },
+            
+            { KeyWords.TRUE, TokenType.True },
+            { KeyWords.FALSE, TokenType.False },
+            { KeyWords.VOID, TokenType.Void },
+            { KeyWords.NULL, TokenType.Null },
+
+
         };
 
         public static bool IsPredefinedKeyword(string keyword)

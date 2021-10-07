@@ -326,18 +326,107 @@ namespace Parsing.Tests
         }
 
         [Test]
-        public static void Lexer_Test_Declare_Function() // Known broken, fix... ~Bart 05-10-2021
+        public static void Lexer_Test_Declare_Void_Function()
         {
-            var lexer = new Lexer("def func SomeFunc() -> void {}");
+            var lexer = new Lexer("func SomeFunc() -> void {}");
 
             var toks = lexer.ConsumeTokens(8);
             Assert.AreEqual(TokenType.FunctionDefinition, toks[0].TokenType);
             Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[2].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
-            Assert.AreEqual(TokenType.GreaterThan, toks[4].TokenType);
-            Assert.AreEqual(TokenType.AccoladesOpen, toks[5].TokenType);
-            Assert.AreEqual(TokenType.AccoladesClose, toks[6].TokenType);
+            Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Void, toks[5].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[6].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[7].TokenType);
+        }
+
+        [TestCase("if(true){}")]
+        [TestCase("if ( true ) { } ")]
+        [TestCase("\nif\n(\ntrue\n)\n{\n}\n")]
+        public static void Lexer_Test_If_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(7);
+            Assert.AreEqual(TokenType.If, toks[0].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[5].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[6].TokenType);
+        }
+
+        [TestCase("if(true){}else{}")]
+        [TestCase("if ( true ) { } else { } ")]
+        [TestCase("\nif\n(\ntrue\n)\n{\n}\nelse\n{\n}\n")]
+        public static void Lexer_Test_If_Else_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.If, toks[0].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Else, toks[6].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[7].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[8].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[9].TokenType);
+        }
+
+        [TestCase("if(true){}else if( false ){}")]
+        [TestCase("if ( true ) { } else if ( false ) { } ")]
+        [TestCase("\nif\n(\ntrue\n)\n{\n}\nelse\nif\n(\nfalse\n)\n{\n}\n")]
+        public static void Lexer_Test_If_Else_If_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(14);
+            Assert.AreEqual(TokenType.If, toks[0].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Else, toks[6].TokenType);
+            Assert.AreEqual(TokenType.If, toks[7].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[8].TokenType);
+            Assert.AreEqual(TokenType.False, toks[9].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[10].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[11].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[12].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[13].TokenType);
+        }
+
+        [TestCase("if(true){}else if(false){}else{}")]
+        [TestCase("if ( true ) { } else if ( false ) { } else { } ")]
+        [TestCase("\nif\n(\ntrue\n)\n{\n}\nelse\nif\n(\nfalse\n)\n{\n}\nelse\n{\n}\n")]
+        public static void Lexer_Test_If_Else_If_Else_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(17);
+            Assert.AreEqual(TokenType.If, toks[0].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[1].TokenType);
+            Assert.AreEqual(TokenType.True, toks[2].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[4].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Else, toks[6].TokenType);
+            Assert.AreEqual(TokenType.If, toks[7].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[8].TokenType);
+            Assert.AreEqual(TokenType.False, toks[9].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[10].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[11].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[12].TokenType);
+            Assert.AreEqual(TokenType.Else, toks[13].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[14].TokenType);
+            Assert.AreEqual(TokenType.AccoladesClose, toks[15].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[16].TokenType);
         }
     }
 }

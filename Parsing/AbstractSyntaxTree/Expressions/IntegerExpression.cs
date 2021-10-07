@@ -11,7 +11,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             Debug.Assert(token.IntegerValue.HasValue);
             Value = token.IntegerValue.Value;
         }
-        public int Value { get; }
+        public long Value { get; }
 
     }
 }
