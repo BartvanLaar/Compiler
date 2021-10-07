@@ -163,6 +163,12 @@ namespace Parsing
 
         private ExpressionBase? ParseExpression()
         {
+            // Below code fixes the test but is not the solution, as just consuming it is not enough, it has to have priority because of ( sign.
+            //if(PeekToken().TokenType != TokenType.ParanthesesOpen)
+            //{
+            //    ConsumeToken();
+            //}
+
             var leftHandSide = ParsePrimary();
             const int DEFAULT_OPERATOR_PRECENDENCE = 0;
             return leftHandSide == null
@@ -177,13 +183,25 @@ namespace Parsing
 
                 // Peek instead of consume to determine precedence
                 var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
+                var isNextTokenClose = PeekToken().TokenType == TokenType.ParanthesesClose;
+                if (isNextTokenClose)
+                {
+                    ConsumeToken();
+                }
 
-                if (currentTokenPrecendence < previousExpressionPrecedence)
+                if (currentTokenPrecendence < previousExpressionPrecedence || isNextTokenClose)
                 {
                     return leftHandSide;
                 }
 
-                var binaryOperatorToken = ConsumeToken();// binary operator needs to be consumed before we can parse the right hand side.
+                // binary operator needs to be consumed before we can parse the right hand side.
+                var binaryOperatorToken = ConsumeToken();
+                var isNextTokenOpen = PeekToken().TokenType == TokenType.ParanthesesOpen;
+
+                if (isNextTokenOpen)
+                {
+                    ConsumeToken();
+                }
 
                 var rightHandSide = ParsePrimary();
 
@@ -191,11 +209,25 @@ namespace Parsing
                 {
                     return null;
                 }
-
-                var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(PeekToken());
-
-                if (currentTokenPrecendence < nextTokenPrecedence)
+                else if (isNextTokenOpen)
                 {
+                    var rhs = ParseBinaryOperatorRightHandSide(leftHandSide, -1);
+                    leftHandSide = new BinaryExpression(binaryOperatorToken, leftHandSide, rhs);
+                }
+
+                var currentPeek = PeekToken();
+                isNextTokenOpen = currentPeek.TokenType == TokenType.ParanthesesOpen;
+
+                var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(currentPeek);
+
+                if (isNextTokenOpen)
+                {
+                    ConsumeToken();
+                }
+
+                if (currentTokenPrecendence < nextTokenPrecedence || isNextTokenOpen)
+                {
+
                     rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, currentTokenPrecendence + 1);
                     if (rightHandSide == null)
                     {

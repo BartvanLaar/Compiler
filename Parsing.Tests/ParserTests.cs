@@ -14,7 +14,9 @@ namespace Parsing.Tests
         [TestCase("x+5;x+=5;", 2)]
         [TestCase("x+5*5/5*5/5;", 1)]
         [TestCase("var x = 10*5;", 1)]
-        [TestCase("var x = 10*(10-5);", 1)] // Known to fail () are not yet supported when doing math stuff.
+        [TestCase("var x = 10*(10-5);", 1)]
+        [TestCase("var x = 10*(10-(5-2));", 1)]
+        [TestCase("var x = (10*(10-(5-2)));", 1)]
         public void Test(string code, int expectedAmountOfTrees, int expectedAmountOfErrors = 0)
         {
             var lexer = new Lexer(code);
