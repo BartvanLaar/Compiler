@@ -185,8 +185,8 @@ namespace Parsing
                     ConsumeToken();
                 }
             }
-            
-            if(isClose) // Get rid of ending scopes.
+
+            if (isClose) // Get rid of ending scopes.
             {
                 while (PeekToken().TokenType is TokenType.ParanthesesClose)
                 {
@@ -211,7 +211,7 @@ namespace Parsing
                 // Peek instead of consume to determine precedence
                 var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
 
-                if (currentTokenPrecendence < previousExpressionPrecedence)
+                if (currentTokenPrecendence < previousExpressionPrecedence )
                 {
                     return leftHandSide;
                 }
@@ -225,30 +225,40 @@ namespace Parsing
                 if (rightHandSide == null)
                 {
                     return null;
-                } 
-                //else if (availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese)
-                //{
-                //    var nextTokenPrecedenceIntern = LexerConstants.OperatorPrecedence.Get(PeekToken());
-                //    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese ? nextTokenPrecedenceIntern : currentTokenPrecendence + 1);
-                //    if (rightHandSide == null)
-                //    {
-                //        return null;
-                //    }
-                //}
+                }
 
                 var availableParanthesesAfterParsingRightHandSide = ConsumeParantheses();
+                if (availableParanthesesAfterParsingRightHandSide.WasClosingParanthese)
+                {
+                    var nextTokPrec = LexerConstants.OperatorPrecedence.Get(PeekToken());
+                    if (nextTokPrec > currentTokenPrecendence)
+                    {
+                        return ParseBinaryOperatorRightHandSide(new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide), nextTokPrec);
+
+                    }
+                    else
+                    {
+                        return new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide);
+                    }
+
+                }
+
+
                 var currentPeek = PeekToken();
 
                 var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(currentPeek);
 
-                var isCloseOfCurrentMathScope = availableParanthesesAfterParsingRightHandSide.WasClosingParanthese;
-                var nextTokenIsMoreImportantThanCurrent = nextTokenPrecedence > currentTokenPrecendence && !isCloseOfCurrentMathScope;
-
+                var nextTokenIsMoreImportantThanCurrent = nextTokenPrecedence > currentTokenPrecendence;
                 // The deeper the scope the better ;)
                 var isStartOfNewMathScopeAndThusMoreImportantThanCurrent = availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese;
                 if (nextTokenIsMoreImportantThanCurrent || isStartOfNewMathScopeAndThusMoreImportantThanCurrent)
                 {
-                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese ? nextTokenPrecedence : currentTokenPrecendence + 1);
+                    int prevTokPrecToUse = currentTokenPrecendence - 1;
+                    if (nextTokenPrecedence >= currentTokenPrecendence)
+                    {
+                        prevTokPrecToUse = nextTokenPrecedence;
+                    }
+                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, prevTokPrecToUse);
                     if (rightHandSide == null)
                     {
                         return null;
