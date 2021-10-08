@@ -173,34 +173,33 @@ namespace Parsing
                 : ParseBinaryOperatorRightHandSide(leftHandSide, DEFAULT_OPERATOR_PRECENDENCE);
         }
 
-        private (bool WasOpeningParanthese, bool WasClosingParanthese) ConsumeParantheses()
+        private (bool WasOpeningParanthese, int OpeningAmount, bool WasClosingParanthese, int ClosingAmount) ConsumeParantheses()
         {
             var currentPeek = PeekToken();
             var isOpen = currentPeek.TokenType is TokenType.ParanthesesOpen;
             var isClose = currentPeek.TokenType is TokenType.ParanthesesClose;
-            if (isOpen) //todo: I don't think we need to know about all the starting layers... Could be wrong..
+            var openCounter = 0;
+            var closedCounter = 0;
+            //todo: I don't think we need to know about all the starting layers... Could be wrong..
+            while (PeekToken().TokenType is TokenType.ParanthesesOpen)
             {
-                while (PeekToken().TokenType is TokenType.ParanthesesOpen)
+                ConsumeToken();
+                openCounter++;
+            }
+
+            // Get rid of ending scopes.
+            while (PeekToken().TokenType is TokenType.ParanthesesClose)
+            {
+                if (openCounter > 0)
                 {
-                    ConsumeToken();
+                    ThrowParseError(PeekToken(), "a statement instead of a closing paranthese", "binary operation.");
+                    //Todo: Should we consume this token and check further..?
                 }
+                ConsumeToken();
+                closedCounter++;
             }
 
-            if (isClose) // Get rid of ending scopes.
-            {
-                while (PeekToken().TokenType is TokenType.ParanthesesClose)
-                {
-                    ConsumeToken();
-                }
-            }
-
-            if (isOpen && PeekToken().TokenType is TokenType.ParanthesesClose)
-            {
-                ThrowParseError(PeekToken(), "a statement instead of a closing paranthese", "binary operation.");
-                //Todo: Should we consume this token and check further..?
-            }
-
-            return (isOpen, isClose);
+            return (isOpen, openCounter, isClose, closedCounter);
         }
 
         private ExpressionBase? ParseBinaryOperatorRightHandSide(ExpressionBase leftHandSide, int previousExpressionPrecedence)
@@ -211,7 +210,7 @@ namespace Parsing
                 // Peek instead of consume to determine precedence
                 var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
 
-                if (currentTokenPrecendence < previousExpressionPrecedence )
+                if (previousExpressionPrecedence > currentTokenPrecendence)
                 {
                     return leftHandSide;
                 }
@@ -230,22 +229,16 @@ namespace Parsing
                 var availableParanthesesAfterParsingRightHandSide = ConsumeParantheses();
                 if (availableParanthesesAfterParsingRightHandSide.WasClosingParanthese)
                 {
-                    var nextTokPrec = LexerConstants.OperatorPrecedence.Get(PeekToken());
-                    if (nextTokPrec > currentTokenPrecendence)
+                    if(availableParanthesesAfterParsingRightHandSide.ClosingAmount == 1)
                     {
-                        return ParseBinaryOperatorRightHandSide(new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide), nextTokPrec);
-
-                    }
-                    else
-                    {
-                        return new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide);
+                        return ParseBinaryOperatorRightHandSide(new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide), currentTokenPrecendence);
                     }
 
+                    return new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide);
                 }
 
 
                 var currentPeek = PeekToken();
-
                 var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(currentPeek);
 
                 var nextTokenIsMoreImportantThanCurrent = nextTokenPrecedence > currentTokenPrecendence;
@@ -253,12 +246,15 @@ namespace Parsing
                 var isStartOfNewMathScopeAndThusMoreImportantThanCurrent = availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese;
                 if (nextTokenIsMoreImportantThanCurrent || isStartOfNewMathScopeAndThusMoreImportantThanCurrent)
                 {
-                    int prevTokPrecToUse = currentTokenPrecendence - 1;
+                    int precedenceToUse;
                     if (nextTokenPrecedence >= currentTokenPrecendence)
                     {
-                        prevTokPrecToUse = nextTokenPrecedence;
+                        precedenceToUse = nextTokenPrecedence;
+                    } else
+                    {
+                        precedenceToUse = nextTokenPrecedence - 1;
                     }
-                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, prevTokPrecToUse);
+                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, precedenceToUse);
                     if (rightHandSide == null)
                     {
                         return null;
