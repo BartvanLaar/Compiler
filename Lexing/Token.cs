@@ -26,9 +26,20 @@
             BooleanValue = null;
         }
 
+        public string? ToStringToken()
+        {
+            return $"{TokenType}";
+        }
+
+        public string? ToStringValue()
+        {
+            return $"{StringValue ?? FloatValue ?? IntegerValue as object ?? Name ?? TokenType.ToString()}";
+
+        }
+
         public override string? ToString()
         {
-            return $"{StringValue ?? FloatValue ?? IntegerValue as object ?? Name ?? TokenType.ToString()} - {TokenType}";
+            return $"{ToStringValue()} - {ToStringToken()}";
         }
     }
 }

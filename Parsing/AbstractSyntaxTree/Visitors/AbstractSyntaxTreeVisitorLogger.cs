@@ -30,7 +30,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
-            LogValue(expression);
+            Console.WriteLine($"Visiting {expression.GetType()} of TokenType {expression.Token?.ToStringToken()} resulting in {expression.LeftHandSide.Token?.ToStringValue()} {expression.Token?.ToStringValue()} {expression.RightHandSide.Token?.ToStringValue()}.");
         }
 
         public void VisitPrototypeExpression(PrototypeExpression expression)

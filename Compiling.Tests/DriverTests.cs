@@ -50,7 +50,20 @@ namespace Compiling.Tests
         [Test]
         public void Driver_Test_LLVM_1()
         {
-            Driver.RunLLVM("4.0 + 6.0;");
+            Driver.RunLLVM("(10-1)*5;");
+        }
+
+        [TestCase("(10-1)*5;")]
+        [TestCase("10-1*5;")]
+        [TestCase("10-(1*5);")]
+        [TestCase("10*(5-1);")]
+        [TestCase("(10*(5-1));")]
+        [TestCase("(10-2)*(5-1);")]
+        [TestCase("((10-2)*(5-1));")]
+        [TestCase("((10-(2+2))*(5-1));")] // the rest is going ok, this one is still borked
+        public void Driver_Test_Log_1(string code)
+        {
+            Driver.Run(code);
         }
     }
 }

@@ -8,15 +8,16 @@ namespace Parsing.Tests
 {
     internal class ParserTests
     {
-        [TestCase("x + 5", 1)]
-        [TestCase("x+5;", 1)]
-        [TestCase("x+5;x+=5", 2)]
-        [TestCase("x+5;x+=5;", 2)]
-        [TestCase("x+5*5/5*5/5;", 1)]
-        [TestCase("var x = 10*5;", 1)]
-        [TestCase("var x = 10*(10-5);", 1)]
-        [TestCase("var x = 10*(10-(5-2));", 1)]
-        [TestCase("var x = (10*(10-(5-2)));", 1)]
+        //[TestCase("x + 5", 1)]
+        //[TestCase("x+5;", 1)]
+        //[TestCase("x+5;x+=5", 2)]
+        //[TestCase("x+5;x+=5;", 2)]
+        //[TestCase("x+5*5/5*5/5;", 1)]
+        //[TestCase("var x = 10*5;", 1)]
+        //[TestCase("var x = 10*(10-5);", 1)]
+        //[TestCase("var x = 10*(10-(5-2));", 1)]
+        //[TestCase("var x = (10*(10-(5-2)));", 1)]
+        [TestCase("(10-1)*5;", 1)]
         public void Test(string code, int expectedAmountOfTrees, int expectedAmountOfErrors = 0)
         {
             var lexer = new Lexer(code);

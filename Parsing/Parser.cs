@@ -132,7 +132,7 @@ namespace Parsing
 
             if (PeekToken().TokenType != TokenType.Identifier)
             {
-                LogParseError(PeekToken(), "identifier", "assignment of variable");
+                ThrowParseError(PeekToken(), "identifier", "assignment of variable");
                 return null;
             }
 
@@ -140,13 +140,13 @@ namespace Parsing
 
             if (leftHandSideIdentifierExpression == null)
             {
-                LogParseError(leftHandSideTok, "variable name", "assignment of variable");
+                ThrowParseError(leftHandSideTok, "variable name", "assignment of variable");
                 return null;
             }
 
             if (PeekToken().TokenType is not (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
             {
-                LogParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
+                ThrowParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
                 return null;
             }
 
@@ -154,7 +154,7 @@ namespace Parsing
             var valueExpression = ParseExpression();
             if (valueExpression == null)
             {
-                LogParseError(assignmentTok, "value expression", "assignment of variable");
+                ThrowParseError(assignmentTok, "value expression", "assignment of variable");
                 return null;
             }
 
@@ -164,16 +164,43 @@ namespace Parsing
         private ExpressionBase? ParseExpression()
         {
             // Below code fixes the test but is not the solution, as just consuming it is not enough, it has to have priority because of ( sign.
-            //if(PeekToken().TokenType != TokenType.ParanthesesOpen)
-            //{
-            //    ConsumeToken();
-            //}
+            var temp = ConsumeParantheses();
 
             var leftHandSide = ParsePrimary();
             const int DEFAULT_OPERATOR_PRECENDENCE = 0;
             return leftHandSide == null
                 ? null
                 : ParseBinaryOperatorRightHandSide(leftHandSide, DEFAULT_OPERATOR_PRECENDENCE);
+        }
+
+        private (bool WasOpeningParanthese, bool WasClosingParanthese) ConsumeParantheses()
+        {
+            var currentPeek = PeekToken();
+            var isOpen = currentPeek.TokenType is TokenType.ParanthesesOpen;
+            var isClose = currentPeek.TokenType is TokenType.ParanthesesClose;
+            if (isOpen) //todo: I don't think we need to know about all the starting layers... Could be wrong..
+            {
+                while (PeekToken().TokenType is TokenType.ParanthesesOpen)
+                {
+                    ConsumeToken();
+                }
+            }
+            
+            if(isClose) // Get rid of ending scopes.
+            {
+                while (PeekToken().TokenType is TokenType.ParanthesesClose)
+                {
+                    ConsumeToken();
+                }
+            }
+
+            if (isOpen && PeekToken().TokenType is TokenType.ParanthesesClose)
+            {
+                ThrowParseError(PeekToken(), "a statement instead of a closing paranthese", "binary operation.");
+                //Todo: Should we consume this token and check further..?
+            }
+
+            return (isOpen, isClose);
         }
 
         private ExpressionBase? ParseBinaryOperatorRightHandSide(ExpressionBase leftHandSide, int previousExpressionPrecedence)
@@ -183,52 +210,45 @@ namespace Parsing
 
                 // Peek instead of consume to determine precedence
                 var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
-                var isNextTokenClose = PeekToken().TokenType == TokenType.ParanthesesClose;
-                if (isNextTokenClose)
-                {
-                    ConsumeToken();
-                }
 
-                if (currentTokenPrecendence < previousExpressionPrecedence || isNextTokenClose)
+                if (currentTokenPrecendence < previousExpressionPrecedence)
                 {
                     return leftHandSide;
                 }
 
                 // binary operator needs to be consumed before we can parse the right hand side.
                 var binaryOperatorToken = ConsumeToken();
-                var isNextTokenOpen = PeekToken().TokenType == TokenType.ParanthesesOpen;
-
-                if (isNextTokenOpen)
-                {
-                    ConsumeToken();
-                }
+                var availableParanthesesBeforeParsingRightHandSide = ConsumeParantheses();
 
                 var rightHandSide = ParsePrimary();
 
                 if (rightHandSide == null)
                 {
                     return null;
-                }
-                else if (isNextTokenOpen)
-                {
-                    var rhs = ParseBinaryOperatorRightHandSide(leftHandSide, -1);
-                    leftHandSide = new BinaryExpression(binaryOperatorToken, leftHandSide, rhs);
-                }
+                } 
+                //else if (availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese)
+                //{
+                //    var nextTokenPrecedenceIntern = LexerConstants.OperatorPrecedence.Get(PeekToken());
+                //    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese ? nextTokenPrecedenceIntern : currentTokenPrecendence + 1);
+                //    if (rightHandSide == null)
+                //    {
+                //        return null;
+                //    }
+                //}
 
+                var availableParanthesesAfterParsingRightHandSide = ConsumeParantheses();
                 var currentPeek = PeekToken();
-                isNextTokenOpen = currentPeek.TokenType == TokenType.ParanthesesOpen;
 
                 var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(currentPeek);
 
-                if (isNextTokenOpen)
-                {
-                    ConsumeToken();
-                }
+                var isCloseOfCurrentMathScope = availableParanthesesAfterParsingRightHandSide.WasClosingParanthese;
+                var nextTokenIsMoreImportantThanCurrent = nextTokenPrecedence > currentTokenPrecendence && !isCloseOfCurrentMathScope;
 
-                if (currentTokenPrecendence < nextTokenPrecedence || isNextTokenOpen)
+                // The deeper the scope the better ;)
+                var isStartOfNewMathScopeAndThusMoreImportantThanCurrent = availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese;
+                if (nextTokenIsMoreImportantThanCurrent || isStartOfNewMathScopeAndThusMoreImportantThanCurrent)
                 {
-
-                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, currentTokenPrecendence + 1);
+                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese ? nextTokenPrecedence : currentTokenPrecendence + 1);
                     if (rightHandSide == null)
                     {
                         return null;
@@ -258,7 +278,7 @@ namespace Parsing
             if (PeekToken().TokenType != TokenType.Identifier)
             {
                 // Expected a function name...
-                LogParseError(PeekToken(), "a function name", "prototype");
+                ThrowParseError(PeekToken(), "a function name", "prototype");
                 return null;
             }
 
@@ -266,7 +286,7 @@ namespace Parsing
 
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
-                LogParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "prototype");
+                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "prototype");
                 return null;
             }
             ConsumeToken();
@@ -280,7 +300,7 @@ namespace Parsing
 
             if (PeekToken().TokenType != TokenType.ParanthesesClose)
             {
-                LogParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "prototype");
+                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "prototype");
                 return null;
             }
 
@@ -334,7 +354,7 @@ namespace Parsing
         {
             if (PeekToken().StringValue?.Length > 1)
             {
-                LogParseError(PeekToken(), "Character with length of 1", "Character initializer");
+                ThrowParseError(PeekToken(), "Character with length of 1", "Character initializer");
             }
 
             //todo: how to handle nullables?
@@ -344,7 +364,7 @@ namespace Parsing
             return result;
         }
 
-        private static void LogParseError(Token token, string expectedCharacter, string exptectedInOrAt)
+        private static void ThrowParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
             Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
         }
