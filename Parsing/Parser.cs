@@ -206,7 +206,6 @@ namespace Parsing
         {
             while (true)
             {
-
                 // Peek instead of consume to determine precedence
                 var currentTokenPrecendence = LexerConstants.OperatorPrecedence.Get(PeekToken());
 
@@ -237,7 +236,6 @@ namespace Parsing
                     return new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide);
                 }
 
-
                 var currentPeek = PeekToken();
                 var nextTokenPrecedence = LexerConstants.OperatorPrecedence.Get(currentPeek);
 
@@ -246,15 +244,7 @@ namespace Parsing
                 var isStartOfNewMathScopeAndThusMoreImportantThanCurrent = availableParanthesesBeforeParsingRightHandSide.WasOpeningParanthese;
                 if (nextTokenIsMoreImportantThanCurrent || isStartOfNewMathScopeAndThusMoreImportantThanCurrent)
                 {
-                    int precedenceToUse;
-                    if (nextTokenPrecedence >= currentTokenPrecendence)
-                    {
-                        precedenceToUse = nextTokenPrecedence;
-                    } else
-                    {
-                        precedenceToUse = nextTokenPrecedence - 1;
-                    }
-                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, precedenceToUse);
+                    rightHandSide = ParseBinaryOperatorRightHandSide(rightHandSide, nextTokenPrecedence);
                     if (rightHandSide == null)
                     {
                         return null;
