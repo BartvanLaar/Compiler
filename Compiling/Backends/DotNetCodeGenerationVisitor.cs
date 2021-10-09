@@ -1,15 +1,12 @@
 ﻿using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Compiling.Backends
 {
     internal class DotNetCodeGenerationVisitor : IByteCodeGeneratorListener
     {
+        private readonly Stack<object> _valueStack = new Stack<object>();
+        public IEnumerable<object> Results => _valueStack;
         public void VisitAssignmentExpression(AssignmentExpression expression)
         {
             throw new NotImplementedException();
@@ -17,7 +14,59 @@ namespace Compiling.Backends
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
-            throw new NotImplementedException();
+            var rhsValue = _valueStack.Pop();
+            var lhsValue = _valueStack.Pop();
+
+            object resultingValue;
+            //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
+            switch (expression.NodeExpressionType)
+            {
+                case ExpressionType.Add:
+                    resultingValue = (double)lhsValue + (double)rhsValue;
+                    break;
+                case ExpressionType.Subtract:
+                    resultingValue = (double)lhsValue - (double)rhsValue;
+                    break;
+                case ExpressionType.Multiply:
+                    resultingValue = (double)lhsValue * (double)rhsValue;
+                    break;
+                case ExpressionType.Divide:
+                    resultingValue = (double)lhsValue / (double)rhsValue;
+                    break;
+                case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
+                    {
+                        resultingValue = (double)lhsValue == (double)rhsValue;
+                        break;
+                    }
+                case ExpressionType.Equals:
+                    {
+                        resultingValue = (double)lhsValue == (double)rhsValue;
+                        break;
+                    }
+                case ExpressionType.GreaterThan:
+                    {
+                        resultingValue = (double)lhsValue > (double)rhsValue;
+                        break;
+                    }
+                case ExpressionType.GreaterThanEqual:
+                    {
+                        resultingValue = (double)lhsValue >= (double)rhsValue;
+                        break;
+                    }
+                case ExpressionType.LessThan:
+                    {
+                        resultingValue = (double)lhsValue < (double)rhsValue;
+                        break;
+                    }
+                case ExpressionType.LessThanEqual:
+                    {
+                        resultingValue = (double)lhsValue <= (double)rhsValue;
+                        break;
+                    }
+                default:
+                    throw new ArgumentException("invalid binary operator");
+            }
+            _valueStack.Push(resultingValue);
         }
 
         public void VisitBodyStatementExpression(BodyExpression expression)
@@ -27,17 +76,17 @@ namespace Compiling.Backends
 
         public void VisitCharacterExpression(CharacterExpression expression)
         {
-            throw new NotImplementedException();
+            _valueStack.Push(expression.Value);
         }
 
         public void VisitDoubleExpression(DoubleExpression expression)
         {
-            throw new NotImplementedException();
+            _valueStack.Push(expression.Value);
         }
 
         public void VisitFloatExpression(FloatExpression expression)
         {
-            throw new NotImplementedException();
+            _valueStack.Push(expression.Value);
         }
 
         public void VisitForStatementExpression(ForStatementExpression expression)
@@ -62,7 +111,7 @@ namespace Compiling.Backends
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
-            throw new NotImplementedException();
+            _valueStack.Push(expression.Value);
         }
 
         public void VisitMethodCallExpression(MethodCallExpression expression)
@@ -77,7 +126,7 @@ namespace Compiling.Backends
 
         public void VisitStringExpression(StringExpression expression)
         {
-            throw new NotImplementedException();
+            _valueStack.Push(expression.Value);
         }
     }
 }

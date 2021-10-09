@@ -1,4 +1,4 @@
-﻿using Compiling.Backends.LLVMSupport;
+﻿using Compiling.Backends;
 using Lexing;
 using LLVMSharp;
 using Parsing;
@@ -11,6 +11,16 @@ namespace Compiling
     public class Driver
     {
         public static void Run(string text) => Run(text, new AbstractSyntaxTreeVisitorExecutor(), new AbstractSyntaxTreeVisitorLogger());
+        public static void RunDotNet(string text)
+        {
+            var visitor = new DotNetCodeGenerationVisitor();
+            Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);
+            foreach(var res in visitor.Results)
+            {
+                Console.WriteLine(res.ToString());
+            }
+        }
+
         public static void RunLLVM(string text)
         {
             var (module, builder, executionEngine, passManager) = SetupLLVM();
