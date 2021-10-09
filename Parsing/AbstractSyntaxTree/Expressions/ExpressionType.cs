@@ -26,7 +26,8 @@
         Body,
         IfStatementExpression,
         ForStatementExpression,
-        BooleanValue
+        BooleanValue,
+        WhileStatementExpression
     }
 
 }

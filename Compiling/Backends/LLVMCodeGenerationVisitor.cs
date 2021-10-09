@@ -263,5 +263,10 @@ namespace Compiling.Backends
         {
             throw new NotImplementedException();
         }
+
+        public void VisitWhileStatementExpression(WhileStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

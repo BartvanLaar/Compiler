@@ -73,14 +73,19 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Log(expression);
         }
 
-        private static void Log(ExpressionBase baseExp)
-        {
-            Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
-        }
-
         public void VisitBodyStatementExpression(BodyExpression expression)
         {
             Log(expression);
+        }
+
+        public void VisitWhileStatementExpression(WhileStatementExpression expression)
+        {
+            Log(expression);
+        }
+
+        private static void Log(ExpressionBase baseExp)
+        {
+            Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
     }
 }

@@ -128,5 +128,10 @@ namespace Compiling.Backends
         {
             _valueStack.Push(expression.Value);
         }
+
+        public void VisitWhileStatementExpression(WhileStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

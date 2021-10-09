@@ -2,7 +2,7 @@
 {
     public class ForStatementExpression : ExpressionBase
     {
-        public ForStatementExpression(string variableName, ExpressionBase start, ExpressionBase end, ExpressionBase step, ExpressionBase actionBody) : base(ExpressionType.ForStatementExpression)
+        public ForStatementExpression(string variableName, ExpressionBase start, ExpressionBase end, ExpressionBase step, BodyExpression actionBody) : base(ExpressionType.ForStatementExpression)
         {
             VariableName = variableName;
             Start = start;

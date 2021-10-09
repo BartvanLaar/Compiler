@@ -19,7 +19,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             return resultFilePath; // for now support a single file.
         }
 
-        public void Visit(ExpressionBase expression)
+        public void Visit(ExpressionBase? expression)
         {
             if (expression == null)
             {
@@ -78,16 +78,25 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.IfStatementExpression:
                     VisitIfStatementExpression((IfStatementExpression)expression);
                     break;
-                case ExpressionType.ForStatementExpression:
-                    VisitForStatementExpression((ForStatementExpression)expression);
+                case ExpressionType.WhileStatementExpression:
+                    VisitWhileStatementExpression((WhileStatementExpression)expression);
                     break;
+                //case ExpressionType.ForStatementExpression:
+                //    VisitForStatementExpression((ForStatementExpression)expression);
+                //    break;
                 default:
                     // should this be visiting a top level?
                     throw new ArgumentException($"Unknown expression type encountered: '{expression.GetType()}'");
             }
         }
 
+        public void VisitWhileStatementExpression(WhileStatementExpression expression)
+        {
+            Visit(expression.WhileCondition);
+            Visit(expression.DoBody);
 
+            _listener?.VisitWhileStatementExpression(expression);
+        }
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
@@ -167,8 +176,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
+            Visit(expression.IfCondition);
+            Visit(expression.IfBody);
+            Visit(expression.Else);
+
             _listener?.VisitIfStatementExpression(expression);
-            throw new NotImplementedException();
         }
 
         public void VisitBodyStatementExpression(BodyExpression expression)

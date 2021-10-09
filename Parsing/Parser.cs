@@ -47,6 +47,11 @@ namespace Parsing
                         ConsumeToken();
                         return false;
                     }
+                case TokenType.If: ConsumeIfStatementExpression(); return false;
+                case TokenType.Do:
+                case TokenType.While:
+                    ConsumeWhileStatementExpression(); return false;
+
                 case TokenType.Identifier:
                     {
                         //todo: handle assignment variants?
@@ -75,6 +80,8 @@ namespace Parsing
             }
         }
 
+     
+
         private void ConsumeExpression(ExpressionBase? expression)
         {
             if (expression == null)
@@ -91,6 +98,19 @@ namespace Parsing
         private void ConsumeIdentifierExpression()
         {
             var expr = ParseExpression();
+            ConsumeExpression(expr);
+        }
+
+        private void ConsumeWhileStatementExpression()
+        {
+            var expr = ParseWhileStatementExpression();
+            ConsumeExpression(expr);
+        }
+      
+
+        private void ConsumeIfStatementExpression()
+        {
+            var expr = ParseIfStatementExpression();
             ConsumeExpression(expr);
         }
 
@@ -124,7 +144,6 @@ namespace Parsing
                 TokenType.Character => ParseCharacterExpression(),
                 TokenType.True => ParseBooleanExpression(),
                 TokenType.False => ParseBooleanExpression(),
-                TokenType.If => ParseIfStatementExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -137,6 +156,22 @@ namespace Parsing
             }
 
             throw new InvalidOperationException($"{nameof(ParseBooleanExpression)} can only be used with Tokens True or False, in all other cases use a binary expression");
+        }
+
+        private ExpressionBase ParseWhileStatementExpression()
+        {
+            var currentPeek = PeekToken();
+            var isWhile = currentPeek.TokenType is TokenType.While;
+            var isDo = currentPeek.TokenType is TokenType.Do;
+            Debug.Assert(isWhile || isDo);
+            //todo: fix...
+            //if (isWhile)
+            //{
+            //    return;
+            //}
+
+            ConsumeToken();
+            return null;
         }
 
         private ExpressionBase? ParseIfStatementExpression()
