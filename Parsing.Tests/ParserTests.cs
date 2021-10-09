@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System;
 using System.IO;
 using System.Linq;
+using TestHelpers.Tests;
 
 namespace Parsing.Tests
 {
@@ -33,7 +34,7 @@ namespace Parsing.Tests
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
-        [TestCase("if(true){}",1)]
+        [TestCase("if(true){}", 1)]
         [TestCase("if(true){}else{}", 1)]
         [TestCase("if(true){}else if(false){}", 1)]
         [TestCase("if(true){}else if(false){} else {}", 1)]
@@ -46,9 +47,10 @@ namespace Parsing.Tests
             using var sw = new StringWriter();
             Console.SetOut(sw);
 
-            var ast = parser.Parse();
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
+            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
+                var ast = parser.Parse();
+                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            });
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -63,13 +65,10 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
-
-            var ast = parser.Parse();
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-
-            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
+            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
+                var ast = parser.Parse();
+                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            });
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -86,13 +85,11 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
+            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
+                var ast = parser.Parse();
+                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            });
 
-            var ast = parser.Parse();
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-
-            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -133,12 +130,12 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
+            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
+                var ast = parser.Parse();
+                Assert.AreEqual(1, ast.Count);
+            });
 
-            var ast = parser.Parse();
-            Assert.AreEqual(1, ast.Count);
-            Assert.IsEmpty(sw.ToString());
+            Assert.IsEmpty(errors);
         }
     }
 }

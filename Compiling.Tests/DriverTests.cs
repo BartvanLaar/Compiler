@@ -1,8 +1,6 @@
-﻿using Compiling;
-using NUnit.Framework;
-using System;
-using System.IO;
+﻿using NUnit.Framework;
 using System.Linq;
+using TestHelpers.Tests;
 
 namespace Compiling.Tests
 {
@@ -57,24 +55,24 @@ namespace Compiling.Tests
         }
 
         [TestCase("(10-1)*5;", 45)]
-        [TestCase("10-1*5;",5)]
-        [TestCase("10-(1*5);",5)]
-        [TestCase("10*(5-1);",40)]
-        [TestCase("10*5-1;",49)]
-        [TestCase("10-5-1;",4)]
-        [TestCase("(10*(5-1));",40)]
-        [TestCase("(10-2)*(5-1);",32)]
-        [TestCase("((10-2)*(5-1));",32)]
-        [TestCase("((10-(2+2))-(5-1));",2)]
-        [TestCase("((10-(2+2))*(5-1));",24)]
-        [TestCase("(10-(2+2))-5;",1)]
-        public void Driver_Test_Log_1(string code,double expectedResult)
+        [TestCase("10-1*5;", 5)]
+        [TestCase("10-(1*5);", 5)]
+        [TestCase("10*(5-1);", 40)]
+        [TestCase("10*5-1;", 49)]
+        [TestCase("10-5-1;", 4)]
+        [TestCase("(10*(5-1));", 40)]
+        [TestCase("(10-2)*(5-1);", 32)]
+        [TestCase("((10-2)*(5-1));", 32)]
+        [TestCase("((10-(2+2))-(5-1));", 2)]
+        [TestCase("((10-(2+2))*(5-1));", 24)]
+        [TestCase("(10-(2+2))-5;", 1)]
+        public void Driver_Test_Log_1(string code, double expectedResult)
         {
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
-            Driver.RunDotNet(code);
-            var messages = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
-            Assert.AreEqual(expectedResult,double.Parse(messages.Last()));
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() =>
+            {
+                Driver.RunDotNet(code);
+            });
+            Assert.AreEqual(expectedResult, double.Parse(messages.Last()));
         }
     }
 }

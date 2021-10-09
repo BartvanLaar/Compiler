@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lexing", "Lexing\Lexing.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lexing.Tests", "Lexing.Tests\Lexing.Tests.csproj", "{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHelpers.Tests", "TestHelpers.Tests\TestHelpers.Tests.csproj", "{CBC98C6B-DEC0-460C-9B5C-87802370C83F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +67,7 @@ Global
 		{03240EB7-5389-4F65-A063-7050A7BA91BD} = {E20D4D1A-ECA0-4903-AC0F-D2540BDCBA62}
 		{AA711ABE-9D9C-433D-A6D9-9FB128264125} = {E20D4D1A-ECA0-4903-AC0F-D2540BDCBA62}
 		{79773A2B-A940-48F6-80EA-9BEDD5A98AAB} = {E20D4D1A-ECA0-4903-AC0F-D2540BDCBA62}
+		{CBC98C6B-DEC0-460C-9B5C-87802370C83F} = {E20D4D1A-ECA0-4903-AC0F-D2540BDCBA62}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {58944CF8-3027-405A-826C-AC440C6D945F}

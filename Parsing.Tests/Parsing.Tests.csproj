@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Parsing\Parsing.csproj" />
+    <ProjectReference Include="..\TestHelpers.Tests\TestHelpers.Tests.csproj" />
   </ItemGroup>
 
 </Project>
