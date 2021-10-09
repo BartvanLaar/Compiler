@@ -14,8 +14,8 @@ namespace Compiling.Backends
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
-            var rhsValue = _valueStack.Pop();
-            var lhsValue = _valueStack.Pop();
+            var rhsValue = Convert.ToDouble(_valueStack.Pop());
+            var lhsValue = Convert.ToDouble(_valueStack.Pop());
 
             object resultingValue;
             //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
