@@ -107,6 +107,8 @@ namespace Lexing.Tests
         [TestCase("??", TokenType.NullableCoalesce)]
         [TestCase("//", TokenType.Comment)]
         [TestCase("///", TokenType.Summary)]
+        [TestCase("--", TokenType.SubtractSubtract)]
+        [TestCase("++", TokenType.AddAdd)]
         public static void Lexer_Test_SingleToken(string text, TokenType expectedTokenType)
         {
             var lexer = new Lexer(text);
@@ -144,6 +146,8 @@ namespace Lexing.Tests
         [TestCase("/// \n ///", TokenType.Summary)]
         [TestCase("// \r\n //", TokenType.Comment)]
         [TestCase("/// \r\n ///", TokenType.Summary)]
+        [TestCase("-- \r\n --", TokenType.SubtractSubtract)]
+        [TestCase("++ \r\n ++", TokenType.AddAdd)]
         public static void Lexer_Test_Two_SingleTokens(string text, TokenType expectedTokenType)
         {
             var lexer = new Lexer(text);
@@ -260,12 +264,43 @@ namespace Lexing.Tests
         {
             var lexer = new Lexer(code);
             var toks = lexer.ConsumeTokens(5);
-
             Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
             Assert.AreEqual(TokenType.Add, toks[1].TokenType);
             Assert.AreEqual(TokenType.Integer, toks[2].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[3].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);
+        }
+
+        [TestCase("x++;")]
+        [TestCase("x ++;")]
+        [TestCase("x \r ++;")]
+        [TestCase("x \n ++;")]
+        [TestCase("x \r\n ++;")]
+        public static void Lexer_Test_Use_Variable_AddAdd(string code)
+        {
+            var lexer = new Lexer(code);
+            var toks = lexer.ConsumeTokens(4);
+
+            Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[1].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[2].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[3].TokenType);
+        }
+
+        [TestCase("x--;")]
+        [TestCase("x --;")]
+        [TestCase("x \r --;")]
+        [TestCase("x \n --;")]
+        [TestCase("x \r\n --;")]
+        public static void Lexer_Test_Use_Variable_SubtractSubtract(string code)
+        {
+            var lexer = new Lexer(code);
+            var toks = lexer.ConsumeTokens(4);
+
+            Assert.AreEqual(TokenType.Identifier, toks[0].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[1].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[2].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[3].TokenType);
         }
 
         [Test]

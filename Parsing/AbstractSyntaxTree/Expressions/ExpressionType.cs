@@ -2,7 +2,6 @@
 {
     public enum ExpressionType
     {
-
         Add,
         Subtract,
         Multiply,

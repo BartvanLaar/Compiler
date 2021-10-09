@@ -51,6 +51,29 @@ namespace Parsing.Tests
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
+        [TestCase("x--", 1)]
+        [TestCase("x--;", 1)]
+        [TestCase("x++", 1)]
+        [TestCase("x++;", 1)]
+        [TestCase("5++", 1, 1)]
+        [TestCase("5++;", 1, 1)]
+        [TestCase("5--", 1, 1)]
+        [TestCase("5--;", 1, 1)]
+        public void General_Code_Test_Throw_No_Error_MinusMinus_And_PlusPlus(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            using var sw = new StringWriter();
+            Console.SetOut(sw);
+
+            var ast = parser.Parse();
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+
+            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
+            Assert.AreEqual(expectedAmountOfErrors, errors.Count());
+        }
+
         [TestCase("x + 5;")]
         [TestCase("x + y;")]
         [TestCase("x += 5;")]
