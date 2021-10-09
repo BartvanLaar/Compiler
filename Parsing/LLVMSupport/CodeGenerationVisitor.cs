@@ -258,5 +258,10 @@ namespace Parsing.LLVMSupport
         {
             throw new NotImplementedException();
         }
+
+        public void VisitBodyStatementExpression(BodyExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

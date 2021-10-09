@@ -24,10 +24,10 @@
         String,
         Character,
         Assignment,
-        [Obsolete("Is this even useful?")]
         Body,
         IfStatementExpression,
-        ForStatementExpression
+        ForStatementExpression,
+        BooleanValue
     }
 
 }

@@ -41,7 +41,7 @@
         BitShiftRight,              // >>>
 
         If,                         // If
-        Else,                       // If
+        Else,                       // Else
         While,                      // While
         Do,                         // While... Do..
         For,                        // For
@@ -89,5 +89,7 @@
         False,
         Null,
         Params,
+        Is,
+        Not,
     }
 }

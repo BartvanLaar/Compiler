@@ -119,7 +119,13 @@ namespace Lexing
 
             if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
             {
-                return (new Token(tokenType, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+                var predefinedToken = new Token(tokenType, res, lineCount, columnCountStart);
+                if(tokenType is TokenType.True or TokenType.False)
+                {
+                    predefinedToken.BooleanValue = tokenType == TokenType.True;
+                }
+
+                return (predefinedToken, cursor, lineCount, columnCount);
             }
 
             return (new Token(TokenType.Identifier, res, lineCount, columnCountStart), cursor, lineCount, columnCount);

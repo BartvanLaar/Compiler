@@ -17,6 +17,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitIdentifierExpression(IdentifierExpression expression);
         void VisitIfStatementExpression(IfStatementExpression expression);
         void VisitForStatementExpression(ForStatementExpression expression);
+        void VisitBodyStatementExpression(BodyExpression expression);
 
     }
 }

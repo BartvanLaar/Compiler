@@ -78,6 +78,9 @@ namespace Lexing
             public const string IF = "if";
             public const string ELSE = "else";
 
+            public const string IS = "is";
+            public const string NOT = "not";
+
             public const string FOR = "for";
             public const string FOREACH = "each";
 
@@ -114,6 +117,9 @@ namespace Lexing
             {KeyWords.IF, TokenType.If },
             {KeyWords.ELSE, TokenType.Else },
 
+            { KeyWords.IS, TokenType.Is},
+            { KeyWords.NOT, TokenType.Not},
+
             { KeyWords.CONTINUE, TokenType.Continue},
             { KeyWords.BREAK, TokenType.Break},
             { KeyWords.RETURN, TokenType.Return},
@@ -136,7 +142,6 @@ namespace Lexing
             { KeyWords.FALSE, TokenType.False },
             { KeyWords.VOID, TokenType.Void },
             { KeyWords.NULL, TokenType.Null },
-
 
         };
 

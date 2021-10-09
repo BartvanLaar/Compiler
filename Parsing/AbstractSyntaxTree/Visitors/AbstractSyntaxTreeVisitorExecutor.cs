@@ -170,5 +170,15 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             _listener?.VisitIfStatementExpression(expression);
             throw new NotImplementedException();
         }
+
+        public void VisitBodyStatementExpression(BodyExpression expression)
+        {
+            while (expression.Body.Any())
+            {
+                Visit(expression.Body.Dequeue());
+            }
+
+            _listener?.VisitBodyStatementExpression(expression);
+        }
     }
 }

@@ -109,18 +109,87 @@ namespace Parsing
         private ExpressionBase? ParsePrimary()
         {
             var currentTokenType = PeekToken().TokenType;
+
             return currentTokenType switch
             {
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
+                TokenType.AccoladesClose => null, // end of a (sub) expression
+                TokenType.ParanthesesClose => null, // end of a sub expression
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Double => ParseDoubleExpression(),
                 TokenType.Float => ParseFloatExpression(),
                 TokenType.Integer => ParseIntegerExpression(),
                 TokenType.String => ParseStringExpression(),
                 TokenType.Character => ParseCharacterExpression(),
+                TokenType.True => ParseBooleanExpression(),
+                TokenType.False => ParseBooleanExpression(),
+                TokenType.If => ParseIfStatementExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
+        }
+
+        private ExpressionBase ParseBooleanExpression()
+        {
+            if (PeekToken().TokenType is (TokenType.True or TokenType.False))
+            {
+                return new BooleanExpression(ConsumeToken());
+            }
+
+            throw new InvalidOperationException($"{nameof(ParseBooleanExpression)} can only be used with Tokens True or False, in all other cases use a binary expression");
+        }
+
+        private ExpressionBase? ParseIfStatementExpression()
+        {
+            var ifToken = ConsumeToken();
+            Debug.Assert(ifToken.TokenType == TokenType.If);
+            var conditionalExpression = ParseExpression();
+            Debug.Assert(conditionalExpression != null);
+
+            if (ThrowParseError(TokenType.AccoladesOpen, "expected opening accolades"))
+            {
+                return null;
+            }
+
+            ConsumeToken();
+
+            //todo: handle multiple { and } signs indented inside ?
+            //todo: Or should we disallow such weird scopes.
+            var body = new List<ExpressionBase> { };
+            while (PeekToken().TokenType != TokenType.AccoladesClose)
+            {
+                var expression = ParseExpression();
+                Debug.Assert(expression != null);
+                body.Add(expression);
+            }
+            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.Else)
+            {
+                return new IfStatementExpression(conditionalExpression, new BodyExpression(body), null);
+            }
+
+            // Consume else...
+            Debug.Assert(PeekToken().TokenType is TokenType.Else);
+            ConsumeToken();
+            // Consume opening accolade
+            var isIfStatementNext = PeekToken().TokenType is TokenType.If;
+            if (!isIfStatementNext)
+            {
+                Debug.Assert(PeekToken().TokenType == TokenType.AccoladesOpen);
+                ConsumeToken();
+            }
+
+            var elseExpression = isIfStatementNext ? ParseIfStatementExpression() : ParseExpression();
+
+            // Consume closing accolade
+            if (!isIfStatementNext)
+            {
+                Debug.Assert(PeekToken().TokenType == TokenType.AccoladesClose);
+                ConsumeToken();
+            }
+            return new IfStatementExpression(conditionalExpression, new BodyExpression(body), elseExpression);
         }
 
         private ExpressionBase? ParseAssignmentExpression(bool isReassignment)
@@ -130,9 +199,8 @@ namespace Parsing
 
             var leftHandSideTok = PeekToken();
 
-            if (PeekToken().TokenType != TokenType.Identifier)
+            if (ThrowParseError(TokenType.Identifier, "assignment of variable"))
             {
-                ThrowParseError(PeekToken(), "identifier", "assignment of variable");
                 return null;
             }
 
@@ -164,7 +232,7 @@ namespace Parsing
         private ExpressionBase? ParseExpression()
         {
             // Below code fixes the test but is not the solution, as just consuming it is not enough, it has to have priority because of ( sign.
-            var temp = ConsumeParantheses();
+            ConsumeParantheses();
 
             var leftHandSide = ParsePrimary();
             const int DEFAULT_OPERATOR_PRECENDENCE = 0;
@@ -181,6 +249,7 @@ namespace Parsing
             var openCounter = 0;
             var closedCounter = 0;
             //todo: I don't think we need to know about all the starting layers... Could be wrong..
+            //Order is important here.. First do openParantheses then the closing ones
             while (PeekToken().TokenType is TokenType.ParanthesesOpen)
             {
                 ConsumeToken();
@@ -211,6 +280,14 @@ namespace Parsing
 
                 if (previousExpressionPrecedence > currentTokenPrecendence)
                 {
+                    if (PeekToken().TokenType is TokenType.ParanthesesClose)
+                    {
+                        // if we return the left hand side, and thus making it a right hand side..
+                        // Because it might leave some trailing closing parantheses..
+                        // We should get rid of those, as we have processed everything of importance at this point.
+                        ConsumeParantheses();
+                    }
+
                     return leftHandSide;
                 }
 
@@ -228,7 +305,7 @@ namespace Parsing
                 var availableParanthesesAfterParsingRightHandSide = ConsumeParantheses();
                 if (availableParanthesesAfterParsingRightHandSide.WasClosingParanthese)
                 {
-                    if(availableParanthesesAfterParsingRightHandSide.ClosingAmount == 1)
+                    if (availableParanthesesAfterParsingRightHandSide.ClosingAmount == 1)
                     {
                         return ParseBinaryOperatorRightHandSide(new BinaryExpression(binaryOperatorToken, leftHandSide, rightHandSide), currentTokenPrecendence);
                     }
@@ -358,6 +435,23 @@ namespace Parsing
             var result = new CharacterExpression(ConsumeToken());
 
             return result;
+        }
+
+        private bool ThrowParseError(TokenType expectedNextTokenType, string exptectedInOrAt)
+        {
+            return ThrowParseError(expectedNextTokenType, expectedNextTokenType.ToString(), exptectedInOrAt);
+        }
+
+        private bool ThrowParseError(TokenType expectedNextTokenType, string expectedCharacter, string exptectedInOrAt)
+        {
+            var token = PeekToken();
+            if (token.TokenType != expectedNextTokenType)
+            {
+                Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
+                return true;
+            }
+
+            return false;
         }
 
         private static void ThrowParseError(Token token, string expectedCharacter, string exptectedInOrAt)
