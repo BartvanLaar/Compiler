@@ -1,9 +1,9 @@
-﻿using Lexing;
+﻿using Compiling.Backends.LLVMSupport;
+using Lexing;
 using LLVMSharp;
 using Parsing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
-using Parsing.LLVMSupport;
 using System.Diagnostics;
 
 namespace Compiling
@@ -14,7 +14,7 @@ namespace Compiling
         public static void RunLLVM(string text)
         {
             var (module, builder, executionEngine, passManager) = SetupLLVM();
-            var visitor = new CodeGenerationVisitor(module, builder, executionEngine, passManager);
+            var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
 

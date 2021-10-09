@@ -3,7 +3,7 @@ using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
 
-namespace Parsing.LLVMSupport
+namespace Backends.LLVMSupport
 {
     public class CodeGenerationVisitor : IByteCodeGeneratorListener
     {

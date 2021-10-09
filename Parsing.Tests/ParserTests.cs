@@ -36,7 +36,29 @@ namespace Parsing.Tests
         [TestCase("if(true){}",1)]
         [TestCase("if(true){}else{}", 1)]
         [TestCase("if(true){}else if(false){}", 1)]
+        [TestCase("if(true){}else if(false){} else {}", 1)]
+        [TestCase("if(true){}else if(false){}else if(false){}else if(false){}else if(false){} else {}", 1)]
         public void General_Code_Test_Throw_No_Error_If_Statements(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            using var sw = new StringWriter();
+            Console.SetOut(sw);
+
+            var ast = parser.Parse();
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
+            Assert.AreEqual(expectedAmountOfErrors, errors.Count());
+        }
+
+
+        [TestCase("while(true) {}", 1)]
+        [TestCase("while(true) do {}", 1)]
+        [TestCase("while(true)do{}", 1)]
+        [TestCase("do{} while(true)", 1)]
+        [TestCase("do{}while(true)", 1)]
+        public void General_Code_Test_Throw_No_Error_While_Statements(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);

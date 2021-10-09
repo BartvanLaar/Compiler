@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parsing.Tests", "Parsing.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lexing", "Lexing\Lexing.csproj", "{D6ED0F1A-380D-4D02-8AF5-04A5262FA4BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lexing.Tests", "Lexing.Tests\Lexing.Tests.csproj", "{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lexing.Tests", "Lexing.Tests\Lexing.Tests.csproj", "{79773A2B-A940-48F6-80EA-9BEDD5A98AAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
