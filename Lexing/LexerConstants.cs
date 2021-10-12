@@ -38,6 +38,8 @@ namespace Lexing
         public const string NOT_EQUALS_SIGN = "!==";
         public const string ASSIGN_OPERATOR = "=";
 
+        public const string RETURN_TYPE_INDICATOR = "->";
+
         public const string NOT_SIGN = "!";
 
         public const string TERNIARY_OPERATOR_TRUE = "?";

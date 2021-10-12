@@ -22,16 +22,15 @@ namespace Parsing
 
         public Queue<ExpressionBase> Parse()
         {
-            var isFinished = false;
-            while (!isFinished)
+            while (PeekToken().TokenType is not TokenType.EndOfStatement)
             {
-                isFinished = ProcessToken();
+                ProcessToken();
             }
 
             return _expressions;
         }
 
-        private bool ProcessToken()
+        private void ProcessToken()
         {
             var peekedTokens = PeekTokens(2);
             Debug.Assert(peekedTokens.Length == 2);
@@ -40,35 +39,49 @@ namespace Parsing
             {
                 case TokenType.EndOfFile:
                     {
-                        return true;
+                        return;
                     }
                 case TokenType.EndOfStatement:
                     {
                         ConsumeToken();
-                        return false;
+                        return;
                     }
-                case TokenType.If: ConsumeIfStatementExpression(); return false;
+                case TokenType.If:
+                    {
+                        ConsumeIfStatementExpression();
+                        return;
+                    }
                 case TokenType.Do:
-                    ConsumeDoWhileExpression(); return false;
+                    {
+                        ConsumeDoWhileExpression();
+                        return;
+                    }
                 case TokenType.While:
-                    ConsumeWhileStatementExpression(); return false;
-
+                    {
+                        ConsumeWhileStatementExpression();
+                        return;
+                    }
+                case TokenType.FunctionDefinition:
+                    {
+                        ConsumeFunctionDefinitionExpression();
+                        return;
+                    }
                 case TokenType.Identifier:
                     {
                         //todo: handle assignment variants?
                         if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
                         {
                             ConsumeIdentifierExpression();
-                            return false;
+                            return;
                         }
 
                         ConsumeAssignmentExpression(true);
-                        return false;
+                        return;
                     }
                 case TokenType.VariableDeclaration:
                     {
                         ConsumeAssignmentExpression(false);
-                        return false;
+                        return;
                     }
                 default:
                     {
@@ -76,22 +89,15 @@ namespace Parsing
                         //ParseFunctionCallExpression(); 
                         var exp = ParseExpression();
                         ConsumeExpression(exp);
-                        return false;
+                        return;
                     }
             }
         }
 
-        private void ConsumeExpression(ExpressionBase? expression)
+        private void ConsumeFunctionDefinitionExpression()
         {
-            if (expression == null)
-            {
-                // on error resume next :)
-                ConsumeToken();
-            }
-            else
-            {
-                _expressions.Enqueue(expression);
-            }
+            var expresion = ParseFunctionDefinitionExpression();
+            ConsumeExpression(expresion);
         }
 
         private void ConsumeIdentifierExpression()
@@ -129,6 +135,19 @@ namespace Parsing
         {
             var functionExpression = ParseFunctionCallExpression();
             ConsumeExpression(functionExpression);
+        }
+
+        private void ConsumeExpression(ExpressionBase? expression)
+        {
+            if (expression == null)
+            {
+                // on error resume next :)
+                ConsumeToken();
+            }
+            else
+            {
+                _expressions.Enqueue(expression);
+            }
         }
 
         private ExpressionBase? ParsePrimary()
@@ -180,6 +199,78 @@ namespace Parsing
             throw new InvalidOperationException($"{nameof(ParseBooleanExpression)} can only be used with Tokens True or False, in all other cases use a binary expression");
         }
 
+        private ExpressionBase? ParseFunctionDefinitionExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.FunctionDefinition);
+
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.Identifier)
+            {
+                ThrowParseError(PeekToken(), TokenType.Identifier.ToString(), "after func definition");
+                return null;
+            }
+
+            var funcIdentifier = ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.ParanthesesOpen)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "after func identifier");
+                return null;
+            }
+            ConsumeToken();
+
+            var parameters = new List<object>();
+
+            while (PeekToken().TokenType is not TokenType.ParanthesesClose)
+            {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "after func parameter body");
+                    return null;
+                }
+
+                //todo: retrieve all parameters...
+            }
+
+            Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesClose);
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.ReturnTypeIndicator)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
+            }
+            ConsumeToken();
+
+            var returnType = ConsumeToken();
+            //todo: check return type??
+
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"after func type identifier");
+                return null;
+            }
+
+            ConsumeToken();
+            //todo: handle multiple { and } signs indented inside ?
+            //todo: Or should we disallow such weird scopes.
+            var body = new List<ExpressionBase> { };
+            while (PeekToken().TokenType is not TokenType.AccoladesClose)
+            {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
+                    return null;
+                }
+
+                var expression = ParseExpression();
+                Debug.Assert(expression != null);
+                body.Add(expression);
+            }
+
+            return new FunctionDefinitionExpression(funcIdentifier, new ParametersExpression(parameters), returnType, new BodyExpression(body));
+        }
+
         private ExpressionBase? ParseDoWhileStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Do);
@@ -198,6 +289,12 @@ namespace Parsing
             var body = new List<ExpressionBase> { };
             while (PeekToken().TokenType is not TokenType.AccoladesClose)
             {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
+                    return null;
+                }
+
                 var expression = ParseExpression();
                 Debug.Assert(expression != null);
                 body.Add(expression);
@@ -221,7 +318,7 @@ namespace Parsing
             return new WhileStatementExpression(condition, new BodyExpression(body));
         }
 
-        private ExpressionBase ParseWhileStatementExpression()
+        private ExpressionBase? ParseWhileStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
@@ -251,6 +348,12 @@ namespace Parsing
             var body = new List<ExpressionBase> { };
             while (PeekToken().TokenType is not TokenType.AccoladesClose)
             {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
+                    return null;
+                }
+
                 var expression = ParseExpression();
                 Debug.Assert(expression != null);
                 body.Add(expression);
@@ -276,7 +379,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.DO}' keyword");
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.IF}' keyword");
                 return null;
             }
 
@@ -287,6 +390,12 @@ namespace Parsing
             var body = new List<ExpressionBase> { };
             while (PeekToken().TokenType != TokenType.AccoladesClose)
             {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after if statement body");
+                    return null;
+                }
+
                 var expression = ParseExpression();
                 Debug.Assert(expression != null);
                 body.Add(expression);

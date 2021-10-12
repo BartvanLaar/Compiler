@@ -145,5 +145,19 @@ namespace Parsing.Tests
             Assert.AreEqual(1, ast.Count);
             Assert.IsEmpty(errors);
         }
+
+        [TestCase("func SomeFunc() -> void {}")]
+        [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> void {}")]
+        [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> bool {}")]
+        [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> ImagineThisIsACustomDefinedType {}")]
+        public void Parse_Function_Definitions_No_Errors(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+
+            Assert.IsEmpty(errors);
+        }
     }
 }
