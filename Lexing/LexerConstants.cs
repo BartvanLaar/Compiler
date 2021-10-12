@@ -160,20 +160,20 @@ namespace Lexing
         {
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
-                [TokenType.Equivalent] = 10,
-                [TokenType.Equals] = 10,
-                [TokenType.LessThan] = 10,
-                [TokenType.LessThanOrEqualTo] = 10,
-                [TokenType.GreaterThan] = 10,
-                [TokenType.GreaterThanOrEqualTo] = 10,
-                [TokenType.Add] = 20,
-                [TokenType.AddAssign] = 20,
-                [TokenType.Subtract] = 20,
-                [TokenType.SubtractAssign] = 20,
-                [TokenType.Multiply] = 40,
-                [TokenType.MultiplyAssign] = 40,
-                [TokenType.Divide] = 40,
-                [TokenType.DivideAssign] = 40,
+                [TokenType.Equivalent] = 1,
+                [TokenType.Equals] = 1,
+                [TokenType.LessThan] = 1,
+                [TokenType.LessThanOrEqualTo] = 1,
+                [TokenType.GreaterThan] = 1,
+                [TokenType.GreaterThanOrEqualTo] = 1,
+                [TokenType.Add] = 2,
+                //[TokenType.AddAssign] = 2,
+                [TokenType.Subtract] = 2,
+                //[TokenType.SubtractAssign] = 2,
+                [TokenType.Multiply] = 3,
+                //[TokenType.MultiplyAssign] = 3,
+                [TokenType.Divide] = 3,
+                //[TokenType.DivideAssign] = 3,
                 //[TokenType.ParanthesesOpen] = 999,
                 //[TokenType.ParanthesesClose] = 999,
             };
@@ -185,8 +185,26 @@ namespace Lexing
 
             public static int Get(TokenType tokenType)
             {
+                Get(tokenType, out var precedence);
+                return precedence;
+            }
+
+            public static bool Get(Token token, out int precedence)
+            {
+                return Get(token.TokenType, out precedence);
+            }
+
+            public static bool Get(TokenType tokenType, out int precedence)
+            {
                 const int DEFAULT_OPERATOR_PRECENDECE = -1;
-                return _precendences.TryGetValue(tokenType, out var result) ? result : DEFAULT_OPERATOR_PRECENDECE;
+
+                var hasPrec = _precendences.TryGetValue(tokenType, out precedence);
+                if(!hasPrec)
+                {
+                    precedence = DEFAULT_OPERATOR_PRECENDECE;
+                }
+
+                return hasPrec;
             }
         }
 
