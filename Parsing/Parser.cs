@@ -80,7 +80,7 @@ namespace Parsing
             }
         }
 
-     
+
 
         private void ConsumeExpression(ExpressionBase? expression)
         {
@@ -106,7 +106,7 @@ namespace Parsing
             var expr = ParseWhileStatementExpression();
             ConsumeExpression(expr);
         }
-      
+
 
         private void ConsumeIfStatementExpression()
         {
@@ -135,7 +135,8 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.AccoladesClose => null, // end of a (sub) expression
-                TokenType.ParanthesesClose => null, // end of a sub expression
+                //TokenType.ParanthesesClose => null, // end of a sub expression
+                TokenType.ParanthesesOpen => ParseParanthese(),
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Double => ParseDoubleExpression(),
                 TokenType.Float => ParseFloatExpression(),
@@ -146,6 +147,22 @@ namespace Parsing
                 TokenType.False => ParseBooleanExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
+        }
+
+        private ExpressionBase? ParseParanthese()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesOpen);
+            ConsumeToken();
+
+            var exp = ParseExpression();
+            if (PeekToken().TokenType is not TokenType.ParanthesesClose)
+            {
+                ThrowParseError(PeekToken(), $"Expected matching closing paranthese '{LexerConstants.PARANTHESES_CLOSE}'");
+                return null;
+            }
+
+            ConsumeToken();
+            return exp;
         }
 
         private ExpressionBase ParseBooleanExpression()
@@ -482,7 +499,7 @@ namespace Parsing
             var token = PeekToken();
             if (token.TokenType != expectedNextTokenType)
             {
-                Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
+                ThrowParseError(token, $"Expected '{expectedCharacter}' in {exptectedInOrAt}");
                 return true;
             }
 
@@ -491,7 +508,12 @@ namespace Parsing
 
         private static void ThrowParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
-            Console.WriteLine($"Expected '{expectedCharacter}' in {exptectedInOrAt} at line: {token.Line}, column: {token.Column}.");
+            ThrowParseError(token, $"Expected '{expectedCharacter}' in {exptectedInOrAt}");
+        }
+
+        private static void ThrowParseError(Token token, string message)
+        {
+            Console.WriteLine($"{message}, at line: {token.Line}, column: {token.Column}.");
         }
 
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);
