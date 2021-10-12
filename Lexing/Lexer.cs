@@ -240,7 +240,7 @@ namespace Lexing
                         singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.NullableCoalesceAssignment;
+                            token.TokenType = TokenType.NullableCoalesceAssign;
                             cursor++;
                             columnCount++;
                         }
@@ -352,19 +352,6 @@ namespace Lexing
                         }
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.Modulo:
-                    {
-                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.Assignment)
-                        {
-                            token.TokenType = TokenType.ModuloAssignment;
-                            token.StringValue = LexerConstants.MODULO_ASSIGN;
-                            cursor++;
-                            columnCount++;
-                        }
-
-                        return (token, cursor, lineCount, columnCount);
-                    }
                 case TokenType.String:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
@@ -442,6 +429,7 @@ namespace Lexing
                 LexerConstants.TIMES => new Token(TokenType.Multiply, lineCount, columnCount) { StringValue = LexerConstants.TIMES },
                 LexerConstants.DIVIDE => new Token(TokenType.Divide, lineCount, columnCount) { StringValue = LexerConstants.DIVIDE },
                 LexerConstants.MODULO => new Token(TokenType.Modulo, lineCount, columnCount) { StringValue = LexerConstants.MODULO },
+                LexerConstants.POWER => new Token(TokenType.Power, lineCount, columnCount) { StringValue = LexerConstants.POWER },
                 LexerConstants.ASSIGN_OPERATOR => new Token(TokenType.Assignment, lineCount, columnCount) { StringValue = LexerConstants.ASSIGN_OPERATOR },
                 LexerConstants.NOT_SIGN => new Token(TokenType.BooleanInvert, lineCount, columnCount) { StringValue = LexerConstants.NOT_SIGN },
                 LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount) { StringValue = LexerConstants.GREATER_THAN_SIGN },

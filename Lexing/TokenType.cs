@@ -15,7 +15,6 @@
         Void,
         Hexadecimal,
 
-
         AccoladesOpen,              // {
         AccoladesClose,             // }
         BracketOpen,               // [
@@ -63,13 +62,13 @@
         Multiply,                   // *
         Divide,                     // /
         Modulo,                     // %
+        Power,                      // ^
         NullableCoalesce,           // ??
         AddAssign,                  // +=
         SubtractAssign,             // -=
         MultiplyAssign,             // *=
         DivideAssign,               // /=
-        ModuloAssignment,           // %=
-        NullableCoalesceAssignment, // ??=
+        NullableCoalesceAssign, // ??=
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //

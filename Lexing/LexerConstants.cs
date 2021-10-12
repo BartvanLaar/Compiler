@@ -26,7 +26,7 @@ namespace Lexing
         public const string DIVIDE = "/";
         public const string DIVIDE_ASSIGN = "/=";
         public const string MODULO = "%";
-        public const string MODULO_ASSIGN = "%=";
+        public const string POWER = "^";
 
         public const string GREATER_THAN_SIGN = ">";
         public const string GREATER_THAN_EQUAL_SIGN = ">=";
@@ -158,6 +158,7 @@ namespace Lexing
 
         public static class OperatorPrecedence
         {
+            public const int DEFAULT_OPERATOR_PRECEDENCE = 0;
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
                 [TokenType.Equivalent] = 1,
@@ -178,6 +179,16 @@ namespace Lexing
                 //[TokenType.ParanthesesClose] = 999,
             };
 
+            public static bool IsLeftAssociated(Token token)
+            {
+                return IsLeftAssociated(token.TokenType);
+            }
+
+            public static bool IsLeftAssociated(TokenType tokenType)
+            {
+                return tokenType is not TokenType.Power;
+            }
+
             public static int Get(Token token)
             {
                 return Get(token.TokenType);
@@ -196,12 +207,10 @@ namespace Lexing
 
             public static bool Get(TokenType tokenType, out int precedence)
             {
-                const int DEFAULT_OPERATOR_PRECENDECE = -1;
-
                 var hasPrec = _precendences.TryGetValue(tokenType, out precedence);
                 if(!hasPrec)
                 {
-                    precedence = DEFAULT_OPERATOR_PRECENDECE;
+                    precedence = DEFAULT_OPERATOR_PRECEDENCE - 1; // everything thats unmapped should be lower than default.
                 }
 
                 return hasPrec;

@@ -5,14 +5,14 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class BinaryExpression : ExpressionBase
     {
-        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase rightHandSide) : base(token, DetermineExpressionType(token.StringValue))
+        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.StringValue))
         {
             LeftHandSide = leftHandSide;
             RightHandSide = rightHandSide;
         }
 
         public ExpressionBase LeftHandSide { get; }
-        public ExpressionBase RightHandSide { get; }
+        public ExpressionBase? RightHandSide { get; }
 
         private static ExpressionType DetermineExpressionType(string? @operator)
         {
