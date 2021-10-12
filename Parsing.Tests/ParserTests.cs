@@ -26,10 +26,10 @@ namespace Parsing.Tests
 
             using var sw = new StringWriter();
             Console.SetOut(sw);
-            
+
             var ast = parser.Parse();
             Assert.AreEqual(expectedAmountOfTrees, ast.Count);
-            
+
             var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
@@ -49,7 +49,8 @@ namespace Parsing.Tests
             using var sw = new StringWriter();
             Console.SetOut(sw);
 
-            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
+            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() =>
+            {
                 var ast = parser.Parse();
                 Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
             });
@@ -67,33 +68,40 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
-                var ast = parser.Parse();
-                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-            });
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
-        [TestCase("x--", 1)]
-        [TestCase("x--;", 1)]
-        [TestCase("x++", 1)]
-        [TestCase("x++;", 1)]
-        [TestCase("5++", 1, 1)]
-        [TestCase("5++;", 1, 1)]
-        [TestCase("5--", 1, 1)]
-        [TestCase("5--;", 1, 1)]
-        public void General_Code_Test_Throw_No_Error_MinusMinus_And_PlusPlus(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
-        {
-            var lexer = new Lexer(code);
-            var parser = new Parser(lexer);
+        //[TestCase("x--")]
+        //[TestCase("x--;")]
+        //[TestCase("x++")]
+        //[TestCase("x++;")]
+        //public void General_Code_Test_Throw_No_Error_MinusMinus_And_PlusPlus(string code)
+        //{
+        //    var lexer = new Lexer(code);
+        //    var parser = new Parser(lexer);
 
-            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
-                var ast = parser.Parse();
-                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-            });
+        //    var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+        //    Assert.AreEqual(1, ast.Count);
+        //    Assert.IsEmpty(errors);
+        //}
 
-            Assert.AreEqual(expectedAmountOfErrors, errors.Count());
-        }
+        //[TestCase("5++")]
+        //[TestCase("5++;")]
+        //[TestCase("5--")]
+        //[TestCase("5--;")]
+        //public void General_Code_Test_Throw_1_Error_MinusMinus_And_PlusPlus(string code)
+        //{
+        //    var lexer = new Lexer(code);
+        //    var parser = new Parser(lexer);
+
+        //    var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+
+        //    Assert.AreEqual(1, ast.Count);
+        //    Assert.AreEqual(1, errors.Count());
+        //}
+
 
         [TestCase("x + 5;")]
         [TestCase("x + y;")]
@@ -132,11 +140,9 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() => {
-                var ast = parser.Parse();
-                Assert.AreEqual(1, ast.Count);
-            });
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
+            Assert.AreEqual(1, ast.Count);
             Assert.IsEmpty(errors);
         }
     }
