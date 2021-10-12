@@ -267,8 +267,8 @@ namespace Parsing
                 Debug.Assert(expression != null);
                 body.Add(expression);
             }
-
-            return new FunctionDefinitionExpression(funcIdentifier, new ParametersExpression(parameters), returnType, new BodyExpression(body));
+            throw new NotImplementedException("Pls Finish func definitions");
+            //return new FunctionDefinitionExpression(funcIdentifier, new ParametersExpression(parameters), returnType, new BodyExpression(body));
         }
 
         private ExpressionBase? ParseDoWhileStatementExpression()

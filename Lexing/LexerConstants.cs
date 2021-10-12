@@ -18,8 +18,11 @@ namespace Lexing
         public const string PRECENDENCE_BEGIN = "(";
         public const string PRECENDENCE_END = ")";
         public const string PLUS = "+";
+        public const string PLUS_PLUS = "++";
         public const string PLUS_ASSIGN = "+=";
         public const string MINUS = "-";
+        public const string MINUS_MINUS = "--";
+
         public const string MINUS_ASSIGN = "-=";
         public const string TIMES = "*";
         public const string TIMES_ASSIGN = "*=";
@@ -37,6 +40,12 @@ namespace Lexing
         public const string NOT_EQUIVALENT_SIGN = "!=";
         public const string NOT_EQUALS_SIGN = "!==";
         public const string ASSIGN_OPERATOR = "=";
+        public const string NULLABLE_COALESCE = "??";
+        public const string NULLABLE_COALESCE_ASSIGN = "??=";
+        public const string AND = "&";
+        public const string AND_ALSO = "&&";
+        public const string OR = "|";
+        public const string OR_ELSE = "||";
 
         public const string RETURN_TYPE_INDICATOR = "->";
 
@@ -147,7 +156,6 @@ namespace Lexing
 
         };
 
-
         public static bool IsPredefinedKeyword(string keyword)
         {
             return IsPredefinedKeyword(keyword, out _);
@@ -163,22 +171,19 @@ namespace Lexing
             public const int DEFAULT_OPERATOR_PRECEDENCE = 0;
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
-                [TokenType.Equivalent] = 1,
-                [TokenType.Equals] = 1,
-                [TokenType.LessThan] = 1,
-                [TokenType.LessThanOrEqualTo] = 1,
-                [TokenType.GreaterThan] = 1,
-                [TokenType.GreaterThanOrEqualTo] = 1,
-                [TokenType.Add] = 2,
-                //[TokenType.AddAssign] = 2,
-                [TokenType.Subtract] = 2,
-                //[TokenType.SubtractAssign] = 2,
-                [TokenType.Multiply] = 3,
-                //[TokenType.MultiplyAssign] = 3,
-                [TokenType.Divide] = 3,
-                //[TokenType.DivideAssign] = 3,
-                //[TokenType.ParanthesesOpen] = 999,
-                //[TokenType.ParanthesesClose] = 999,
+                // @note: values don't matter too much as long as it's +1 everytime and theyre proper... Higher is more important of an operator.
+                [TokenType.OrElse] = 1,
+                [TokenType.AndAlso] = 2,
+                [TokenType.Equivalent] = 3,
+                [TokenType.Equals] = 3,
+                [TokenType.LessThan] = 3,
+                [TokenType.LessThanOrEqualTo] = 3,
+                [TokenType.GreaterThan] = 3,
+                [TokenType.GreaterThanOrEqualTo] = 3,
+                [TokenType.Add] = 4,
+                [TokenType.Subtract] = 4,
+                [TokenType.Multiply] = 5,
+                [TokenType.Divide] = 5,
             };
 
             public static bool IsLeftAssociated(Token token)
@@ -210,7 +215,7 @@ namespace Lexing
             public static bool Get(TokenType tokenType, out int precedence)
             {
                 var hasPrec = _precendences.TryGetValue(tokenType, out precedence);
-                if(!hasPrec)
+                if (!hasPrec)
                 {
                     precedence = DEFAULT_OPERATOR_PRECEDENCE - 1; // everything thats unmapped should be lower than default.
                 }

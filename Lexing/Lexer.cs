@@ -193,6 +193,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.Equivalent;
+                            token.StringValue = LexerConstants.EQUIVALENT_SIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -201,10 +202,35 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.Equals;
+                            token.StringValue = LexerConstants.EQUALS_SIGN;
                             cursor++;
                             columnCount++;
                         }
 
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.Or:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Or)
+                        {
+                            token.TokenType = TokenType.OrElse;
+                            token.StringValue = LexerConstants.OR_ELSE;
+                            cursor++;
+                            columnCount++;
+                        }
+                        return (token, cursor, lineCount, columnCount);
+                    }
+                case TokenType.And:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.And)
+                        {
+                            token.TokenType = TokenType.AndAlso;
+                            token.StringValue = LexerConstants.AND_ALSO;
+                            cursor++;
+                            columnCount++;
+                        }
                         return (token, cursor, lineCount, columnCount);
                     }
                 case TokenType.BooleanInvert:
@@ -213,6 +239,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.NotEquivalent;
+                            token.StringValue = LexerConstants.NOT_EQUIVALENT_SIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -221,6 +248,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.NotEquals;
+                            token.StringValue = LexerConstants.NOT_EQUALS_SIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -233,6 +261,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.TerniaryOperatorTrue)
                         {
                             token.TokenType = TokenType.NullableCoalesce;
+                            token.StringValue = LexerConstants.NULLABLE_COALESCE;
                             cursor++;
                             columnCount++;
                         }
@@ -241,6 +270,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.NullableCoalesceAssign;
+                            token.StringValue = LexerConstants.NULLABLE_COALESCE_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -253,6 +283,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.LessThanOrEqualTo;
+                            token.StringValue = LexerConstants.LESS_THAN_EQUAL_SIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -265,6 +296,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.GreaterThanOrEqualTo;
+                            token.StringValue = LexerConstants.GREATER_THAN_EQUAL_SIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -277,12 +309,14 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.AddAssign;
+                            token.StringValue = LexerConstants.PLUS_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
                         else if (singleCharTok?.TokenType == TokenType.Add)
                         {
                             token.TokenType = TokenType.AddAdd;
+                            token.StringValue = LexerConstants.PLUS_PLUS;
                             cursor++;
                             columnCount++;
                         }
@@ -295,18 +329,21 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.SubtractAssign;
+                            token.StringValue = LexerConstants.MINUS_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
                         else if (singleCharTok?.TokenType == TokenType.GreaterThan)
                         {
                             token.TokenType = TokenType.ReturnTypeIndicator;
+                            token.StringValue = LexerConstants.RETURN_TYPE_INDICATOR;
                             cursor++;
                             columnCount++;
                         }
                         else if (singleCharTok?.TokenType == TokenType.Subtract)
                         {
                             token.TokenType = TokenType.SubtractSubtract;
+                            token.StringValue = LexerConstants.MINUS_MINUS;
                             cursor++;
                             columnCount++;
                         }
@@ -319,6 +356,7 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.MultiplyAssign;
+                            token.StringValue = LexerConstants.TIMES_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
@@ -331,22 +369,25 @@ namespace Lexing
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
                             token.TokenType = TokenType.DivideAssign;
+                            token.StringValue = LexerConstants.DIVIDE_ASSIGN;
                             cursor++;
                             columnCount++;
                         }
 
                         if (singleCharTok?.TokenType == TokenType.Divide)
                         {
+                            token.TokenType = TokenType.Comment;
+                            token.StringValue = LexerConstants.COMMENT_INDICATOR;
                             cursor++;
                             columnCount++;
-                            token.TokenType = TokenType.Comment;
 
                             singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             if (singleCharTok?.TokenType == TokenType.Divide)
                             {
+                                token.TokenType = TokenType.Summary;
+                                token.StringValue = LexerConstants.SUMMARY_INDICATOR;
                                 cursor++;
                                 columnCount++;
-                                token.TokenType = TokenType.Summary;
                             }
 
                         }
@@ -435,6 +476,8 @@ namespace Lexing
                 LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount) { StringValue = LexerConstants.GREATER_THAN_SIGN },
                 LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount) { StringValue = LexerConstants.LESS_THAN_SIGN },
                 LexerConstants.DOUBLE_QOUTE => new Token(TokenType.String, lineCount, columnCount) { StringValue = LexerConstants.DOUBLE_QOUTE },
+                LexerConstants.AND => new Token(TokenType.And, lineCount, columnCount) { StringValue = LexerConstants.AND },
+                LexerConstants.OR => new Token(TokenType.Or, lineCount, columnCount) { StringValue = LexerConstants.OR },
                 _ => null,
             };
         }

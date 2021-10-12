@@ -27,7 +27,11 @@
         IfStatementExpression,
         ForStatementExpression,
         BooleanValue,
-        WhileStatementExpression
+        WhileStatementExpression,
+        Or,
+        OrElse,
+        And,
+        AndAlso
     }
 
 }

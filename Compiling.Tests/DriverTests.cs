@@ -62,17 +62,30 @@ namespace Compiling.Tests
         [TestCase("10-5-1;", 4)]
         [TestCase("(10*(5-1));", 40)]
         [TestCase("(10-2)*(5-1);", 32)]
+        [TestCase("(10-(2*5)-1);", -1)]
+        [TestCase("(10-(2-5)-1);", 12)]
+        [TestCase("10-(2-5)-1;", 12)]
         [TestCase("((10-2)*(5-1));", 32)]
         [TestCase("((10-(2+2))-(5-1));", 2)]
         [TestCase("((10-(2+2))*(5-1));", 24)]
         [TestCase("(10-(2+2))-5;", 1)]
-        public void Driver_Test_Log_1(string code, double expectedResult)
+        public void Driver_Test_Validate_Operator_Precedence_Math(string code, double expectedResult)
         {
-            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() =>
-            {
-                Driver.RunDotNet(code);
-            });
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
             Assert.AreEqual(expectedResult, double.Parse(messages.Last()));
+        }
+
+        [TestCase("true || false", true)]
+        [TestCase("false || true", true)]
+        [TestCase("false && true", false)]
+        [TestCase("true && true", true)]
+        [TestCase("true && true || false", false)]
+        [TestCase("true || false && true", false)]
+        [TestCase("true && false", false)]
+        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic(string code, bool expectedResult)
+        {
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
+            Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
         }
     }
 }

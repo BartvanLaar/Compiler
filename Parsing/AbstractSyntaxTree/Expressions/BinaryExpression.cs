@@ -16,6 +16,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         private static ExpressionType DetermineExpressionType(string? @operator)
         {
+            //todo: why not use token type here instead? its basically the same...
             Debug.Assert(@operator != null);
             return @operator switch
             {
@@ -30,6 +31,10 @@ namespace Parsing.AbstractSyntaxTree.Expressions
                 LexerConstants.LESS_THAN_EQUAL_SIGN => ExpressionType.LessThanEqual,
                 LexerConstants.EQUIVALENT_SIGN => ExpressionType.Equivalent,
                 LexerConstants.EQUALS_SIGN => ExpressionType.Equals,
+                LexerConstants.OR => ExpressionType.Or,
+                LexerConstants.OR_ELSE => ExpressionType.OrElse,
+                LexerConstants.AND => ExpressionType.And,
+                LexerConstants.AND_ALSO => ExpressionType.AndAlso,
                 _ => throw new ArgumentException($"Operator {@operator} is not supported."),
             };
         }

@@ -688,9 +688,6 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[counter++].TokenType);
         }
 
-
-
-
         [TestCase("true?true:false")]
         [TestCase("true ? true : false")]
         [TestCase("\ntrue\n ?\n true\n :\n false")]
@@ -705,6 +702,20 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.True, toks[2].TokenType);
             Assert.AreEqual(TokenType.TerniaryOperatorFalse, toks[3].TokenType);
             Assert.AreEqual(TokenType.False, toks[4].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
+        }
+
+        [TestCase("true && false || true")]
+        public static void Lexer_Test_Boolean_Statement(string code)
+        {
+            var lexer = new Lexer(code);
+
+            var toks = lexer.ConsumeTokens(6);
+            Assert.AreEqual(TokenType.True, toks[0].TokenType);
+            Assert.AreEqual(TokenType.AndAlso, toks[1].TokenType);
+            Assert.AreEqual(TokenType.False, toks[2].TokenType);
+            Assert.AreEqual(TokenType.OrElse, toks[3].TokenType);
+            Assert.AreEqual(TokenType.True, toks[4].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
         }
     }
