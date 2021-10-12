@@ -26,18 +26,18 @@
             BooleanValue = null;
         }
 
-        public string? ToStringToken()
+        public string ToStringToken()
         {
             return $"{TokenType}";
         }
 
-        public string? ToStringValue()
+        public string ToStringValue()
         {
             return $"{StringValue ?? FloatValue ?? IntegerValue as object ?? Name ?? TokenType.ToString()}";
 
         }
 
-        public override string? ToString()
+        public override string ToString()
         {
             return $"{ToStringValue()} - {ToStringToken()}";
         }

@@ -49,6 +49,7 @@ namespace Parsing
                     }
                 case TokenType.If: ConsumeIfStatementExpression(); return false;
                 case TokenType.Do:
+                    ConsumeDoWhileExpression(); return false;
                 case TokenType.While:
                     ConsumeWhileStatementExpression(); return false;
 
@@ -80,8 +81,6 @@ namespace Parsing
             }
         }
 
-
-
         private void ConsumeExpression(ExpressionBase? expression)
         {
             if (expression == null)
@@ -98,6 +97,12 @@ namespace Parsing
         private void ConsumeIdentifierExpression()
         {
             var expr = ParseExpression();
+            ConsumeExpression(expr);
+        }
+
+        private void ConsumeDoWhileExpression()
+        {
+            var expr = ParseDoWhileStatementExpression();
             ConsumeExpression(expr);
         }
 
@@ -175,31 +180,103 @@ namespace Parsing
             throw new InvalidOperationException($"{nameof(ParseBooleanExpression)} can only be used with Tokens True or False, in all other cases use a binary expression");
         }
 
-        private ExpressionBase ParseWhileStatementExpression()
+        private ExpressionBase? ParseDoWhileStatementExpression()
         {
-            var currentPeek = PeekToken();
-            var isWhile = currentPeek.TokenType is TokenType.While;
-            var isDo = currentPeek.TokenType is TokenType.Do;
-            Debug.Assert(isWhile || isDo);
-            //todo: fix...
-            //if (isWhile)
-            //{
-            //    return;
-            //}
+            Debug.Assert(PeekToken().TokenType is TokenType.Do);
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.DO}' keyword");
+                return null;
+            }
 
             ConsumeToken();
-            return null;
+
+            //todo: handle multiple { and } signs indented inside ?
+            //todo: Or should we disallow such weird scopes.
+            var body = new List<ExpressionBase> { };
+            while (PeekToken().TokenType is not TokenType.AccoladesClose)
+            {
+                var expression = ParseExpression();
+                Debug.Assert(expression != null);
+                body.Add(expression);
+            }
+
+            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.While)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.KeyWords.WHILE, $"'{LexerConstants.KeyWords.DO}' keyword");
+                return null;
+            }
+            var prevTok = ConsumeToken();
+            var condition = ParseExpression();
+            if (condition == null)
+            {
+                ThrowParseError("Expected an expression", prevTok);
+                return null;
+            }
+            return new WhileStatementExpression(condition, new BodyExpression(body));
+        }
+
+        private ExpressionBase ParseWhileStatementExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.While);
+            var whileTok = ConsumeToken();
+            var conditionalExpression = ParseExpression();
+            if (conditionalExpression == null)
+            {
+                ThrowParseError("Expected an expression", whileTok);
+                return null;
+            }
+
+            var hasDo = PeekToken().TokenType is TokenType.Do;
+            if (PeekToken().TokenType is TokenType.Do)
+            {
+                ConsumeToken();
+            }
+
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                var keyword = hasDo ? LexerConstants.KeyWords.DO : LexerConstants.KeyWords.WHILE;
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{keyword}' keyword");
+                return null;
+            }
+            ConsumeToken();
+
+            //todo: handle multiple { and } signs indented inside ?
+            //todo: Or should we disallow such weird scopes.
+            var body = new List<ExpressionBase> { };
+            while (PeekToken().TokenType is not TokenType.AccoladesClose)
+            {
+                var expression = ParseExpression();
+                Debug.Assert(expression != null);
+                body.Add(expression);
+            }
+
+            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
+            ConsumeToken();
+
+            return new WhileStatementExpression(conditionalExpression, new BodyExpression(body));
         }
 
         private ExpressionBase? ParseIfStatementExpression()
         {
+            //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             var ifToken = ConsumeToken();
             Debug.Assert(ifToken.TokenType == TokenType.If);
             var conditionalExpression = ParseExpression();
-            Debug.Assert(conditionalExpression != null);
-
-            if (ThrowParseError(TokenType.AccoladesOpen, "expected opening accolades"))
+            if (conditionalExpression == null)
             {
+                ThrowParseError("Expected an expression", ifToken);
+                return null;
+            }
+
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.DO}' keyword");
                 return null;
             }
 
@@ -214,6 +291,7 @@ namespace Parsing
                 Debug.Assert(expression != null);
                 body.Add(expression);
             }
+
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
             ConsumeToken();
 
@@ -222,25 +300,26 @@ namespace Parsing
                 return new IfStatementExpression(conditionalExpression, new BodyExpression(body), null);
             }
 
-            // Consume else...
             Debug.Assert(PeekToken().TokenType is TokenType.Else);
             ConsumeToken();
-            // Consume opening accolade
+
             var isIfStatementNext = PeekToken().TokenType is TokenType.If;
-            if (!isIfStatementNext)
+            ExpressionBase? elseExpression;
+            if (isIfStatementNext)
+            {
+                elseExpression = ParseIfStatementExpression();
+
+            }
+            else
             {
                 Debug.Assert(PeekToken().TokenType == TokenType.AccoladesOpen);
                 ConsumeToken();
-            }
+                elseExpression = ParseExpression();
 
-            var elseExpression = isIfStatementNext ? ParseIfStatementExpression() : ParseExpression();
-
-            // Consume closing accolade
-            if (!isIfStatementNext)
-            {
                 Debug.Assert(PeekToken().TokenType == TokenType.AccoladesClose);
                 ConsumeToken();
             }
+
             return new IfStatementExpression(conditionalExpression, new BodyExpression(body), elseExpression);
         }
 
@@ -251,8 +330,9 @@ namespace Parsing
 
             var leftHandSideTok = PeekToken();
 
-            if (ThrowParseError(TokenType.Identifier, "assignment of variable"))
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
+                ThrowParseError(PeekToken(), "assignment of variable");
                 return null;
             }
 
@@ -270,7 +350,7 @@ namespace Parsing
                 return null;
             }
 
-            var assignmentTok = ConsumeToken(); // consume assign operator
+            var assignmentTok = ConsumeToken();
             var valueExpression = ParseExpression();
             if (valueExpression == null)
             {
@@ -284,11 +364,17 @@ namespace Parsing
         private ExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
             var lhs = ParsePrimary();
-            while(true)
+
+            if (lhs == null)
+            {
+                return null;
+            }
+
+            while (true)
             {
                 // Peek instead of consume to determine precedence
                 var isBinaryOperator = LexerConstants.OperatorPrecedence.Get(PeekToken(), out var binaryOperatorPrecedence);
-                if (!isBinaryOperator || lhs == null || binaryOperatorPrecedence < minTokenPrecedence)
+                if (!isBinaryOperator || binaryOperatorPrecedence < minTokenPrecedence)
                 {
                     break;
                 }
@@ -411,29 +497,17 @@ namespace Parsing
             return result;
         }
 
-        private bool ThrowParseError(TokenType expectedNextTokenType, string exptectedInOrAt)
+        private static void ThrowParseError(Token token, string expectedInOrAt)
         {
-            return ThrowParseError(expectedNextTokenType, expectedNextTokenType.ToString(), exptectedInOrAt);
-        }
-
-        private bool ThrowParseError(TokenType expectedNextTokenType, string expectedCharacter, string exptectedInOrAt)
-        {
-            var token = PeekToken();
-            if (token.TokenType != expectedNextTokenType)
-            {
-                ThrowParseError(token, $"Expected '{expectedCharacter}' in {exptectedInOrAt}");
-                return true;
-            }
-
-            return false;
+            ThrowParseError(token, token.ToString(), expectedInOrAt);
         }
 
         private static void ThrowParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
-            ThrowParseError(token, $"Expected '{expectedCharacter}' in {exptectedInOrAt}");
+            ThrowParseError($"Expected '{expectedCharacter}' in {exptectedInOrAt}", token);
         }
 
-        private static void ThrowParseError(Token token, string message)
+        private static void ThrowParseError(string message, Token token)
         {
             Console.WriteLine($"{message}, at line: {token.Line}, column: {token.Column}.");
         }
