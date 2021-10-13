@@ -15,7 +15,7 @@ namespace Compiling
         {
             var visitor = new DotNetCodeGenerationVisitor();
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);
-            foreach(var res in visitor.Results)
+            foreach (var res in visitor.Results)
             {
                 Console.WriteLine(res.ToString());
             }
@@ -27,15 +27,21 @@ namespace Compiling
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
-
             LLVM.DumpModule(module);
-            LLVM.WriteBitcodeToFile(module, "test.bc");
+            var output = Path.Join(Directory.GetCurrentDirectory(), "output.bc");
+            LLVM.WriteBitcodeToFile(module, output);
 
-            //var path = Path.Combine(Directory.GetCurrentDirectory(), "test.bc");
-            //LLVM.WriteBitcodeToFile(module, path);
-            //var lldLink = Process.Start("clang++", $"{path} -v -o {Path.Combine(Directory.GetCurrentDirectory(), "test.exe")}");
-            //lldLink.Start();
-            //lldLink.WaitForExit();
+            var llc = Process.Start(@"llc", $"-filetype=obj {output}");
+            llc.WaitForExit();
+            //dll...
+            //"lld-link /subsystem:console /dll /noentry output.obj";
+
+            // no dll but need to specify entry point?
+            //"lld-link /subsystem:console /entry:main output.obj";
+            
+            var lld = Process.Start(@"lld-link", $"/subsystem:console /noentry /dll {Path.GetFileNameWithoutExtension(output)}.obj");
+            lld.WaitForExit();
+
         }
         internal static void Run(string text, IAbstractSyntaxTreeVisitorExecuter byteCodeGenerator, IByteCodeGeneratorListener byteCodeGeneratorListener)
         {
@@ -68,6 +74,12 @@ namespace Compiling
             LLVM.InitializeX86TargetInfo();
             LLVM.InitializeX86AsmParser();
             LLVM.InitializeX86AsmPrinter();
+            //LLVM.InitializeAllAsmParsers();
+            //LLVM.InitializeAllAsmPrinters();
+            //LLVM.InitializeAllDisassemblers();
+            //LLVM.InitializeAllTargetInfos();
+            //LLVM.InitializeAllTargetMCs();
+            //LLVM.InitializeAllTargets();
 
             if (LLVM.CreateExecutionEngineForModule(out var engine, module, out var errorMessage).Value == 1)
             {

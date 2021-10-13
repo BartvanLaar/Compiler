@@ -11,8 +11,9 @@ namespace CLI
             Console.WriteLine("Press to start.");
             Console.ReadKey();
             //var code = "2.0 + 5.0 / 5.0;";
-            var code = "10d*(10d-5d);";
-            Driver.RunDotNet(code);
+            //var code = "10d*(10d-5d);";
+            var code = "7+2;";
+            Driver.RunLLVM(code);
             //code = "2.0 * 7.0;";
             //Driver.RunLLVM(code);
 
