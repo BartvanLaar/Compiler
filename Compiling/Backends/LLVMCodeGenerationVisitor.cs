@@ -48,6 +48,13 @@ namespace Compiling.Backends
             Debug.Assert(expression.IdentificationExpression.Token.HasValue);
             _namedValues.Add(expression.IdentificationExpression.Token.Value.Name, lhsValue);
         }
+        public void VisitBooleanExpression(BooleanExpression expression)
+        {
+            //todo: is this the right way to handle bools..?
+            _valueStack.Push(LLVM.ConstReal(LLVM.Int64Type(), expression.Value ? 1 : 0));
+            throw new NotImplementedException();
+        }
+
         public void VisitIntegerExpression(IntegerExpression expression)
         {
             _valueStack.Push(LLVM.ConstReal(LLVM.Int64Type(), expression.Value));
@@ -64,45 +71,13 @@ namespace Compiling.Backends
         }
         public void VisitCharacterExpression(CharacterExpression expression)
         {
-            throw new NotImplementedException();
+            //todo: shouldnt a character be converted to an int?
+            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int64Type(), expression.Value.ToString(),1));
         }
 
         public void VisitStringExpression(StringExpression expression)
         {
-            throw new NotImplementedException();
-        }
-
-        public void VisitFunctionCallExpression(FunctionCallExpression expression)
-        {
-            //_namedValues.Clear(); // this was cleared.. But how about the variable i previously added to an outer scope..?
-            //todo: add scoping...
-
-            var body = _valueStack.Pop();
-            var protoTypeFunction = _valueStack.Pop();
-            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(protoTypeFunction, "entry"));
-
-            //todo: below code seems fair... need to delete a fooked up function
-            //try
-            //{
-            //    Visit(node.Body);
-            //}
-            //catch (Exception)
-            //{
-            //    LLVM.DeleteFunction(function);
-            //    throw;
-            //}
-
-            // Finish off the function.
-            LLVM.BuildRet(_builder, _valueStack.Pop());
-
-            // Validate the generated code, checking for consistency.
-            if (!LLVM.VerifyFunction(protoTypeFunction, LLVMVerifierFailureAction.LLVMPrintMessageAction))
-            {
-                LLVM.DeleteFunction(protoTypeFunction);
-                throw new Exception("Encountered a bad function..?"); // clarify message?
-            }
-
-            _valueStack.Push(protoTypeFunction);
+            _valueStack.Push(LLVM.ConstRealOfString(LLVM.Int64Type(), expression.Value));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -115,19 +90,19 @@ namespace Compiling.Backends
             _valueStack.Push(value);
         }
 
-        public void VisitMethodCallExpression(MethodCallExpression expression)
+        public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
-            var calleeFunction = LLVM.GetNamedFunction(_module, expression.Callee);
+            var calleeFunction = LLVM.GetNamedFunction(_module, expression.FunctionName);
 
             if (calleeFunction.Pointer == IntPtr.Zero)
             {
-                throw new Exception($"Unknown function referenced: {expression.Callee}");
+                throw new Exception($"Unknown function referenced: {expression.FunctionName}");
             }
 
-            var argumentCount = (uint)expression.MethodArguments.Length;
+            var argumentCount = (uint)expression.Arguments.Length;
             if (LLVM.CountParams(calleeFunction) != argumentCount)
             {
-                throw new Exception($"Incorrect # arguments passed to {expression.Callee}");
+                throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
             }
 
             var argumentValues = new LLVMValueRef[argumentCount];
@@ -139,23 +114,26 @@ namespace Compiling.Backends
             _valueStack.Push(LLVM.BuildCall(_builder, calleeFunction, argumentValues, "calltmp"));
         }
 
-        public void VisitPrototypeExpression(PrototypeExpression expression)
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
+            Debug.Assert(expression?.Token != null);
+
             var argumentCount = (uint)expression.Arguments.Length;
             var arguments = new LLVMTypeRef[argumentCount];
+            var expressionName = expression.Token.Value.Name;
 
-            var function = LLVM.GetNamedFunction(_module, expression.Name);
+            var function = LLVM.GetNamedFunction(_module, expressionName);
             if (function.Pointer != IntPtr.Zero)
             {
                 if (LLVM.CountBasicBlocks(function) != 0)
                 {
-                    throw new Exception($"Redefinition of function :'{expression.Name}'");
+                    throw new Exception($"Redefinition of function :'{expressionName}'");
                 }
 
                 if (LLVM.CountParams(function) != argumentCount)
                 {
                     //todo: we should support method overloading...
-                    throw new Exception($"Redefinition of function :'{expression.Name}' with a different number of arguments.");
+                    throw new Exception($"Redefinition of function :'{expressionName}' with a different number of arguments.");
                 }
 
             }
@@ -167,13 +145,14 @@ namespace Compiling.Backends
                     arguments[i] = LLVM.DoubleType();
                 }
 
-                function = LLVM.AddFunction(_module, expression.Name, LLVM.FunctionType(LLVM.DoubleType(), arguments, LLVMBoolFalse));
+                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(LLVM.DoubleType(), arguments, LLVMBoolFalse));
                 LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
             }
 
             for (int i = 0; i < argumentCount; ++i)
             {
-                var argumentName = expression.ArgumentNames[i];
+                Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
+                var argumentName = expression.Arguments[i].ValueToken.Name;// todo: is this right?
 
                 LLVMValueRef param = LLVM.GetParam(function, (uint)i);
                 LLVM.SetValueName(param, argumentName);

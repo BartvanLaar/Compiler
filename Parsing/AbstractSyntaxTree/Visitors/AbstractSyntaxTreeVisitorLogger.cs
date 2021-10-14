@@ -4,6 +4,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 {
     public class AbstractSyntaxTreeVisitorLogger : IByteCodeGeneratorListener
     {
+        public void VisitBooleanExpression(BooleanExpression expression)
+        {
+            LogValue(expression);
+        }
+
         public void VisitDoubleExpression(DoubleExpression expression)
         {
             LogValue(expression);
@@ -33,17 +38,12 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Console.WriteLine($"Visiting {expression.GetType()} of TokenType {expression.Token?.ToStringToken()} resulting in {expression.LeftHandSide.Token?.ToStringValue()} {expression.Token?.ToStringValue()} {expression.RightHandSide?.Token?.ToStringValue()}.");
         }
 
-        public void VisitPrototypeExpression(PrototypeExpression expression)
-        {
-            Log(expression);
-        }
-
-        public void VisitMethodCallExpression(MethodCallExpression expression)
-        {
-            Log(expression);
-        }
-
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
+        {
+            Log(expression);
+        }
+
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
             Log(expression);
         }
@@ -86,6 +86,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         private static void Log(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
-        }
+        }        
     }
 }

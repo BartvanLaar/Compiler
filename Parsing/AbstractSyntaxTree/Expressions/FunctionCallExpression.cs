@@ -1,15 +1,16 @@
-﻿namespace Parsing.AbstractSyntaxTree.Expressions
+﻿using Lexing;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class FunctionCallExpression : ExpressionBase
     {
-        public FunctionCallExpression(PrototypeExpression prototype, ExpressionBase body) : base(ExpressionType.FunctionCall)
+        public FunctionCallExpression(Token functionIdentifierToken, ExpressionBase[] methodArguments) : base(functionIdentifierToken, ExpressionType.FunctionCall)
         {
-            Prototype = prototype;
-            Body = body;
+            FunctionName = functionIdentifierToken.Name;
+            Arguments = methodArguments;
         }
 
-        public PrototypeExpression Prototype { get; }
-        public ExpressionBase Body { get; }
+        public string FunctionName { get; }
+        public ExpressionBase[] Arguments { get; }
     }
-  
 }

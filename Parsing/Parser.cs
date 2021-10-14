@@ -61,26 +61,11 @@ namespace Parsing
                         ConsumeWhileStatementExpression();
                         return;
                     }
+                case TokenType.Extern:
+                case TokenType.Export:
                 case TokenType.FunctionDefinition:
                     {
                         ConsumeFunctionDefinitionExpression();
-                        return;
-                    }
-                case TokenType.Identifier:
-                    {
-                        //todo: handle assignment variants?
-                        if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
-                        {
-                            ConsumeIdentifierExpression();
-                            return;
-                        }
-
-                        ConsumeAssignmentExpression(true);
-                        return;
-                    }
-                case TokenType.VariableDeclaration:
-                    {
-                        ConsumeAssignmentExpression(false);
                         return;
                     }
                 default:
@@ -100,12 +85,6 @@ namespace Parsing
             ConsumeExpression(expresion);
         }
 
-        private void ConsumeIdentifierExpression()
-        {
-            var expr = ParseExpression();
-            ConsumeExpression(expr);
-        }
-
         private void ConsumeDoWhileExpression()
         {
             var expr = ParseDoWhileStatementExpression();
@@ -118,17 +97,10 @@ namespace Parsing
             ConsumeExpression(expr);
         }
 
-
         private void ConsumeIfStatementExpression()
         {
             var expr = ParseIfStatementExpression();
             ConsumeExpression(expr);
-        }
-
-        private void ConsumeAssignmentExpression(bool isReassignment)
-        {
-            var assignmentExpression = ParseAssignmentExpression(isReassignment);
-            ConsumeExpression(assignmentExpression);
         }
 
         private void ConsumeFunctionCallExpression()
@@ -152,13 +124,15 @@ namespace Parsing
 
         private ExpressionBase? ParsePrimary()
         {
-            var currentTokenType = PeekToken().TokenType;
+            var peekedTokens = PeekTokens(2);
+            var currentTokenType = peekedTokens[0].TokenType;
 
             return currentTokenType switch
             {
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.AccoladesClose => null, // end of a (sub) expression
+                //TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Double => ParseDoubleExpression(),
@@ -168,6 +142,7 @@ namespace Parsing
                 TokenType.Character => ParseCharacterExpression(),
                 TokenType.True => ParseBooleanExpression(),
                 TokenType.False => ParseBooleanExpression(),
+                TokenType.VariableDeclaration => ParseAssignmentExpression(false),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -200,6 +175,18 @@ namespace Parsing
 
         private ExpressionBase? ParseFunctionDefinitionExpression()
         {
+            var isExtern = PeekToken().TokenType is TokenType.Extern;
+            var isExport = PeekToken().TokenType is TokenType.Export;
+            if (isExtern && isExport)
+            {
+                ThrowParseError(PeekToken(), "Function definition can not be both extern and export at the same time");
+                return null;
+            }
+            if (isExtern || isExport)
+            {
+                ConsumeToken();
+            }
+
             Debug.Assert(PeekToken().TokenType is TokenType.FunctionDefinition);
 
             ConsumeToken();
@@ -219,7 +206,7 @@ namespace Parsing
             }
             ConsumeToken();
 
-            var parameters = new List<object>();
+            var parameters = new List<FunctionDefinitionArgument>();
 
             while (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
@@ -230,7 +217,12 @@ namespace Parsing
                 }
 
                 //todo: retrieve all parameters...
+                // for now at least consume token, else endless loop...
+                ConsumeToken();
             }
+
+            //todo: check resulting parameters if any... They either all should have a token, or none should. e.g. difference between function call and function definition.
+            // However, we can not assume that it's a function call based on this, as functions are allowed to have zero parameters.
 
             Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesClose);
             ConsumeToken();
@@ -239,10 +231,27 @@ namespace Parsing
             {
                 ThrowParseError(PeekToken(), LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
             }
+
             ConsumeToken();
 
             var returnType = ConsumeToken();
             //todo: check return type??
+            var parametersArray = parameters.ToArray();
+
+            if (isExtern)
+            {
+                if (PeekToken().TokenType is not TokenType.EndOfStatement)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
+                    return null;
+                }
+                ConsumeToken();
+
+                Debug.Assert(isExtern);
+                Debug.Assert(!isExport);
+
+                return new FunctionDefinitionExpression(funcIdentifier, parametersArray, returnType, null, true, false);
+            }
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
@@ -266,8 +275,7 @@ namespace Parsing
                 Debug.Assert(expression != null);
                 body.Add(expression);
             }
-            throw new NotImplementedException("Pls Finish func definitions");
-            //return new FunctionDefinitionExpression(funcIdentifier, new ParametersExpression(parameters), returnType, new BodyExpression(body));
+            return new FunctionDefinitionExpression(funcIdentifier, parametersArray, returnType, new BodyExpression(body), isExtern, isExport);
         }
 
         private ExpressionBase? ParseDoWhileStatementExpression()
@@ -502,24 +510,10 @@ namespace Parsing
 
         private FunctionCallExpression? ParseFunctionCallExpression()
         {
-            var expression = ParseExpression();
-            if (expression == null)
-            {
-                return null;
-            }
-
-            //little bit hacky.. But it's an anonymous proto...
-            var prototype = new PrototypeExpression(new Token() { Name = string.Empty }, Array.Empty<Token>());
-            return new FunctionCallExpression(prototype, expression);
-        }
-
-        //what is a prototype?
-        private PrototypeExpression? ParsePrototype()
-        {
             if (PeekToken().TokenType != TokenType.Identifier)
             {
                 // Expected a function name...
-                ThrowParseError(PeekToken(), "a function name", "prototype");
+                ThrowParseError(PeekToken(), "a function name", "function call");
                 return null;
             }
 
@@ -527,36 +521,70 @@ namespace Parsing
 
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "prototype");
+                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call");
                 return null;
             }
             ConsumeToken();
 
-            var argumentNames = new List<Token>();
+            var functionArguments = new List<ExpressionBase>();
 
-            while (PeekToken().TokenType == TokenType.Identifier)
+            while (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
-                argumentNames.Add(ConsumeToken());
+                if (functionArguments.Count > 1 && PeekToken().TokenType is not TokenType.ArgumentSeparator)
+                {
+                    ThrowParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function call");
+                    return null;
+                }
+
+                if (PeekToken().TokenType is TokenType.ArgumentSeparator)
+                {
+                    ConsumeToken();
+                }
+
+                var argumentExpression = ParseExpression();
+                if (argumentExpression == null)
+                {
+                    ThrowParseError($"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ", PeekToken());
+                    return null;
+                }
+
+                functionArguments.Add(argumentExpression);
             }
 
-            if (PeekToken().TokenType != TokenType.ParanthesesClose)
+            if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
-                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "prototype");
+                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "function call");
                 return null;
             }
 
             ConsumeToken();
 
-            return new PrototypeExpression(functionToken, argumentNames.ToArray());
+            return new FunctionCallExpression(functionToken, functionArguments.ToArray());
         }
 
-        private ExpressionBase ParseIdentifierExpression()
+        private ExpressionBase? ParseIdentifierExpression()
         {
-            //todo: make smarter so it knows whether this is a function call? Or should the lexer handle this for me, as it can also peek forward...
-            //todo: how to handle nullables?
-            var result = new IdentifierExpression(ConsumeToken());
+            //@todo: @Cleanup: This whole method feels like a massive hack.
+            var peekedTokens = PeekTokens(2);
+            //todo: handle assignment variants?
+            if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
+            {
+                return ParseExpression();
+            }
 
-            return result;
+            if (peekedTokens[1].TokenType is TokenType.ParanthesesOpen)
+            {
+                return ParseFunctionCallExpression();
+            }
+
+            //todo: should this handle ++ and --? but what if those are before this token?..
+            if (peekedTokens[1].TokenType is (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
+            {
+                return ParseAssignmentExpression(true); 
+                //ConsumeAssignmentExpression(true);
+            }
+
+            return new IdentifierExpression(ConsumeToken());
         }
 
         private ExpressionBase ParseFloatExpression()

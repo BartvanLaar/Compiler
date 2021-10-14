@@ -29,6 +29,12 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             switch (expression.NodeExpressionType)
             {
                 // These are all handled by binary operator expressions.
+                case ExpressionType.And:
+                case ExpressionType.AndAlso:
+                case ExpressionType.Or:
+                case ExpressionType.OrElse:
+                    VisitBinaryExpression((BinaryExpression)expression);
+                    break;
                 case ExpressionType.Add:
                 case ExpressionType.Subtract:
                 case ExpressionType.Multiply:
@@ -45,17 +51,15 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.LessThanEqual:
                     VisitBinaryExpression((BinaryExpression)expression);
                     break;
-                case ExpressionType.MethodCall:
-                    VisitMethodCallExpression((MethodCallExpression)expression);
+
+                case ExpressionType.FunctionCall:
+                    VisitFunctionCallExpression((FunctionCallExpression)expression);
                     break;
                 case ExpressionType.Identifier:
                     VisitIdentifierExpression((IdentifierExpression)expression);
                     break;
-                case ExpressionType.Prototype:
-                    VisitPrototypeExpression((PrototypeExpression)expression);
-                    break;
-                case ExpressionType.FunctionCall:
-                    VisitFunctionCallExpression((FunctionCallExpression)expression);
+                case ExpressionType.FunctionDefinition:
+                    VisitFunctionDefinitionExpression((FunctionDefinitionExpression)expression);
                     break;
                 case ExpressionType.Double:
                     VisitDoubleExpression((DoubleExpression)expression);
@@ -65,6 +69,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     break;
                 case ExpressionType.Integer:
                     VisitIntegerExpression((IntegerExpression)expression);
+                    break;
+                case ExpressionType.BooleanValue:
+                    VisitBooleanExpression((BooleanExpression)expression);
                     break;
                 case ExpressionType.String:
                     VisitStringExpression((StringExpression)expression);
@@ -86,9 +93,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 //    break;
                 default:
                     // should this be visiting a top level?
-                    throw new ArgumentException($"Unknown expression type encountered: '{expression.GetType()}'");
+                    throw new ArgumentException($"Unknown expression type encountered: '{expression.NodeExpressionType}'");
             }
         }
+
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
@@ -96,6 +104,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Visit(expression.DoBody);
 
             _listener?.VisitWhileStatementExpression(expression);
+        }
+
+        public void VisitBooleanExpression(BooleanExpression expression)
+        {
+            _listener?.VisitBooleanExpression(expression);
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
@@ -131,28 +144,19 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             _listener?.VisitBinaryExpression(expression);
         }
 
-        public void VisitPrototypeExpression(PrototypeExpression expression)
+        public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
-            //Visit(expression); \\ this triggers an overflow for obvious reasons...
-            _listener?.VisitPrototypeExpression(expression);
-        }
-
-        public void VisitMethodCallExpression(MethodCallExpression expression)
-        {
-            foreach (var argument in expression.MethodArguments)
+            foreach (var argument in expression.Arguments)
             {
                 Visit(argument);
             }
 
-            _listener?.VisitMethodCallExpression(expression);
+            _listener?.VisitFunctionCallExpression(expression);
         }
 
-        public void VisitFunctionCallExpression(FunctionCallExpression expression)
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Visit(expression.Prototype);
-            Visit(expression.Body);
-
-            _listener?.VisitFunctionCallExpression(expression);
+            _listener?.VisitFunctionDefinitionExpression(expression);
         }
 
         public void VisitAssignmentExpression(AssignmentExpression expression)

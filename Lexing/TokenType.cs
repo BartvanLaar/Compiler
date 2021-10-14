@@ -76,7 +76,7 @@
         FunctionDefinition,         // func
         ReturnTypeIndicator,        // ->
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
-        VariableSeparator,          // ,
+        ArgumentSeparator,          // ,
         Definition,
         Return,
 

@@ -1,6 +1,6 @@
 ﻿namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public class ForStatementExpression : ExpressionBase
+    public sealed class ForStatementExpression : ExpressionBase
     {
         public ForStatementExpression(string variableName, ExpressionBase start, ExpressionBase end, ExpressionBase step, BodyExpression actionBody) : base(ExpressionType.ForStatementExpression)
         {

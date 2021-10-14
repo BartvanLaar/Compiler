@@ -147,10 +147,47 @@ namespace Parsing.Tests
         }
 
         [TestCase("func SomeFunc() -> void {}")]
+        [TestCase("extern func SomeFunc() -> void;")]
+        [TestCase("extern func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> void;")]
+        [TestCase("extern func SomeFunc() -> bool;")]
+        [TestCase("extern func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> bool;")]
+        [TestCase("extern func SomeFunc() -> int;")]
+        [TestCase("extern func SomeFunc() -> double;")]
+        [TestCase("export func SomeFunc() -> void {}")]
+        [TestCase("export func SomeFunc() -> bool {}")]
+        [TestCase("export func SomeFunc() -> double {}")]
+        [TestCase("export func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> double {}")]
+        [TestCase("export func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> int {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> void {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> bool {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> ImagineThisIsACustomDefinedType {}")]
         public void Parse_Function_Definitions_No_Errors(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+
+            Assert.IsEmpty(errors);
+        }
+
+        [TestCase("SomeFunc();")]
+        [TestCase("SomeFunc(param1);")]
+        [TestCase("SomeFunc(param1, param2);")]
+        [TestCase("SomeFunc(param1,param2,param3);")]
+        [TestCase("SomeFunc(param1, param2, param3);")]
+        [TestCase("SomeFunc(param1, param2, param3)")]
+        [TestCase("SomeFunc(param1,param2,param3)")]
+        [TestCase("SomeFunc(param1, param2)")]
+        [TestCase("SomeFunc(param1)")]
+        [TestCase("SomeFunc()")]
+        [TestCase("SomeFunc(callFunc());")]
+        [TestCase("SomeFunc(callFunc(),callFunc2());")]
+        [TestCase("SomeFunc(callFunc(), callFunc2());")]
+        [TestCase("SomeFunc(callFunc(), callFunc2())")]
+        [TestCase("SomeFunc(callFunc(),callFunc2())")]
+        [TestCase("SomeFunc(callFunc())")]
+        public void Parse_Function_Calls_No_Errors(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);

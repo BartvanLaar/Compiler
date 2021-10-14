@@ -22,49 +22,69 @@ namespace Compiling.Backends
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
-                    resultingValue = (double)lhsValue + (double)rhsValue;
+                    resultingValue = lhsValue + rhsValue;
                     break;
                 case ExpressionType.Subtract:
-                    resultingValue = (double)lhsValue - (double)rhsValue;
+                    resultingValue = lhsValue - rhsValue;
                     break;
                 case ExpressionType.Multiply:
-                    resultingValue = (double)lhsValue * (double)rhsValue;
+                    resultingValue = lhsValue * rhsValue;
                     break;
                 case ExpressionType.Divide:
-                    resultingValue = (double)lhsValue / (double)rhsValue;
+                    resultingValue = lhsValue / rhsValue;
                     break;
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
-                        resultingValue = (double)lhsValue == (double)rhsValue;
+                        resultingValue = lhsValue == rhsValue;
                         break;
                     }
                 case ExpressionType.Equals:
                     {
-                        resultingValue = (double)lhsValue == (double)rhsValue;
+                        resultingValue = lhsValue == rhsValue;
                         break;
                     }
                 case ExpressionType.GreaterThan:
                     {
-                        resultingValue = (double)lhsValue > (double)rhsValue;
+                        resultingValue = lhsValue > rhsValue;
                         break;
                     }
                 case ExpressionType.GreaterThanEqual:
                     {
-                        resultingValue = (double)lhsValue >= (double)rhsValue;
+                        resultingValue = lhsValue >= rhsValue;
                         break;
                     }
                 case ExpressionType.LessThan:
                     {
-                        resultingValue = (double)lhsValue < (double)rhsValue;
+                        resultingValue = lhsValue < rhsValue;
                         break;
                     }
                 case ExpressionType.LessThanEqual:
                     {
-                        resultingValue = (double)lhsValue <= (double)rhsValue;
+                        resultingValue = lhsValue <= rhsValue;
+                        break;
+                    }
+                case ExpressionType.Or:
+                    {
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        break;
+                    }
+                case ExpressionType.OrElse:
+                    {
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        break;
+                    }
+                case ExpressionType.And:
+                    {
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        break;
+                    }
+                case ExpressionType.AndAlso:
+                    {
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(lhsValue, typeof(bool));
                         break;
                     }
                 default:
-                    throw new ArgumentException("invalid binary operator");
+                    throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
             }
             _valueStack.Push(resultingValue);
         }
@@ -72,6 +92,11 @@ namespace Compiling.Backends
         public void VisitBodyStatementExpression(BodyExpression expression)
         {
             throw new NotImplementedException();
+        }
+
+        public void VisitBooleanExpression(BooleanExpression expression)
+        {
+            _valueStack.Push(expression.Value);
         }
 
         public void VisitCharacterExpression(CharacterExpression expression)
@@ -94,7 +119,7 @@ namespace Compiling.Backends
             throw new NotImplementedException();
         }
 
-        public void VisitFunctionCallExpression(FunctionCallExpression expression)
+        public void VisitFunctionCallExpression(FunctionDefinitionExpression expression)
         {
             throw new NotImplementedException();
         }
@@ -114,12 +139,12 @@ namespace Compiling.Backends
             _valueStack.Push(expression.Value);
         }
 
-        public void VisitMethodCallExpression(MethodCallExpression expression)
+        public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public void VisitPrototypeExpression(PrototypeExpression expression)
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
             throw new NotImplementedException();
         }

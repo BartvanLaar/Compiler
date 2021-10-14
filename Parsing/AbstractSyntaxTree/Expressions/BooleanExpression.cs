@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public class BooleanExpression : ExpressionBase
+    public sealed class BooleanExpression : ExpressionBase
     {
         public BooleanExpression(Token token) : base(token, ExpressionType.BooleanValue)
         {

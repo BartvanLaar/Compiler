@@ -11,7 +11,7 @@ namespace Lexing
         public const string BACKETS_OPEN = "[";
         public const string BACKETS_CLOSE = "]";
 
-        public const string VARIABLE_SEPARATOR = ",";
+        public const string ARGUMENT_SEPARATOR = ",";
         public const string END_OF_STATEMENT = ";";
 
         /// Math signs
@@ -135,7 +135,7 @@ namespace Lexing
 
             { KeyWords.EXPORT, TokenType.Export},
             { KeyWords.EXTEND, TokenType.Extend },
-            { KeyWords.EXTERN, TokenType.Export },
+            { KeyWords.EXTERN, TokenType.Extern },
 
             //types ? todo: is this the right moment and place?
             { KeyWords.DOUBLE, TokenType.Double },
@@ -152,6 +152,7 @@ namespace Lexing
             { KeyWords.NULL, TokenType.Null },
 
         };
+
 
         public static bool IsPredefinedKeyword(string keyword)
         {

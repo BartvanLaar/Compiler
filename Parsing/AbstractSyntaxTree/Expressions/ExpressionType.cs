@@ -7,10 +7,8 @@
         Multiply,
         Divide,
         LessThan,
-        MethodCall,
-        Identifier,
-        Prototype,
         FunctionCall,
+        Identifier,
         Double,
         DivideRest,
         GreaterThan,
@@ -31,7 +29,8 @@
         Or,
         OrElse,
         And,
-        AndAlso
+        AndAlso,
+        FunctionDefinition
     }
 
 }

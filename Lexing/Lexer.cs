@@ -128,7 +128,7 @@ namespace Lexing
                 return (predefinedToken, cursor, lineCount, columnCount);
             }
 
-            return (new Token(TokenType.Identifier, res, lineCount, columnCountStart), cursor, lineCount, columnCount);
+            return (new Token(TokenType.Identifier, res, lineCount, columnCountStart) { StringValue = res }, cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
@@ -456,7 +456,7 @@ namespace Lexing
             return _text[cursor].ToString() switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount) { StringValue = LexerConstants.END_OF_STATEMENT },
-                LexerConstants.VARIABLE_SEPARATOR => new Token(TokenType.VariableSeparator, lineCount, columnCount) { StringValue = LexerConstants.VARIABLE_SEPARATOR },
+                LexerConstants.ARGUMENT_SEPARATOR => new Token(TokenType.ArgumentSeparator, lineCount, columnCount) { StringValue = LexerConstants.ARGUMENT_SEPARATOR },
                 LexerConstants.ACCOLADES_OPEN => new Token(TokenType.AccoladesOpen, lineCount, columnCount) { StringValue = LexerConstants.ACCOLADES_OPEN },
                 LexerConstants.PARANTHESES_OPEN => new Token(TokenType.ParanthesesOpen, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_OPEN },
                 LexerConstants.PARANTHESES_CLOSE => new Token(TokenType.ParanthesesClose, lineCount, columnCount) { StringValue = LexerConstants.PARANTHESES_CLOSE },
