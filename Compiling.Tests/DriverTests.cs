@@ -84,6 +84,7 @@ namespace Compiling.Tests
         [TestCase("true && false", false)]
         public void Driver_Test_Validate_Operator_Predence_Boolean_Logic(string code, bool expectedResult)
         {
+            Assert.Fail();
             var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
             Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
         }

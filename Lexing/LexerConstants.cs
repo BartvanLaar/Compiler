@@ -76,13 +76,11 @@ namespace Lexing
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
 
             public const string FUNCTION_DEFINITION = "func";
-            public const string PUBLIC = "public";
-            public const string PROTECTED = "protected";
-            public const string INTERNAL = "internal";
-            public const string PRIVATE = "private";
+            public const string EXPORT = "export";
+            public const string EXTEND = "extend";
+            public const string EXTERN = "extern";
 
             public const string PARAMS = "params";
-            public const string IMPLEMENTED = "implemented";
             public const string CLASS = "class";
             public const string STRUCT = "struct";
 
@@ -135,10 +133,9 @@ namespace Lexing
             { KeyWords.BREAK, TokenType.Break},
             { KeyWords.RETURN, TokenType.Return},
 
-            { KeyWords.PUBLIC, TokenType.PublicScope},
-            { KeyWords.INTERNAL, TokenType.InternalScope },
-            { KeyWords.PROTECTED, TokenType.ProtectedScope },
-            { KeyWords.PRIVATE, TokenType.PrivateScope },
+            { KeyWords.EXPORT, TokenType.Export},
+            { KeyWords.EXTEND, TokenType.Extend },
+            { KeyWords.EXTERN, TokenType.Export },
 
             //types ? todo: is this the right moment and place?
             { KeyWords.DOUBLE, TokenType.Double },

@@ -73,16 +73,16 @@
         Summary,                    ///        
         Comment,                    //
         VariableDeclaration,        // var, auto
-        PublicScope,                // public
-        PrivateScope,               // private
-        InternalScope,              // internal
-        ProtectedScope,             // protected
         FunctionDefinition,         // func
         ReturnTypeIndicator,        // ->
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
         VariableSeparator,          // ,
         Definition,
         Return,
+
+        Export,                     // export
+        Extend,                     // extend
+        Extern,                     // extern
 
         True,
         False,

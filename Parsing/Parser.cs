@@ -22,7 +22,7 @@ namespace Parsing
 
         public Queue<ExpressionBase> Parse()
         {
-            while (PeekToken().TokenType is not TokenType.EndOfStatement)
+            while (PeekToken().TokenType is not TokenType.EndOfFile)
             {
                 ProcessToken();
             }
@@ -159,8 +159,7 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.AccoladesClose => null, // end of a (sub) expression
-                //TokenType.ParanthesesClose => null, // end of a sub expression
-                TokenType.ParanthesesOpen => ParseParanthese(),
+                TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Double => ParseDoubleExpression(),
                 TokenType.Float => ParseFloatExpression(),
@@ -173,7 +172,7 @@ namespace Parsing
             };
         }
 
-        private ExpressionBase? ParseParanthese()
+        private ExpressionBase? ParseParantheseOpen()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesOpen);
             ConsumeToken();
