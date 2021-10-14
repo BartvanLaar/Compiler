@@ -1,12 +1,11 @@
 ﻿using Lexing;
 using NUnit.Framework;
-using System;
-using System.IO;
 using System.Linq;
 using TestHelpers.Tests;
 
 namespace Parsing.Tests
 {
+    [Parallelizable]
     internal class ParserTests
     {
         [TestCase("x + 5", 1)]
@@ -23,14 +22,9 @@ namespace Parsing.Tests
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
-
-            var ast = parser.Parse();
             Assert.AreEqual(expectedAmountOfTrees, ast.Count);
-
-            var errors = sw.ToString().Split("\n").Where(s => !string.IsNullOrWhiteSpace(s));
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -46,14 +40,8 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            using var sw = new StringWriter();
-            Console.SetOut(sw);
-
-            var errors = StandardOutputHelper.RunActionAndCaptureStdOut(() =>
-            {
-                var ast = parser.Parse();
-                Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
-            });
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 

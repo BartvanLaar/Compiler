@@ -68,6 +68,17 @@ namespace Parsing
                         ConsumeFunctionDefinitionExpression();
                         return;
                     }
+                case TokenType.Identifier:
+                    {
+                        ConsumeIdentifierExpression();
+                        return;
+                    }
+                case TokenType.VariableDeclaration:
+                    {
+                        ConsumeAssignmentExpression();
+                        return;
+                    }
+
                 default:
                     {
                         //Shouldn't getting here throw an exception?
@@ -77,6 +88,39 @@ namespace Parsing
                         return;
                     }
             }
+        }
+
+        private void ConsumeAssignmentExpression()
+        {
+            ConsumeExpression(ParseAssignmentExpression(false));
+        }
+
+        private void ConsumeIdentifierExpression()
+        {
+            //@todo: @Cleanup: This whole method feels like a massive hack.
+            var peekedTokens = PeekTokens(2);
+            //todo: handle assignment variants?
+            if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
+            {
+                ConsumeExpression(ParseExpression());
+                return;
+            }
+
+            if (peekedTokens[1].TokenType is TokenType.ParanthesesOpen)
+            {
+                ConsumeExpression(ParseFunctionCallExpression());
+                return;
+            }
+
+            //todo: should this handle ++ and --? but what if those are before this token?..
+            if (peekedTokens[1].TokenType is (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
+            {
+                ConsumeExpression(ParseAssignmentExpression(true));
+                return;
+            }
+
+            // even more of a hack!! Fix@@
+            ConsumeExpression(ParseIdentifierExpression());
         }
 
         private void ConsumeFunctionDefinitionExpression()
@@ -142,7 +186,6 @@ namespace Parsing
                 TokenType.Character => ParseCharacterExpression(),
                 TokenType.True => ParseBooleanExpression(),
                 TokenType.False => ParseBooleanExpression(),
-                TokenType.VariableDeclaration => ParseAssignmentExpression(false),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -564,27 +607,8 @@ namespace Parsing
 
         private ExpressionBase? ParseIdentifierExpression()
         {
-            //@todo: @Cleanup: This whole method feels like a massive hack.
-            var peekedTokens = PeekTokens(2);
-            //todo: handle assignment variants?
-            if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
-            {
-                return ParseExpression();
-            }
-
-            if (peekedTokens[1].TokenType is TokenType.ParanthesesOpen)
-            {
-                return ParseFunctionCallExpression();
-            }
-
-            //todo: should this handle ++ and --? but what if those are before this token?..
-            if (peekedTokens[1].TokenType is (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
-            {
-                return ParseAssignmentExpression(true); 
-                //ConsumeAssignmentExpression(true);
-            }
-
             return new IdentifierExpression(ConsumeToken());
+
         }
 
         private ExpressionBase ParseFloatExpression()
@@ -598,17 +622,13 @@ namespace Parsing
         private ExpressionBase ParseDoubleExpression()
         {
             //todo: how to handle nullables?
-            var result = new DoubleExpression(ConsumeToken());
-
-            return result;
+            return new DoubleExpression(ConsumeToken());
         }
 
         private ExpressionBase ParseIntegerExpression()
         {
             //todo: how to handle nullables?
-            var result = new IntegerExpression(ConsumeToken());
-
-            return result;
+            return new IntegerExpression(ConsumeToken());
         }
 
         private ExpressionBase ParseStringExpression()
