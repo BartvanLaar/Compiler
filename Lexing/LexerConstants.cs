@@ -170,8 +170,8 @@ namespace Lexing
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
                 // @note: values don't matter too much as long as it's +1 everytime and theyre proper... Higher is more important of an operator.
-                [TokenType.OrElse] = 1,
-                [TokenType.AndAlso] = 2,
+                [TokenType.AndAlso] = 1,
+                [TokenType.OrElse] = 2,
                 [TokenType.Equivalent] = 3,
                 [TokenType.Equals] = 3,
                 [TokenType.LessThan] = 3,

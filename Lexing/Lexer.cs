@@ -127,8 +127,19 @@ namespace Lexing
 
                 return (predefinedToken, cursor, lineCount, columnCount);
             }
+            var tok = new Token(TokenType.Identifier, res, lineCount, columnCountStart) { StringValue = res };
+            // kind of a hack, but check if next single char tok is a parantheseOpen, indicating a function call or definition
+            // but first eat all white spaces.
+            (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
+            
+            var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCountStart);
+            if(nextTok.HasValue && nextTok.Value.TokenType == TokenType.ParanthesesOpen)
+            {
+                // We wont increase any counts. This will lead to duplicate detection of a single character.. being (... But for now, we will take that performance 'hit'.
+                tok.TokenType = TokenType.FunctionName;
+            }
 
-            return (new Token(TokenType.Identifier, res, lineCount, columnCountStart) { StringValue = res }, cursor, lineCount, columnCount);
+            return (tok, cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)

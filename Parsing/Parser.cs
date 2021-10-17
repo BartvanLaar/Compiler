@@ -68,6 +68,12 @@ namespace Parsing
                         ConsumeFunctionDefinitionExpression();
                         return;
                     }
+                // if we get here, it apparently wasn't a function definition, so it should be a function call.
+                case TokenType.FunctionName:
+                    {
+                        ConsumeFunctionCallExpression();
+                        return;
+                    }
                 case TokenType.Identifier:
                     {
                         ConsumeIdentifierExpression();
@@ -176,8 +182,9 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.AccoladesClose => null, // end of a (sub) expression
-                //TokenType.ParanthesesClose => null, // e.g. end of function call..
+                                                  //TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
+                TokenType.FunctionName => ParseIdentifierExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Double => ParseDoubleExpression(),
                 TokenType.Float => ParseFloatExpression(),
@@ -234,9 +241,9 @@ namespace Parsing
 
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.Identifier)
+            if (PeekToken().TokenType is not TokenType.FunctionName)
             {
-                ThrowParseError(PeekToken(), TokenType.Identifier.ToString(), "after func definition");
+                ThrowParseError(PeekToken(), "after func definition");
                 return null;
             }
 
@@ -259,7 +266,7 @@ namespace Parsing
                     return null;
                 }
 
-                //todo: retrieve all parameters...
+                //@todo: @fix retrieve all parameters...
                 // for now at least consume token, else endless loop...
                 ConsumeToken();
             }
@@ -553,7 +560,7 @@ namespace Parsing
 
         private FunctionCallExpression? ParseFunctionCallExpression()
         {
-            if (PeekToken().TokenType != TokenType.Identifier)
+            if (PeekToken().TokenType != TokenType.FunctionName)
             {
                 // Expected a function name...
                 ThrowParseError(PeekToken(), "a function name", "function call");
