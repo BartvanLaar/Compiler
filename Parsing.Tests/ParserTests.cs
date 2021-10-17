@@ -159,6 +159,18 @@ namespace Parsing.Tests
             Assert.IsEmpty(errors);
         }
 
+        [TestCase("func SomeFunc(bool x, double y, int z) -> int \n {\n var x = 5;\n auto y = 6;\n return x + y; \n }\n")]
+        public void Parse_Function_Definitions_With_Bodies_No_Errors(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+
+            Assert.IsEmpty(errors);
+        }
+
+
         [TestCase("SomeFunc();")]
         [TestCase("SomeFunc(param1);")]
         [TestCase("SomeFunc(param1, param2);")]
