@@ -4,6 +4,7 @@ using TestHelpers.Tests;
 
 namespace Compiling.Tests
 {
+    [Parallelizable]
     internal class DriverTests
     {
         // The tests below don't do ... atm. Might as well be Assert.Pass();...
@@ -114,6 +115,11 @@ namespace Compiling.Tests
         [TestCase("0 !== 0", false)]
         [TestCase("0 != 1", true)]
         [TestCase("0 !== 1", true)]
+        [TestCase("true == true", true)]
+        [TestCase("false == false", true)]
+        [TestCase("true == false", false)]
+        [TestCase("true != false", true)]
+        [TestCase("false != false", false)]
         //@todo: @fix: make it so our language handles negative numbers...
         //[TestCase("0 <= -1", false)]
         //[TestCase("0 < -1", false)]
