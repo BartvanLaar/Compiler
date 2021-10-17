@@ -65,22 +65,22 @@ namespace Compiling.Backends
                     }
                 case ExpressionType.Or:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
                 case ExpressionType.OrElse:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
                 case ExpressionType.And:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
                 case ExpressionType.AndAlso:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(lhsValue, typeof(bool));
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
                 default:

@@ -79,8 +79,9 @@ namespace Compiling.Tests
         [TestCase("false || true", true)]
         [TestCase("false && true", false)]
         [TestCase("true && true", true)]
-        [TestCase("true && true || false", false)]
-        [TestCase("true || false && true", false)]
+        [TestCase("true && true || false", true)]
+        [TestCase("true || false && true", true)]
+        [TestCase("false || false && true", false)]
         [TestCase("true && false", false)]
         public void Driver_Test_Validate_Operator_Predence_Boolean_Logic(string code, bool expectedResult)
         {
