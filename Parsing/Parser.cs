@@ -590,8 +590,7 @@ namespace Parsing
                 {
                     ConsumeToken();
                 }
-
-                // todo: @fix, parsing a function call needs a bit more work than this...:(
+             
                 if (PeekToken().TokenType is TokenType.FunctionName)
                 {
                     var funcCallExpr = ParseFunctionCallExpression();
