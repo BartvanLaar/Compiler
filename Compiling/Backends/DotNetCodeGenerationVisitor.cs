@@ -43,6 +43,16 @@ namespace Compiling.Backends
                         resultingValue = lhsValue == rhsValue;
                         break;
                     }
+                case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
+                    {
+                        resultingValue = lhsValue != rhsValue;
+                        break;
+                    }
+                case ExpressionType.NotEquals:
+                    {
+                        resultingValue = lhsValue != rhsValue;
+                        break;
+                    }
                 case ExpressionType.GreaterThan:
                     {
                         resultingValue = lhsValue > rhsValue;

@@ -174,6 +174,8 @@ namespace Lexing
                 [TokenType.OrElse] = 2,
                 [TokenType.Equivalent] = 3,
                 [TokenType.Equals] = 3,
+                [TokenType.NotEquivalent] = 3,
+                [TokenType.NotEquals] = 3,
                 [TokenType.LessThan] = 3,
                 [TokenType.LessThanOrEqualTo] = 3,
                 [TokenType.GreaterThan] = 3,

@@ -31,6 +31,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
                 LexerConstants.LESS_THAN_EQUAL_SIGN => ExpressionType.LessThanEqual,
                 LexerConstants.EQUIVALENT_SIGN => ExpressionType.Equivalent,
                 LexerConstants.EQUALS_SIGN => ExpressionType.Equals,
+                LexerConstants.NOT_EQUIVALENT_SIGN => ExpressionType.NotEquivalent,
+                LexerConstants.NOT_EQUALS_SIGN => ExpressionType.NotEquals,
                 LexerConstants.OR => ExpressionType.Or,
                 LexerConstants.OR_ELSE => ExpressionType.OrElse,
                 LexerConstants.AND => ExpressionType.And,

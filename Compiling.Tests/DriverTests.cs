@@ -75,6 +75,15 @@ namespace Compiling.Tests
             Assert.AreEqual(expectedResult, double.Parse(messages.Last()));
         }
 
+
+        [TestCase("true", true)]
+        [TestCase("false", false)]
+        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_Static_True_Or_False(string code, bool expectedResult)
+        {
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
+            Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
+        }
+
         [TestCase("true || false", true)]
         [TestCase("false || true", true)]
         [TestCase("false && true", false)]
@@ -83,7 +92,43 @@ namespace Compiling.Tests
         [TestCase("true || false && true", true)]
         [TestCase("false || false && true", false)]
         [TestCase("true && false", false)]
-        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic(string code, bool expectedResult)
+        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_Static_True_Or_False_Comparisons(string code, bool expectedResult)
+        {
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
+            Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
+        }
+
+        [TestCase("2 > 1", true)]
+        [TestCase("2 >= 1", true)]
+        [TestCase("1 >= 1", true)]
+        [TestCase("0 > 1", false)]
+        [TestCase("0 >= 1", false)]
+        [TestCase("0 < 1", true)]
+        [TestCase("0 <= 1", true)]
+        [TestCase("0 <= 0", true)]
+        [TestCase("0 == 0", true)]
+        [TestCase("0 === 0", true)]
+        [TestCase("0 == 1", false)]
+        [TestCase("0 === 1", false)]
+        [TestCase("0 != 0", false)]
+        [TestCase("0 !== 0", false)]
+        [TestCase("0 != 1", true)]
+        [TestCase("0 !== 1", true)]
+        //@todo: @fix: make it so our language handles negative numbers...
+        //[TestCase("0 <= -1", false)]
+        //[TestCase("0 < -1", false)]
+        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_comparisons(string code, bool expectedResult)
+        {
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
+            Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
+        }
+
+        [TestCase("1 > 1 || true", true)]
+        [TestCase("1 >= 1 || false", true)]
+        [TestCase("1 <= 1 || false", true)]
+        [TestCase("1 == 1 || false", true)]
+        [TestCase("1 > 1 || false", false)]
+        public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_Comparisons_Multiple(string code, bool expectedResult)
         {
             var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
             Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());

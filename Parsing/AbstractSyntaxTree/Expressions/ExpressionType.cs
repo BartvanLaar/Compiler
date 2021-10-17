@@ -14,6 +14,8 @@
         GreaterThan,
         Equivalent,
         Equals,
+        NotEquivalent,
+        NotEquals,
         GreaterThanEqual,
         LessThanEqual,
         Float,
@@ -30,7 +32,8 @@
         OrElse,
         And,
         AndAlso,
-        FunctionDefinition
+        FunctionDefinition,
+
     }
 
 }

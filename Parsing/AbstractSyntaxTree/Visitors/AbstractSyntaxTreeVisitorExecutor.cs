@@ -45,6 +45,8 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 // These are all handled by binary operator expressions.
                 case ExpressionType.Equivalent:
                 case ExpressionType.Equals:
+                case ExpressionType.NotEquivalent:
+                case ExpressionType.NotEquals:
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanEqual:
                 case ExpressionType.LessThan:
