@@ -22,17 +22,25 @@ namespace Compiling.Backends
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
-                    resultingValue = lhsValue + rhsValue;
-                    break;
+                    {
+                        resultingValue = lhsValue + rhsValue;
+                        break;
+                    }
                 case ExpressionType.Subtract:
-                    resultingValue = lhsValue - rhsValue;
-                    break;
+                    {
+                        resultingValue = lhsValue - rhsValue;
+                        break;
+                    }
                 case ExpressionType.Multiply:
-                    resultingValue = lhsValue * rhsValue;
-                    break;
+                    {
+                        resultingValue = lhsValue * rhsValue;
+                        break;
+                    }
                 case ExpressionType.Divide:
-                    resultingValue = lhsValue / rhsValue;
-                    break;
+                    {
+                        resultingValue = lhsValue / rhsValue;
+                        break;
+                    }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
                         resultingValue = lhsValue == rhsValue;
