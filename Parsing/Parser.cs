@@ -182,7 +182,7 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.AccoladesClose => null, // end of a (sub) expression
-                                                  //TokenType.ParanthesesClose => null, // e.g. end of function call..
+                TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 TokenType.FunctionName => ParseIdentifierExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.Identifier => ParseIdentifierExpression(),
@@ -591,7 +591,16 @@ namespace Parsing
                     ConsumeToken();
                 }
 
+                // todo: @fix, parsing a function call needs a bit more work than this...:(
+                if (PeekToken().TokenType is TokenType.FunctionName)
+                {
+                    var funcCallExpr = ParseFunctionCallExpression();
+                    Debug.Assert(funcCallExpr != null, "func call expression can't be null when the previous token is a function name!");
+                    functionArguments.Add(funcCallExpr);
+                    continue;
+                }
                 var argumentExpression = ParseExpression();
+
                 if (argumentExpression == null)
                 {
                     ThrowParseError($"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ", PeekToken());
