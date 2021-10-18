@@ -31,11 +31,12 @@
         LessThan,                   // <
         LessThanOrEqualTo,          // <=
 
-        Also,                       // &
-        AndAlso,                    // &&
-        Or,                         // |
-        OrElse,                     // ||
-        xOr,                        // ^
+        LogicalAnd,                       // &
+        ConditionalAnd,                    // &&
+        LogicalOr,                         // |
+        ConditionalOr,                     // ||
+        LogicalXOr,                        // ^
+
         BitShiftLeft,               // <<
         BitShiftRight,              // >>>
 
@@ -62,13 +63,13 @@
         Multiply,                   // *
         Divide,                     // /
         Modulo,                     // %
-        Power,                      // ^
+        //Power,                      // ^ //todo: dit moet anders geimplementeerd, misschien middels ** ?
         NullableCoalesce,           // ??
         AddAssign,                  // +=
         SubtractAssign,             // -=
         MultiplyAssign,             // *=
         DivideAssign,               // /=
-        NullableCoalesceAssign, // ??=
+        NullableCoalesceAssign,     // ??=
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
@@ -90,7 +91,12 @@
         Params,
         Is,
         Not,
-        And,
         ImportStatement,
+        ModuloAssign,
+        LogicalXOrAssign,
+        LogicalAndAssign,
+        LogicalOrAssign,
+        BitShiftLeftAssign,
+        BitShiftRightAssign,
     }
 }

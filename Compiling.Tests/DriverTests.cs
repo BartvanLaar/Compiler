@@ -139,6 +139,7 @@ namespace Compiling.Tests
         [TestCase("(1 != 1 && true) || true", true)]
         [TestCase("(1 != 1 || true) && true", true)]
         [TestCase("(1 != 1 || true) && false", false)]
+        [TestCase("1 != 1 || true && false", false)]
         public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_Comparisons_Multiple(string code, bool expectedResult)
         {
             var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));

@@ -108,6 +108,8 @@ namespace Lexing.Tests
         [TestCase("///", TokenType.Summary)]
         [TestCase("--", TokenType.SubtractSubtract)]
         [TestCase("++", TokenType.AddAdd)]
+        [TestCase("<<", TokenType.BitShiftLeft)]
+        [TestCase(">>", TokenType.BitShiftRight)]
         public static void Lexer_Test_SingleToken(string text, TokenType expectedTokenType)
         {
             var lexer = new Lexer(text);
@@ -146,6 +148,12 @@ namespace Lexing.Tests
         [TestCase("/// \r\n ///", TokenType.Summary)]
         [TestCase("-- \r\n --", TokenType.SubtractSubtract)]
         [TestCase("++ \r\n ++", TokenType.AddAdd)]
+        [TestCase("<< \n <<", TokenType.BitShiftLeft)]
+        [TestCase("<< \r\n <<", TokenType.BitShiftLeft)]
+        [TestCase("<< <<", TokenType.BitShiftLeft)]
+        [TestCase(">> \n >>", TokenType.BitShiftRight)]
+        [TestCase(">> \r\n >>", TokenType.BitShiftRight)]
+        [TestCase(">> >>", TokenType.BitShiftRight)]
         public static void Lexer_Test_Two_SingleTokens(string text, TokenType expectedTokenType)
         {
             var lexer = new Lexer(text);
@@ -712,9 +720,9 @@ namespace Lexing.Tests
 
             var toks = lexer.ConsumeTokens(6);
             Assert.AreEqual(TokenType.True, toks[0].TokenType);
-            Assert.AreEqual(TokenType.AndAlso, toks[1].TokenType);
+            Assert.AreEqual(TokenType.ConditionalAnd, toks[1].TokenType);
             Assert.AreEqual(TokenType.False, toks[2].TokenType);
-            Assert.AreEqual(TokenType.OrElse, toks[3].TokenType);
+            Assert.AreEqual(TokenType.ConditionalOr, toks[3].TokenType);
             Assert.AreEqual(TokenType.True, toks[4].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
         }
