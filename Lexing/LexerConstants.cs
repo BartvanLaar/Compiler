@@ -75,6 +75,8 @@ namespace Lexing
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
 
+            public const string IMPORT = "import";
+
             public const string FUNCTION_DEFINITION = "func";
             public const string EXPORT = "export";
             public const string EXTEND = "extend";
@@ -132,7 +134,7 @@ namespace Lexing
             { KeyWords.CONTINUE, TokenType.Continue},
             { KeyWords.BREAK, TokenType.Break},
             { KeyWords.RETURN, TokenType.Return},
-
+            { KeyWords.IMPORT, TokenType.ImportStatement },
             { KeyWords.EXPORT, TokenType.Export},
             { KeyWords.EXTEND, TokenType.Extend },
             { KeyWords.EXTERN, TokenType.Extern },
@@ -152,7 +154,6 @@ namespace Lexing
             { KeyWords.NULL, TokenType.Null },
 
         };
-
 
         public static bool IsPredefinedKeyword(string keyword)
         {

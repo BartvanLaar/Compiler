@@ -84,7 +84,11 @@ namespace Parsing
                         ConsumeAssignmentExpression();
                         return;
                     }
-
+                case TokenType.ImportStatement:
+                    {
+                        ConsumeImportStatementExpression();
+                        return;
+                    }
                 default:
                     {
                         //Shouldn't getting here throw an exception?
@@ -94,6 +98,13 @@ namespace Parsing
                         return;
                     }
             }
+        }
+
+        private void ConsumeImportStatementExpression()
+        {
+            var expr = ParseImportStatementExpression();
+            //todo: parse imported file before continuing?
+            ConsumeExpression(expr);
         }
 
         private void ConsumeAssignmentExpression()
@@ -618,6 +629,26 @@ namespace Parsing
             ConsumeToken();
 
             return new FunctionCallExpression(functionToken, functionArguments.ToArray());
+        }
+
+        private ExpressionBase? ParseImportStatementExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
+            var importTok = ConsumeToken();
+            var expr = ParseExpression();
+            if(expr == null || expr.Token.HasValue == false || expr.Token.Value.TokenType is not TokenType.String)
+            {
+                ThrowParseError("Expected string expression representing a file path after import", importTok);
+                return null;
+            }
+
+            var pathTok = ConsumeToken();
+            if(PeekToken().TokenType is TokenType.EndOfStatement)
+            {
+                ConsumeToken();
+            }
+
+            return new ImportStatementExpression(pathTok);
         }
 
         private ExpressionBase? ParseIdentifierExpression()

@@ -196,5 +196,16 @@ namespace Parsing.Tests
 
             Assert.IsEmpty(errors);
         }
+
+        [TestCase("import \"this\\is\\a\\path\\\";")]
+        public void Parse_Import_Statement_No_Errors(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+
+            Assert.IsEmpty(errors);
+        }
     }
 }

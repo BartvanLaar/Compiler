@@ -63,6 +63,7 @@ namespace Lexing
 
             return tokens;
         }
+
         private (Token[] Tokens, int Cursor, long LineCounter, long ColumnCounter) TraverseTokensInternal(int amount, int cursor, long lineCounter, long columnCounter)
         {
             Token[] tokens = new Token[amount];
@@ -119,10 +120,10 @@ namespace Lexing
 
             if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
             {
-                var predefinedToken = new Token(tokenType, res, lineCount, columnCountStart);
+                var predefinedToken = new Token(tokenType, res, lineCount, columnCountStart) { StringValue = res };
                 if(tokenType is TokenType.True or TokenType.False)
                 {
-                    predefinedToken.BooleanValue = tokenType == TokenType.True;
+                    predefinedToken.BooleanValue = tokenType is TokenType.True;
                 }
 
                 return (predefinedToken, cursor, lineCount, columnCount);

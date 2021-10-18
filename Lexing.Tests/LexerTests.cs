@@ -705,10 +705,10 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
         }
 
-        [TestCase("true && false || true")]
-        public static void Lexer_Test_Boolean_Statement(string code)
+        [Test]
+        public static void Lexer_Test_Boolean_Statement()
         {
-            var lexer = new Lexer(code);
+            var lexer = new Lexer("true && false || true");
 
             var toks = lexer.ConsumeTokens(6);
             Assert.AreEqual(TokenType.True, toks[0].TokenType);
@@ -717,6 +717,17 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.OrElse, toks[3].TokenType);
             Assert.AreEqual(TokenType.True, toks[4].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
+        }
+
+        [TestCase]
+        public void Lexer_Test_Import_Statement()
+        {
+            var lexer = new Lexer("import \"this\\is\\a\\file\\path\";");
+            var toks = lexer.ConsumeTokens(3);
+            Assert.AreEqual(TokenType.ImportStatement, toks[0].TokenType);
+            Assert.AreEqual(TokenType.String, toks[1].TokenType);
+            Assert.AreEqual("this\\is\\a\\file\\path", toks[1].StringValue);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[2].TokenType);
         }
     }
 }
