@@ -2,10 +2,10 @@
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public sealed class AssignmentExpression : ExpressionBase
+    public sealed class VariableDeclarationExpression : ExpressionBase
     {
 
-        public AssignmentExpression(Token declarationTypeToken, ExpressionBase identificationExpression, Token assignmentToken, ExpressionBase valueExpression) : base(declarationTypeToken, ExpressionType.Assignment) // todo: do we/should we pass a token to the base?
+        public VariableDeclarationExpression(Token declarationTypeToken, ExpressionBase identificationExpression, Token assignmentToken, ExpressionBase valueExpression) : base(declarationTypeToken, ExpressionType.VariableDeclaration) // todo: do we/should we pass a token to the base?
         {
             DeclarationTypeToken = declarationTypeToken;
             IdentificationExpression = identificationExpression;

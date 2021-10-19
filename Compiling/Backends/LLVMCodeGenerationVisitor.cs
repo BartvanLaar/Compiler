@@ -37,17 +37,13 @@ namespace Compiling.Backends
             _valueStack.Clear();
         }
 
-        //public void VisitAssignmentExpression(AssignmentExpression expression)
-        //{
-        //    //Visit(node.IdentificationExpression);
-        //    //Visit(expression.ValueExpression);
+        public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
+        {
+            var rhsValue = _valueStack.Pop();
+            Debug.Assert(expression.IdentificationExpression.Token.HasValue);
+            _namedValues.Add(expression.IdentificationExpression.Token.Value.Name, rhsValue);
+        }
 
-        //    //doesnt an assignment have a lhs or rhs? how does this work :)
-        //    //var rhsValue = _valueStack.Pop();
-        //    var lhsValue = _valueStack.Pop();
-        //    Debug.Assert(expression.IdentificationExpression.Token.HasValue);
-        //    _namedValues.Add(expression.IdentificationExpression.Token.Value.Name, lhsValue);
-        //}
         public void VisitBooleanExpression(BooleanExpression expression)
         {
             //todo: is this the right way to handle bools..?
@@ -244,6 +240,11 @@ namespace Compiling.Backends
         }
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitReturnExpression(ReturnExpression expression)
         {
             throw new NotImplementedException();
         }

@@ -44,6 +44,8 @@
         LogicalAnd,
         FunctionDefinition,
         DivideRestAssign,
+        VariableDeclaration,
+        Return,
     }
 
 }

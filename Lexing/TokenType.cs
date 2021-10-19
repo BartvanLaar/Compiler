@@ -79,7 +79,7 @@
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
         ArgumentSeparator,          // ,
         Definition,
-        Return,
+        ReturnStatement,
 
         Export,                     // export
         Extend,                     // extend

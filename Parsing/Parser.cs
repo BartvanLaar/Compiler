@@ -84,6 +84,10 @@ namespace Parsing
                     {
                         return ParseImportStatementExpression();
                     }
+                case TokenType.ReturnStatement:
+                    {
+                        return ParseReturnStatementExpression();
+                    }
                 default:
                     {
                         return ParseExpression();
@@ -150,6 +154,13 @@ namespace Parsing
                 TokenType.False => ParseBooleanExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
+        }
+
+        private ExpressionBase ParseReturnStatementExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.ReturnStatement);
+            var expr = new ReturnExpression(ConsumeToken(), ParseExpression());
+            return expr;
         }
 
         private ExpressionBase? ParseParantheseOpen()
@@ -318,6 +329,7 @@ namespace Parsing
                 if(PeekToken().TokenType is TokenType.EndOfStatement)
                 {
                     ConsumeToken();
+                    continue;
                 }
 
                 var expression = ParseTopLevelExpression();
@@ -547,7 +559,8 @@ namespace Parsing
                 return null;
             }
 
-            return new AssignmentExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
+            //todo: fix and rename..
+            return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
 
         private ExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)

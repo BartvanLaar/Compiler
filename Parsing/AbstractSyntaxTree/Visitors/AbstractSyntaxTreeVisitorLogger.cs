@@ -48,10 +48,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Log(expression);
         }
 
-        //public void VisitAssignmentExpression(AssignmentExpression expression)
-        //{
-        //    Log(expression);
-        //}
+        public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
+        {
+            Log(expression);
+        }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
@@ -86,6 +86,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         private static void Log(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
-        }        
+        }
+
+        public void VisitReturnExpression(ReturnExpression expression)
+        {
+            Log(expression);
+        }
     }
 }

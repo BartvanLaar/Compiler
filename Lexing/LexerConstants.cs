@@ -139,7 +139,7 @@ namespace Lexing
 
             { KeyWords.CONTINUE, TokenType.Continue},
             { KeyWords.BREAK, TokenType.Break},
-            { KeyWords.RETURN, TokenType.Return},
+            { KeyWords.RETURN, TokenType.ReturnStatement},
             { KeyWords.IMPORT, TokenType.ImportStatement },
             { KeyWords.EXPORT, TokenType.Export},
             { KeyWords.EXTEND, TokenType.Extend },

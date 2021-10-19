@@ -6,6 +6,7 @@ namespace Compiling.Backends
     internal class DotNetCodeInterpreter : IByteCodeGeneratorListener
     {
         private readonly Stack<object> _valueStack = new Stack<object>();
+        private readonly Dictionary<string, object?> _namedValues = new Dictionary<string, object?>();
         public IEnumerable<object> Results => _valueStack;
 
         public void VisitBinaryExpression(BinaryExpression expression)
@@ -35,6 +36,12 @@ namespace Compiling.Backends
                 case ExpressionType.Divide:
                     {
                         resultingValue = lhsValue / rhsValue;
+                        break;
+                    }
+                case ExpressionType.Assignment:
+                    {
+                        // what to do here?
+                        resultingValue = lhsValue;
                         break;
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
@@ -97,7 +104,6 @@ namespace Compiling.Backends
                         resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
-
                 case ExpressionType.ConditionalAnd:
                     {
                         resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool));
@@ -122,6 +128,20 @@ namespace Compiling.Backends
         public void VisitBodyStatementExpression(BodyExpression expression)
         {
             throw new NotImplementedException();
+        }
+        
+        public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
+        {
+            var name = (string) Convert.ChangeType(_valueStack.Pop(), typeof(string));
+            var value = _valueStack.Pop();
+
+            if (!_namedValues.ContainsKey(name))
+            {
+                // error using not previously instantiated variable.
+                return;
+            }
+            //todo: handle scopes?
+            _namedValues[name] = value;
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)
@@ -156,7 +176,9 @@ namespace Compiling.Backends
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
-            throw new NotImplementedException();
+            //todo, handle double identifiers in same or different scope?
+            _namedValues.Add(expression.Identifier, null);
+            _valueStack.Push(expression.Identifier);
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
@@ -186,6 +208,13 @@ namespace Compiling.Backends
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
+            throw new NotImplementedException();
+        }
+
+        public void VisitReturnExpression(ReturnExpression expression)
+        {
+            //todo: how do returns even work?
+            //_valueStack.Push(expression);
             throw new NotImplementedException();
         }
     }

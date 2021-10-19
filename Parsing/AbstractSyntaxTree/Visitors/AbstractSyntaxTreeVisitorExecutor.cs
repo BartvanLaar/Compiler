@@ -54,7 +54,14 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.LessThanEqual:
                     VisitBinaryExpression((BinaryExpression)expression);
                     break;
-
+                case ExpressionType.VariableDeclaration:
+                    {
+                        VisitVariableDeclarationExpression((VariableDeclarationExpression)expression);
+                        break;
+                    }
+                case ExpressionType.Return:
+                    VisitReturnExpression((ReturnExpression) expression);
+                    break;
                 case ExpressionType.FunctionCall:
                     VisitFunctionCallExpression((FunctionCallExpression)expression);
                     break;
@@ -159,13 +166,13 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             _listener?.VisitFunctionDefinitionExpression(expression);
         }
 
-        //public void VisitAssignmentExpression(AssignmentExpression expression)
-        //{
-        //    Visit(expression.IdentificationExpression);
-        //    Visit(expression.ValueExpression);
+        public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
+        {
+            Visit(expression.IdentificationExpression);
+            Visit(expression.ValueExpression);
 
-        //    _listener?.VisitAssignmentExpression(expression);
-        //}
+            _listener?.VisitVariableDeclarationExpression(expression);
+        }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
@@ -195,6 +202,12 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             }
 
             _listener?.VisitBodyStatementExpression(expression);
+        }
+
+        public void VisitReturnExpression(ReturnExpression expression)
+        {
+            Visit(expression.Expression);
+            _listener?.VisitReturnExpression(expression);
         }
     }
 }
