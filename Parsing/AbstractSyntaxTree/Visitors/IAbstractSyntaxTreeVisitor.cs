@@ -13,7 +13,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitBinaryExpression(BinaryExpression expression);
         void VisitFunctionCallExpression(FunctionCallExpression expression);
         void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression);
-        void VisitAssignmentExpression(AssignmentExpression expression);
         void VisitIdentifierExpression(IdentifierExpression expression);
         void VisitIfStatementExpression(IfStatementExpression expression);
         void VisitForStatementExpression(ForStatementExpression expression);

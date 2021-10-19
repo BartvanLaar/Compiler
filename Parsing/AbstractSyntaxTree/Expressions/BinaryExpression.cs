@@ -45,6 +45,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
                 LexerConstants.XOr => ExpressionType.LogicalXOr,
                 LexerConstants.BIT_SHIFT_LEFT => ExpressionType.BitShiftLeft,
                 LexerConstants.BIT_SHIFT_RIGHT => ExpressionType.BitShiftRight,
+                LexerConstants.ASSIGN_OPERATOR => ExpressionType.Assignment,
                 _ => throw new ArgumentException($"Operator {@operator} is not supported."),
             };
         }

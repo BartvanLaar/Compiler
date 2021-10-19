@@ -43,6 +43,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     VisitBinaryExpression((BinaryExpression)expression);
                     break;
                 // These are all handled by binary operator expressions.
+                case ExpressionType.Assignment:
                 case ExpressionType.Equivalent:
                 case ExpressionType.Equals:
                 case ExpressionType.NotEquivalent:
@@ -80,10 +81,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     break;
                 case ExpressionType.Character:
                     VisitCharacterExpression((CharacterExpression)expression);
-                    break;
-                case ExpressionType.Assignment:
-                    VisitAssignmentExpression((AssignmentExpression)expression);
-                    break;
+                    break;    
                 case ExpressionType.IfStatementExpression:
                     VisitIfStatementExpression((IfStatementExpression)expression);
                     break;
@@ -161,13 +159,13 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             _listener?.VisitFunctionDefinitionExpression(expression);
         }
 
-        public void VisitAssignmentExpression(AssignmentExpression expression)
-        {
-            Visit(expression.IdentificationExpression);
-            Visit(expression.ValueExpression);
+        //public void VisitAssignmentExpression(AssignmentExpression expression)
+        //{
+        //    Visit(expression.IdentificationExpression);
+        //    Visit(expression.ValueExpression);
 
-            _listener?.VisitAssignmentExpression(expression);
-        }
+        //    _listener?.VisitAssignmentExpression(expression);
+        //}
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {

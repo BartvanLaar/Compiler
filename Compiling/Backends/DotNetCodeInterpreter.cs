@@ -7,10 +7,6 @@ namespace Compiling.Backends
     {
         private readonly Stack<object> _valueStack = new Stack<object>();
         public IEnumerable<object> Results => _valueStack;
-        public void VisitAssignmentExpression(AssignmentExpression expression)
-        {
-            throw new NotImplementedException();
-        }
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {

@@ -48,10 +48,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Log(expression);
         }
 
-        public void VisitAssignmentExpression(AssignmentExpression expression)
-        {
-            Log(expression);
-        }
+        //public void VisitAssignmentExpression(AssignmentExpression expression)
+        //{
+        //    Log(expression);
+        //}
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {

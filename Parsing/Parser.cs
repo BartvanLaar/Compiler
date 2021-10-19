@@ -78,7 +78,7 @@ namespace Parsing
                     }
                 case TokenType.VariableDeclaration:
                     {
-                        return ParseAssignmentExpression(false);
+                        return ParseVariableDeclaration();
                     }
                 case TokenType.ImportStatement:
                     {
@@ -512,10 +512,10 @@ namespace Parsing
             return new IfStatementExpression(conditionalExpression, new BodyExpression(body), elseExpression);
         }
 
-        private ExpressionBase? ParseAssignmentExpression(bool isReassignment)
+        private ExpressionBase? ParseVariableDeclaration()
         {
             // todo: Check if the value thats being assigned a new value actually Exists in scope?
-            var declarationTypeToken = isReassignment ? new Token() { TokenType = TokenType.ReAssignment } : ConsumeToken();
+            var declarationTypeToken = ConsumeToken();
 
             var leftHandSideTok = PeekToken();
 
