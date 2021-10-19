@@ -95,29 +95,6 @@ namespace Parsing
             }
         }
 
-        //private void ConsumeIdentifierExpression()
-        //{
-        //    // @todo: @Cleanup: This whole method feels like a massive hack.
-        //    var peekedTokens = PeekTokens(2);
-        //    //todo: handle assignment variants?
-        //    if (peekedTokens[1].TokenType is TokenType.Add or TokenType.Subtract or TokenType.Multiply or TokenType.Divide)
-        //    {
-        //        ConsumeExpression(ParseExpression());
-        //        return;
-        //    }
-
-        //    //todo: should this handle ++ and --? but what if those are before this token?..
-        //    //@CleanUp, have seen a similar list in lexer constants..?
-        //    if (peekedTokens[1].TokenType is (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
-        //    {
-        //        ConsumeExpression(ParseAssignmentExpression(true));
-        //        return;
-        //    }
-
-        //    even more of a hack!! Fix@@
-        //    ConsumeExpression(ParseIdentifierExpression());
-        //}
-
         private void ConsumeExpression(ExpressionBase? expression)
         {
             if (expression == null)
