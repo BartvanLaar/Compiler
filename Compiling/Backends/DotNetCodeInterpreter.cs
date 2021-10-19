@@ -132,16 +132,16 @@ namespace Compiling.Backends
         
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
-            var name = (string) Convert.ChangeType(_valueStack.Pop(), typeof(string));
-            var value = _valueStack.Pop();
+            var valueRhs = _valueStack.Pop(); 
+            var nameLhs = (string)Convert.ChangeType(_valueStack.Pop(), typeof(string));
 
-            if (!_namedValues.ContainsKey(name))
+            if (!_namedValues.ContainsKey(nameLhs))
             {
                 // error using not previously instantiated variable.
                 return;
             }
             //todo: handle scopes?
-            _namedValues[name] = value;
+            _namedValues[nameLhs] = valueRhs;
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)

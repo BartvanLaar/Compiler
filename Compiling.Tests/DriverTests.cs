@@ -145,5 +145,11 @@ namespace Compiling.Tests
             var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
             Assert.AreEqual(expectedResult.ToString().ToLowerInvariant(), messages.Last().Trim().ToLowerInvariant());
         }
+
+        [Test]
+        public void Driver_Test_Fill_Variable()
+        {
+            var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet("var x = 2;"));
+        }
     }
 }
