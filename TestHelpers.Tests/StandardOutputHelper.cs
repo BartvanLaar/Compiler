@@ -34,8 +34,7 @@
             }
             finally
             {
-                var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-                standardOutput.AutoFlush = true;
+                var standardOutput = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
                 Console.SetOut(standardOutput);
             }
 

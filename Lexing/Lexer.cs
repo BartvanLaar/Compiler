@@ -391,6 +391,19 @@ namespace Lexing
 
                         return (token, cursor, lineCount, columnCount);
                     }
+                case TokenType.Modulo:
+                    {
+                        var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+                        if (singleCharTok?.TokenType == TokenType.Assignment)
+                        {
+                            token.TokenType = TokenType.ModuloAssign;
+                            token.StringValue = LexerConstants.MODULO_ASSIGN;
+                            cursor++;
+                            columnCount++;
+                        }
+
+                        return (token, cursor, lineCount, columnCount);
+                    }
                 case TokenType.Divide:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
@@ -439,6 +452,7 @@ namespace Lexing
 
                                 if (singleCharTok.Value.TokenType == TokenType.EndOfFile)
                                 {
+                                    // @todo @cleanup should probably throw an exception?
                                     break;
                                 }
 

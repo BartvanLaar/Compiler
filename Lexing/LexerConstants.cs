@@ -29,7 +29,9 @@ namespace Lexing
         public const string DIVIDE = "/";
         public const string DIVIDE_ASSIGN = "/=";
         public const string MODULO = "%";
+        public const string MODULO_ASSIGN = "%=";
         public const string POWER = "^";
+        //public const string POWER_ASSIGN = "^"; // what should this do haha
 
         public const string GREATER_THAN_SIGN = ">";
         public const string GREATER_THAN_EQUAL_SIGN = ">=";
@@ -45,6 +47,7 @@ namespace Lexing
         public const string AND = "&";
         public const string AND_ALSO = "&&";
         public const string OR = "|";
+        public const string XOr = "^";
         public const string OR_ELSE = "||";
 
         public const string BIT_SHIFT_LEFT = "<<";

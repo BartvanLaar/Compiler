@@ -3,7 +3,7 @@ using Parsing.AbstractSyntaxTree.Visitors;
 
 namespace Compiling.Backends
 {
-    internal class DotNetCodeGenerationVisitor : IByteCodeGeneratorListener
+    internal class DotNetCodeInterpreter : IByteCodeGeneratorListener
     {
         private readonly Stack<object> _valueStack = new Stack<object>();
         public IEnumerable<object> Results => _valueStack;
@@ -81,24 +81,40 @@ namespace Compiling.Backends
                         resultingValue = lhsValue <= rhsValue;
                         break;
                     }
-                case ExpressionType.Or:
+                case ExpressionType.LogicalOr:
                     {
                         resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
-                case ExpressionType.OrElse:
+                case ExpressionType.LogicalXOr:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
-                case ExpressionType.And:
+                case ExpressionType.LogicalAnd:
                     {
                         resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool));
                         break;
                     }
-                case ExpressionType.AndAlso:
+                case ExpressionType.ConditionalOr:
+                    {
+                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                        break;
+                    }
+
+                case ExpressionType.ConditionalAnd:
                     {
                         resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                        break;
+                    }
+                case ExpressionType.BitShiftLeft:
+                    {
+                        resultingValue = (int)lhsValue << (int)rhsValue;
+                        break;
+                    }
+                case ExpressionType.BitShiftRight:
+                    {
+                        resultingValue = (int)lhsValue >> (int)rhsValue;
                         break;
                     }
                 default:

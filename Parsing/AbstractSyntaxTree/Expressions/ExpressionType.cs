@@ -4,9 +4,15 @@
     {
         DontCare = -1,
         Add,
+        AddAssign,
         Subtract,
+        SubtractAssign,
         Multiply,
+        MultiplyAssign,
         Divide,
+        DivideAssign,
+        Modulo,
+        ModuloAssign,
         LessThan,
         FunctionCall,
         Identifier,
@@ -31,12 +37,13 @@
         ForStatementExpression,
         BooleanValue,
         WhileStatementExpression,
-        Or,
-        OrElse,
-        And,
-        AndAlso,
+        ConditionalOr,
+        ConditionalAnd,
+        LogicalOr,
+        LogicalXOr,
+        LogicalAnd,
         FunctionDefinition,
-
+        DivideRestAssign,
     }
 
 }

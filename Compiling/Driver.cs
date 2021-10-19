@@ -13,7 +13,7 @@ namespace Compiling
         public static void Run(string text) => Run(text, new AbstractSyntaxTreeVisitorExecutor(), new AbstractSyntaxTreeVisitorLogger());
         public static void RunDotNet(string text)
         {
-            var visitor = new DotNetCodeGenerationVisitor();
+            var visitor = new DotNetCodeInterpreter();
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);
             foreach (var res in visitor.Results)
             {
