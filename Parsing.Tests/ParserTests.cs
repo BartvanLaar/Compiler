@@ -144,12 +144,13 @@ namespace Parsing.Tests
         [TestCase("export func SomeFunc() -> void {}")]
         [TestCase("export func SomeFunc() -> bool {}")]
         [TestCase("export func SomeFunc() -> double {}")]
+        [TestCase("export func SomeFunc(bool x) -> void {}")]
         [TestCase("export func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> double {}")]
         [TestCase("export func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> int {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> void {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> bool {}")]
         [TestCase("func SomeFunc(bool x, double y, int z, string ranOutOfAlphabet) -> ImagineThisIsACustomDefinedType {}")]
-        public void Parse_Function_Definitions_No_Errors(string code)
+        public void Parse_Function_Definitions_No_Errors_No_Body(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
@@ -159,8 +160,9 @@ namespace Parsing.Tests
             Assert.IsEmpty(errors);
         }
 
+        [TestCase("export func SomeFunc(bool x) -> void {var x = 5}")]
         [TestCase("func SomeFunc(bool x, double y, int z) -> int \n {\n var x = 5;\n auto y = 6;\n return x + y; \n }\n")]
-        public void Parse_Function_Definitions_With_Bodies_No_Errors(string code)
+        public void Parse_Function_Definitions_Variable_Declaration_In_Body_No_Errors(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
@@ -170,6 +172,15 @@ namespace Parsing.Tests
             Assert.IsEmpty(errors);
         }
 
+        [TestCase("export func SomeFunc() -> double {", 1)]
+        public void Parse_Function_Definition_N_Errors(string code, int amountOfErrors)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            Assert.AreEqual(amountOfErrors, errors.Length);
+        }
 
         [TestCase("SomeFunc();")]
         [TestCase("SomeFunc(param1);")]

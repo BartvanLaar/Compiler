@@ -309,7 +309,9 @@ namespace Parsing
                 return null;
             }
 
+            //Consume accolade...
             ConsumeToken();
+
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
             var body = new List<ExpressionBase> { };
