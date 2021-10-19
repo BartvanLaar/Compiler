@@ -314,18 +314,21 @@ namespace Parsing
                     ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
                     return null;
                 }
+               
                 if(PeekToken().TokenType is TokenType.EndOfStatement)
                 {
                     ConsumeToken();
                 }
 
                 var expression = ParseTopLevelExpression();
-                if(expression != null)
+                if(expression == null)
+                {
+                    ConsumeToken();
+                }
+                else
                 {
                     body.Add(expression);
                 }
-
-
             }
             return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, new BodyExpression(body), isExtern, isExport);
         }
@@ -354,9 +357,15 @@ namespace Parsing
                     return null;
                 }
 
-                var expression = ParseExpression();
-                Debug.Assert(expression != null);
-                body.Add(expression);
+                var expression = ParseTopLevelExpression();
+                if (expression == null)
+                {
+                    ConsumeToken();
+                }
+                else
+                {
+                    body.Add(expression);
+                }
             }
 
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
@@ -413,9 +422,15 @@ namespace Parsing
                     return null;
                 }
 
-                var expression = ParseExpression();
-                Debug.Assert(expression != null);
-                body.Add(expression);
+                var expression = ParseTopLevelExpression();
+                if (expression == null)
+                {
+                    ConsumeToken();
+                }
+                else
+                {
+                    body.Add(expression);
+                }
             }
 
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
@@ -455,9 +470,15 @@ namespace Parsing
                     return null;
                 }
 
-                var expression = ParseExpression();
-                Debug.Assert(expression != null);
-                body.Add(expression);
+                var expression = ParseTopLevelExpression();
+                if (expression == null)
+                {
+                    ConsumeToken();
+                }
+                else
+                {
+                    body.Add(expression);
+                }
             }
 
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
