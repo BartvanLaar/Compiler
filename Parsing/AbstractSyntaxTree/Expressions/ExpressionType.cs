@@ -2,6 +2,7 @@
 {
     public enum ExpressionType
     {
+        DontCare = -1,
         Add,
         Subtract,
         Multiply,
@@ -18,6 +19,8 @@
         NotEquals,
         GreaterThanEqual,
         LessThanEqual,
+        BitShiftLeft,
+        BitShiftRight,
         Float,
         Integer,
         String,

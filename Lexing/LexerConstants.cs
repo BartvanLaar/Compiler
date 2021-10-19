@@ -47,6 +47,9 @@ namespace Lexing
         public const string OR = "|";
         public const string OR_ELSE = "||";
 
+        public const string BIT_SHIFT_LEFT = "<<";
+        public const string BIT_SHIFT_RIGHT = ">>";
+
         public const string RETURN_TYPE_INDICATOR = "->";
 
         public const string NOT_SIGN = "!";
@@ -74,6 +77,8 @@ namespace Lexing
         {
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
+
+            public const string IMPORT = "import";
 
             public const string FUNCTION_DEFINITION = "func";
             public const string EXPORT = "export";
@@ -132,7 +137,7 @@ namespace Lexing
             { KeyWords.CONTINUE, TokenType.Continue},
             { KeyWords.BREAK, TokenType.Break},
             { KeyWords.RETURN, TokenType.Return},
-
+            { KeyWords.IMPORT, TokenType.ImportStatement },
             { KeyWords.EXPORT, TokenType.Export},
             { KeyWords.EXTEND, TokenType.Extend },
             { KeyWords.EXTERN, TokenType.Extern },
@@ -153,7 +158,6 @@ namespace Lexing
 
         };
 
-
         public static bool IsPredefinedKeyword(string keyword)
         {
             return IsPredefinedKeyword(keyword, out _);
@@ -166,24 +170,74 @@ namespace Lexing
 
         public static class OperatorPrecedence
         {
+            private const int MULTIPLICATIVE = ADDITIVE + 1;
+            private const int ADDITIVE = SHIFT_PRECEDENCE + 1;
+            private const int SHIFT_PRECEDENCE = RELATIONAL_TEST + 1;
+            private const int RELATIONAL_TEST = EQUALITY_TEST + 1;
+            private const int EQUALITY_TEST = LOGICAL_AND + 1;
+            private const int LOGICAL_AND = LOGICAL_XOR + 1;
+            private const int LOGICAL_XOR = LOGICAL_OR + 1;
+            private const int LOGICAL_OR = CONDITIONAL_AND + 1;
+            private const int CONDITIONAL_AND = CONDITIONAL_OR + 1;
+            private const int CONDITIONAL_OR = NULLABLE_COALESCE + 1;
+            private const int NULLABLE_COALESCE = CONDITIONAL_OPERATOR + 1;
+            private const int CONDITIONAL_OPERATOR = ASSIGNMENT_DECLARATION + 1;
+            private const int ASSIGNMENT_DECLARATION = DEFAULT_OPERATOR_PRECEDENCE + 1;
             public const int DEFAULT_OPERATOR_PRECEDENCE = 0;
+
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
             {
                 // @note: values don't matter too much as long as it's +1 everytime and theyre proper... Higher is more important of an operator.
-                [TokenType.AndAlso] = 1,
-                [TokenType.OrElse] = 2,
-                [TokenType.Equivalent] = 3,
-                [TokenType.Equals] = 3,
-                [TokenType.NotEquivalent] = 3,
-                [TokenType.NotEquals] = 3,
-                [TokenType.LessThan] = 3,
-                [TokenType.LessThanOrEqualTo] = 3,
-                [TokenType.GreaterThan] = 3,
-                [TokenType.GreaterThanOrEqualTo] = 3,
-                [TokenType.Add] = 4,
-                [TokenType.Subtract] = 4,
-                [TokenType.Multiply] = 5,
-                [TokenType.Divide] = 5,
+                // source: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/#operator-precedence
+                // # better good stolen than badly thought...
+                [TokenType.Modulo] = MULTIPLICATIVE,
+                [TokenType.Multiply] = MULTIPLICATIVE,
+                [TokenType.Divide] = MULTIPLICATIVE,
+
+                [TokenType.Add] = ADDITIVE,
+                [TokenType.Subtract] = ADDITIVE,
+
+                [TokenType.BitShiftLeft] = SHIFT_PRECEDENCE,
+                [TokenType.BitShiftRight] = SHIFT_PRECEDENCE,
+
+                [TokenType.LessThan] = RELATIONAL_TEST,
+                [TokenType.LessThanOrEqualTo] = RELATIONAL_TEST,
+                [TokenType.GreaterThan] = RELATIONAL_TEST,
+                [TokenType.GreaterThanOrEqualTo] = RELATIONAL_TEST,
+
+                [TokenType.Equivalent] = EQUALITY_TEST,
+                [TokenType.Equals] = EQUALITY_TEST,
+                [TokenType.NotEquivalent] = EQUALITY_TEST,
+                [TokenType.NotEquals] = EQUALITY_TEST,
+
+                [TokenType.LogicalAnd] = LOGICAL_AND,
+                [TokenType.LogicalXOr] = LOGICAL_XOR,
+                [TokenType.LogicalOr] = LOGICAL_OR,
+
+                [TokenType.ConditionalAnd] = CONDITIONAL_AND,
+                [TokenType.ConditionalOr] = CONDITIONAL_OR,
+
+                [TokenType.NullableCoalesceAssign] = NULLABLE_COALESCE,
+
+                [TokenType.TerniaryOperatorTrue] = CONDITIONAL_OPERATOR,
+                [TokenType.TerniaryOperatorFalse] = CONDITIONAL_OPERATOR,
+
+
+                [TokenType.Assignment] = ASSIGNMENT_DECLARATION,
+                [TokenType.NullableCoalesceAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.MultiplyAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.ModuloAssign] = ASSIGNMENT_DECLARATION, // todo: bring back modulo assign support ?
+                [TokenType.DivideAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.AddAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.SubtractAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.LogicalAndAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.LogicalXOrAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.LogicalOrAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.BitShiftLeftAssign] = ASSIGNMENT_DECLARATION,
+                [TokenType.BitShiftRightAssign] = ASSIGNMENT_DECLARATION,
+                //[TokenType.Lambda] = ASSIGNMENT_DECLARATION, //todo: support lambdas?
+
+
             };
 
             public static bool IsLeftAssociated(Token token)
@@ -193,7 +247,12 @@ namespace Lexing
 
             public static bool IsLeftAssociated(TokenType tokenType)
             {
-                return tokenType is not TokenType.Power;
+                //return tokenType is not TokenType.Power;
+                //todo: refactor for readability and speed...
+                // but cant be based on precedence as that is nasty and error prone..
+                return tokenType is not (TokenType.NullableCoalesce or TokenType.NullableCoalesceAssign or TokenType.TerniaryOperatorTrue or TokenType.TerniaryOperatorFalse or
+                    TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign or TokenType.ModuloAssign or TokenType.BitShiftLeftAssign or TokenType.BitShiftRightAssign
+                    or TokenType.LogicalAndAssign or TokenType.LogicalOrAssign or TokenType.LogicalXOrAssign);
             }
 
             public static int Get(Token token)
