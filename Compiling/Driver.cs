@@ -27,17 +27,13 @@ namespace Compiling
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
-            //LLVM.DumpModule(module);
+            LLVM.DumpModule(module);
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             LLVM.WriteBitcodeToFile(module, output);
 
             var llc = Process.Start(@"llc", $"--filetype=obj {output}");
             llc.WaitForExit();
-            //dll...
-            //"lld-link /subsystem:console /dll /noentry output.obj";
-
-            // no dll but need to specify entry point?
-            //"lld-link /subsystem:console /entry:main output.obj";
+  
             Process lld;
             if (isExecutable)
             {
