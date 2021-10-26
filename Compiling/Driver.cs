@@ -41,7 +41,7 @@ namespace Compiling
             Process lld;
             if (isExecutable)
             {
-                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:Main {Path.GetFileNameWithoutExtension(output)}.obj");
+                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:_main {Path.GetFileNameWithoutExtension(output)}.obj");
             }
             else
             {
