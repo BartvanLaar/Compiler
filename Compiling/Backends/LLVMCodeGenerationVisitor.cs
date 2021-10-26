@@ -21,7 +21,7 @@ namespace Compiling.Backends
         private delegate double D_FUNCTION_PTR(); // temp?
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
-
+        //LLVM.LoadLibraryPermanently() // should i use this to load a c lib for printing to consoles?
         public LLVMCodeGenerationVisitor(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
         {
             _module = module;
@@ -45,10 +45,8 @@ namespace Compiling.Backends
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)
-        {
-            //todo: is this the right way to handle bools..?
+        {    
             _valueStack.Push(LLVM.ConstReal(LLVM.Int64Type(), expression.Value ? 1 : 0));
-            throw new NotImplementedException();
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
@@ -73,7 +71,7 @@ namespace Compiling.Backends
 
         public void VisitStringExpression(StringExpression expression)
         {
-            _valueStack.Push(LLVM.ConstRealOfString(LLVM.Int64Type(), expression.Value));
+            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int64Type(), expression.Value, (uint)expression.Value.Length));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -140,7 +138,7 @@ namespace Compiling.Backends
                 {
                     arguments[i] = LLVM.DoubleType();
                 }
-
+                
                 function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(LLVM.DoubleType(), arguments, LLVMBoolFalse));
                 LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
             }
@@ -155,7 +153,8 @@ namespace Compiling.Backends
 
                 _namedValues[argumentName] = param;
             }
-
+            LLVM.BuildRetVoid(_builder);// todo: support return types...?
+            LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
         }
 

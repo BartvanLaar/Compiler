@@ -22,4 +22,10 @@
     <ProjectReference Include="..\TestHelpers.Tests\TestHelpers.Tests.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestFiles\VoidMainFuncNoParamsDefinition.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

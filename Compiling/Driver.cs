@@ -21,25 +21,33 @@ namespace Compiling
             }
         }
 
-        public static void RunLLVM(string text)
+        public static void RunLLVM(string text, string filename = "output", bool isExecutable = false)
         {
             var (module, builder, executionEngine, passManager) = SetupLLVM();
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
             LLVM.DumpModule(module);
-            var output = Path.Join(Directory.GetCurrentDirectory(), "output.bc");
+            var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             LLVM.WriteBitcodeToFile(module, output);
 
-            var llc = Process.Start(@"llc", $"-filetype=obj {output}");
+            var llc = Process.Start(@"llc", $"--filetype=obj {output}");
             llc.WaitForExit();
             //dll...
             //"lld-link /subsystem:console /dll /noentry output.obj";
 
             // no dll but need to specify entry point?
             //"lld-link /subsystem:console /entry:main output.obj";
-            
-            var lld = Process.Start(@"lld-link", $"/subsystem:console /noentry /dll {Path.GetFileNameWithoutExtension(output)}.obj");
+            Process lld;
+            if (isExecutable)
+            {
+                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:Main {Path.GetFileNameWithoutExtension(output)}.obj");
+            }
+            else
+            {
+                lld = Process.Start(@"lld-link", $"/subsystem:console /noentry /dll {Path.GetFileNameWithoutExtension(output)}.obj");
+            }
+
             lld.WaitForExit();
 
         }
