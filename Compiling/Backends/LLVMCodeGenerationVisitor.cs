@@ -139,7 +139,7 @@ namespace Compiling.Backends
                     arguments[i] = LLVM.DoubleType();
                 }
                 
-                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(LLVM.DoubleType(), arguments, LLVMBoolFalse));
+                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(LLVM.VoidType(), arguments, false));
                 LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
             }
 
@@ -153,6 +153,8 @@ namespace Compiling.Backends
 
                 _namedValues[argumentName] = param;
             }
+            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            //todo: implement visit body and add it to the function? So actual code can be run
             LLVM.BuildRetVoid(_builder);// todo: support return types...?
             LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);

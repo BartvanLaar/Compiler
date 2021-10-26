@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestFiles\VoidLibFuncNoParamsDefinition.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\VoidMainFuncNoParamsDefinition.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

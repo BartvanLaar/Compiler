@@ -27,7 +27,7 @@ namespace Compiling
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
-            LLVM.DumpModule(module);
+            //LLVM.DumpModule(module);
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             LLVM.WriteBitcodeToFile(module, output);
 
@@ -41,7 +41,7 @@ namespace Compiling
             Process lld;
             if (isExecutable)
             {
-                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:_main {Path.GetFileNameWithoutExtension(output)}.obj");
+                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:Main {Path.GetFileNameWithoutExtension(output)}.obj");
             }
             else
             {
