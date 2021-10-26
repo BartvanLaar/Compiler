@@ -27,9 +27,13 @@ namespace Compiling
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
-            LLVM.DumpModule(module);
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             LLVM.WriteBitcodeToFile(module, output);
+            LLVM.DumpModule(module);
+            LLVM.DisposeModule(module);
+            LLVM.DisposeBuilder(builder);
+            LLVM.DisposeExecutionEngine(executionEngine);
+            LLVM.DisposePassManager(passManager);
 
             var llc = Process.Start(@"llc", $"--filetype=obj {output}");
             llc.WaitForExit();
