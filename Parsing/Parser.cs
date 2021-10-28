@@ -22,6 +22,16 @@ namespace Parsing
 
         public Queue<ExpressionBase> Parse()
         {
+            // how to handle multiple files.. 
+            // Are we gonna added them to the same queue, or are we going to return a list of queues?
+            // We should make the expression visitor(s) smart enough to not care about order..
+            // e.g. by looping over it once to determine whether all used functions and global variables are present in the included files..
+            // this means global varialbes and public functions should be stored somewhere so we can check that...
+            // does an expression need a scope..? we need to know if the used function is present in one of the imported file(s).
+            // but we also need to know which variant is picked, as no duplicates are allowed.
+            // should we require import "stuff" as <NAME HERE> so we know which version they mean? or should it be optional in case of ambiguity
+            // once that is valid, we need to do some type checking.
+            // then the last step is code gen... which we can do already.. sort of...
             while (PeekToken().TokenType is not TokenType.EndOfFile)
             {
                 var expr = ParseTopLevelExpression();
