@@ -2,7 +2,6 @@
 {
     public class Token
     {
-
         public TokenType TokenType { get; set; }
         public int Line { get; init; }
         public int Column { get; init; }
@@ -20,10 +19,6 @@
             Line = line;
             Column = column;
             Name = name;
-            StringValue = null;
-            FloatValue = null;
-            IntegerValue = null;
-            BooleanValue = null;
         }
 
         public string ToStringToken()

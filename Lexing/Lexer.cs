@@ -9,30 +9,10 @@ namespace Lexing
         Token[] PeekTokens(int amount);
     }
 
-    internal struct State
-    {
-        public int CursorPosition { get; set; }
-        public int LineCounter { get; set; }
-        public int ColumnCounter { get; set; }
-
-        public State() : this(0, 1, 0)
-        {
-
-        }
-
-        public State(int cursorPosition, int lineCounter, int columnCounter)
-        {
-            CursorPosition = cursorPosition;
-            LineCounter = lineCounter;
-            ColumnCounter = columnCounter;
-        }
-    }
-
     public class Lexer : ILexer
     {
         /// Represents a single file.
         private readonly string _text;
-        private State _state = new State();
         private int _cursorPosition;
         private int _lineCounter;
         private int _columnCounter;
