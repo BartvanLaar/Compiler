@@ -9,13 +9,19 @@ namespace Lexing
         Token[] PeekTokens(int amount);
     }
 
+    //private struct State
+    //{
+    //    public int  LineCount { get; set; }
+    //    public int ColumnCount { get; set; }
+    //}
+
     public class Lexer : ILexer
     {
         /// Represents a single file.
         private readonly string _text;
         private int _cursor;
-        private long _lineCounter;
-        private long _columnCounter;
+        private int _lineCounter;
+        private int _columnCounter;
         public Lexer(string text)
         {
             _text = text ?? throw new ArgumentNullException(nameof(text));
@@ -64,7 +70,7 @@ namespace Lexing
             return tokens;
         }
 
-        private (Token[] Tokens, int Cursor, long LineCounter, long ColumnCounter) TraverseTokensInternal(int amount, int cursor, long lineCounter, long columnCounter)
+        private (Token[] Tokens, int Cursor, int LineCounter, int ColumnCounter) TraverseTokensInternal(int amount, int cursor, int lineCounter, int columnCounter)
         {
             Token[] tokens = new Token[amount];
             // @FutureMe, if doing this for a single token peek is a performance bottleneck, you're doing some crazy fast stuff... and you're allowed to refactor this for the PeekToken() and ConsumeToken() methods :), for now idc.... ~Bart, 07-10-2021
@@ -80,7 +86,7 @@ namespace Lexing
             return (tokens, cursor, lineCounter, columnCounter);
         }
 
-        private (Token Token, int Cursor, long LineCount, long ColumnCount) GetNextToken(int cursor, long lineCount, long columnCount)
+        private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int columnCount)
         {
             // todo: should this language be case sensitive?
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
@@ -144,7 +150,7 @@ namespace Lexing
             return (tok, cursor, lineCount, columnCount);
         }
 
-        private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetNumberToken(int cursor, long lineCount, long columnCount)
+        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount)
         {
             if (!char.IsDigit(_text[cursor]))
             {
@@ -195,7 +201,7 @@ namespace Lexing
             return (token, cursor, lineCount, columnCount);
         }
 
-        private (Token? Token, int Cursor, long LineCount, long ColumnCount) GetMultipleCharacterToken(Token token, int cursor, long lineCount, long columnCount)
+        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetMultipleCharacterToken(Token token, int cursor, int lineCount, int columnCount)
         {
             //@incomplete
             switch (token.TokenType)
@@ -487,7 +493,7 @@ namespace Lexing
             }
         }
 
-        private Token? GetSingleCharacterToken(int cursor, long lineCount, long columnCount)
+        private Token? GetSingleCharacterToken(int cursor, int lineCount, int columnCount)
         {
             if (cursor >= _text.Length)
             {
@@ -525,7 +531,7 @@ namespace Lexing
             };
         }
 
-        private (int cursor, long lineCount, long columnCount) SkipTillNewLine(int cursor, long lineCount)
+        private (int cursor, int lineCount, int columnCount) SkipTillNewLine(int cursor, int lineCount)
         {
             while (cursor < _text.Length && _text[cursor] != '\n')
             {
@@ -535,7 +541,7 @@ namespace Lexing
             return (cursor, lineCount + 1, 0);
         }
 
-        private (int cursor, long lineCount, long columnCount) SkipWhiteSpaces(int cursor, long lineCount, long columnCount)
+        private (int cursor, int lineCount, int columnCount) SkipWhiteSpaces(int cursor, int lineCount, int columnCount)
         {
             while (cursor < _text.Length && char.IsWhiteSpace(_text[cursor]))
             {
