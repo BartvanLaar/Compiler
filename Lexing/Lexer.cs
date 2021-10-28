@@ -9,23 +9,37 @@ namespace Lexing
         Token[] PeekTokens(int amount);
     }
 
-    //private struct State
-    //{
-    //    public int  LineCount { get; set; }
-    //    public int ColumnCount { get; set; }
-    //}
+    internal struct State
+    {
+        public int CursorPosition { get; set; }
+        public int LineCounter { get; set; }
+        public int ColumnCounter { get; set; }
+
+        public State() : this(0, 1, 0)
+        {
+
+        }
+
+        public State(int cursorPosition, int lineCounter, int columnCounter)
+        {
+            CursorPosition = cursorPosition;
+            LineCounter = lineCounter;
+            ColumnCounter = columnCounter;
+        }
+    }
 
     public class Lexer : ILexer
     {
         /// Represents a single file.
         private readonly string _text;
-        private int _cursor;
+        private State _state = new State();
+        private int _cursorPosition;
         private int _lineCounter;
         private int _columnCounter;
         public Lexer(string text)
         {
             _text = text ?? throw new ArgumentNullException(nameof(text));
-            _cursor = 0;
+            _cursorPosition = 0;
             _lineCounter = 1;
             _columnCounter = 0;
         }
@@ -58,11 +72,11 @@ namespace Lexing
                 throw new ArgumentException("amount must be greater than 0.");
             }
 
-            var (tokens, cursor, lineCounter, columnCounter) = TraverseTokensInternal(amount, _cursor, _lineCounter, _columnCounter);
+            var (tokens, cursor, lineCounter, columnCounter) = TraverseTokensInternal(amount, _cursorPosition, _lineCounter, _columnCounter);
 
             if (shouldConsume)
             {
-                _cursor = cursor;
+                _cursorPosition = cursor;
                 _lineCounter = lineCounter;
                 _columnCounter = columnCounter;
             }
@@ -74,7 +88,7 @@ namespace Lexing
         {
             Token[] tokens = new Token[amount];
             // @FutureMe, if doing this for a single token peek is a performance bottleneck, you're doing some crazy fast stuff... and you're allowed to refactor this for the PeekToken() and ConsumeToken() methods :), for now idc.... ~Bart, 07-10-2021
-            for (var counter = 0; counter < amount; counter++) 
+            for (var counter = 0; counter < amount; counter++)
             {
                 (Token token, cursor, lineCounter, columnCounter) =
                     cursor < _text.Length
@@ -128,7 +142,7 @@ namespace Lexing
             if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
             {
                 var predefinedToken = new Token(tokenType, res, lineCount, columnCountStart) { StringValue = res };
-                if(tokenType is TokenType.True or TokenType.False)
+                if (tokenType is TokenType.True or TokenType.False)
                 {
                     predefinedToken.BooleanValue = tokenType is TokenType.True;
                 }
@@ -139,9 +153,9 @@ namespace Lexing
             // kind of a hack, but check if next single char tok is a parantheseOpen, indicating a function call or definition
             // but first eat all white spaces.
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
-            
+
             var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCountStart);
-            if(nextTok?.TokenType == TokenType.ParanthesesOpen)
+            if (nextTok?.TokenType == TokenType.ParanthesesOpen)
             {
                 // We wont increase any counts. This will lead to duplicate detection of a single character.. being (... But for now, we will take that performance 'hit'.
                 tok.TokenType = TokenType.FunctionName;
