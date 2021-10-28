@@ -88,11 +88,11 @@ namespace Lexing
 
             var columnCountStart = columnCount;
             var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
-            if (token.HasValue)
+            if (token is not null)
             {
                 cursor++;
                 columnCount++;
-                (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token.Value, cursor, lineCount, columnCount);
+                (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token, cursor, lineCount, columnCount);
 
                 // we don't (yet) care about comments or summaries.. so get rid of them
                 if (tokenExtended?.TokenType is (TokenType.Comment or TokenType.Summary))
@@ -101,17 +101,18 @@ namespace Lexing
                 }
 
                 token = tokenExtended ?? token;
-                return (token.Value, cursor, lineCount, columnCount);
+                return (token, cursor, lineCount, columnCount);
             }
 
             (token, cursor, lineCount, columnCount) = GetNumberToken(cursor, lineCount, columnCount);
-            if (token.HasValue)
+            if (token is not null)
             {
-                return (token.Value, cursor, lineCount, columnCount);
+                return (token, cursor, lineCount, columnCount);
             }
 
             var res = string.Empty;
-            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && !GetSingleCharacterToken(cursor, columnCount, lineCount).HasValue)
+            // todo: is there an easier way than using GetSingleCharToken every time..?
+            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
             {
                 res += _text[cursor];
                 columnCount++;
@@ -134,7 +135,7 @@ namespace Lexing
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
             
             var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCountStart);
-            if(nextTok.HasValue && nextTok.Value.TokenType == TokenType.ParanthesesOpen)
+            if(nextTok?.TokenType == TokenType.ParanthesesOpen)
             {
                 // We wont increase any counts. This will lead to duplicate detection of a single character.. being (... But for now, we will take that performance 'hit'.
                 tok.TokenType = TokenType.FunctionName;
@@ -443,20 +444,20 @@ namespace Lexing
                             try
                             {
 
-                                if (!singleCharTok.HasValue)
+                                if (singleCharTok is null)
                                 {
                                     //todo: handle newlines?
                                     result += _text[cursor];
                                     continue;
                                 }
 
-                                if (singleCharTok.Value.TokenType == TokenType.EndOfFile)
+                                if (singleCharTok.TokenType == TokenType.EndOfFile)
                                 {
                                     // @todo @cleanup should probably throw an exception?
                                     break;
                                 }
 
-                                if (singleCharTok.Value.TokenType == TokenType.String)
+                                if (singleCharTok.TokenType == TokenType.String)
                                 {
                                     if (cursor + 1 < _text.Length && _text[cursor + 1].ToString() == LexerConstants.CHARACTER_INDICATOR)
                                     {

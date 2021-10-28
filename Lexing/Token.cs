@@ -1,6 +1,6 @@
 ﻿namespace Lexing
 {
-    public struct Token
+    public class Token
     {
 
         public TokenType TokenType { get; set; }

@@ -40,8 +40,8 @@ namespace Compiling.Backends
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
             var rhsValue = _valueStack.Pop();
-            Debug.Assert(expression.IdentificationExpression.Token.HasValue);
-            _namedValues.Add(expression.IdentificationExpression.Token.Value.Name, rhsValue);
+            Debug.Assert(expression.IdentificationExpression.Token?.Name is not null);
+            _namedValues.Add(expression.IdentificationExpression.Token.Name, rhsValue);
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)
@@ -110,11 +110,11 @@ namespace Compiling.Backends
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Debug.Assert(expression?.Token != null);
+            Debug.Assert(expression?.Token is not null);
 
             var argumentCount = (uint)expression.Arguments.Length;
             var arguments = new LLVMTypeRef[argumentCount];
-            var expressionName = expression.Token.Value.Name;
+            var expressionName = expression.Token.Name;
 
             var function = LLVM.GetNamedFunction(_module, expressionName);
             if (function.Pointer != IntPtr.Zero)

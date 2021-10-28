@@ -638,7 +638,7 @@ namespace Parsing
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
             var expr = ParseExpression();
-            if (expr == null || expr.Token.HasValue == false || expr.Token.Value.TokenType is not TokenType.String)
+            if (expr == null || expr.Token is null || expr.Token.TokenType is not TokenType.String)
             {
                 ThrowParseError("Expected string expression representing a file path after import statement", importTok);
                 return null;
@@ -646,16 +646,16 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.EndOfStatement)
             {
-                ThrowParseError("Expected ; after specifying the file path of an import statement", expr.Token.Value);
+                ThrowParseError("Expected ; after specifying the file path of an import statement", expr.Token);
                 return null;
             }
 
-            if (string.IsNullOrWhiteSpace(expr.Token.Value.StringValue))
+            if (string.IsNullOrWhiteSpace(expr.Token.StringValue))
             {
                 ThrowParseError("Expected non empty string expression representing a file path after import statement", importTok);
                 return null;
             }
-            if (!File.Exists(expr.Token.Value.StringValue))
+            if (!File.Exists(expr.Token.StringValue))
             {
                 ThrowParseError("File specified in import statement could not be found", importTok);
                 return null;
@@ -664,7 +664,7 @@ namespace Parsing
 
             ConsumeToken();
 
-            return new ImportStatementExpression(expr.Token.Value);
+            return new ImportStatementExpression(expr.Token);
         }
 
         private ExpressionBase? ParseIdentifierExpression()

@@ -30,14 +30,22 @@ namespace Compiling
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             LLVM.WriteBitcodeToFile(module, output);
             LLVM.DumpModule(module);
-            LLVM.DisposeModule(module);
-            LLVM.DisposeBuilder(builder);
-            LLVM.DisposeExecutionEngine(executionEngine);
-            LLVM.DisposePassManager(passManager);
+            // don't know if dispose is required, but disposing may cause an error..
+            //try
+            //{
+            //    LLVM.DisposeModule(module);
+            //    LLVM.DisposeBuilder(builder);
+            //    LLVM.DisposeExecutionEngine(executionEngine);
+            //    LLVM.DisposePassManager(passManager);
+            //}
+            //catch
+            //{
+            //    // for some reason disposing the execution engine causes a crash?
+            //}
 
             var llc = Process.Start(@"llc", $"--filetype=obj {output}");
             llc.WaitForExit();
-  
+
             Process lld;
             if (isExecutable)
             {
