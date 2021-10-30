@@ -164,9 +164,8 @@ namespace Compiling.Backends
             else
             {
                 var retValue = _valueStack.Pop();
-                // below code is required for integers... why does LLVM turn ints into FPS?
-                var newVal = LLVM.BuildCast(_builder, LLVMOpcode.LLVMRet, retValue, GetReturnType(expression.ReturnTypeToken.TokenType), "tmpCast");
-                LLVM.BuildRet(_builder, newVal); // todo: support return types...?
+              
+                LLVM.BuildRet(_builder, retValue); // todo: support return types...?
             }
 
             LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);

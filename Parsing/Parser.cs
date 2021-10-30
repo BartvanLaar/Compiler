@@ -146,7 +146,7 @@ namespace Parsing
         private ExpressionBase ParseReturnStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ReturnStatement);
-            var expr = new ReturnExpression(ConsumeToken(), ParseExpression());
+            var expr = new ReturnExpression(ConsumeToken(), ParseTopLevelExpression());
             return expr;
         }
 

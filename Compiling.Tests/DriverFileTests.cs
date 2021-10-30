@@ -54,10 +54,10 @@ namespace Compiling.Tests
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), Path.ChangeExtension(filename, testFile.Extension));
             if (File.Exists(filePath))
             {
-                TryRemoveResultsOfTest(filePath);
+                //TryRemoveResultsOfTest(filePath);
                 Assert.Pass();
             }
-            TryRemoveResultsOfTest(filePath);
+            //TryRemoveResultsOfTest(filePath);
             Assert.Fail();
         }
 
