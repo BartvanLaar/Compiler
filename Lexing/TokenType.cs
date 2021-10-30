@@ -5,7 +5,7 @@
         Error,
         EndOfFile,
 
-        Float,
+        Float, // should return types be their own enum type? and replaced as a token called ReturnType?
         Double,
         Boolean,
         Integer,
@@ -52,7 +52,6 @@
 
         FunctionName,
         Identifier,
-        Letters,
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
@@ -85,7 +84,7 @@
         Extend,                     // extend
         Extern,                     // extern
 
-        True,
+        True,                       // should this be tokentype.Keyword and then their own enum? or just only strings? Now its kind of double administration
         False,
         Null,
         Params,

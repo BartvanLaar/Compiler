@@ -1,0 +1,4 @@
+﻿func Main() -> int {
+    return 1337
+}
+Main();

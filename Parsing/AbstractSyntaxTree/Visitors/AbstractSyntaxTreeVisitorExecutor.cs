@@ -60,7 +60,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                         break;
                     }
                 case ExpressionType.Return:
-                    VisitReturnExpression((ReturnExpression) expression);
+                    VisitReturnExpression((ReturnExpression)expression);
                     break;
                 case ExpressionType.FunctionCall:
                     VisitFunctionCallExpression((FunctionCallExpression)expression);
@@ -88,12 +88,15 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     break;
                 case ExpressionType.Character:
                     VisitCharacterExpression((CharacterExpression)expression);
-                    break;    
+                    break;
                 case ExpressionType.IfStatementExpression:
                     VisitIfStatementExpression((IfStatementExpression)expression);
                     break;
                 case ExpressionType.WhileStatementExpression:
                     VisitWhileStatementExpression((WhileStatementExpression)expression);
+                    break;
+                case ExpressionType.Body:
+                    VisitBodyExpression((BodyExpression)expression);
                     break;
                 //case ExpressionType.ForStatementExpression:
                 //    VisitForStatementExpression((ForStatementExpression)expression);
@@ -103,7 +106,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     throw new ArgumentException($"Unknown expression type encountered: '{expression.NodeExpressionType}'");
             }
         }
-
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
@@ -163,6 +165,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
+            Visit(expression.FunctionBody);
             _listener?.VisitFunctionDefinitionExpression(expression);
         }
 
@@ -194,14 +197,14 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             _listener?.VisitIfStatementExpression(expression);
         }
 
-        public void VisitBodyStatementExpression(BodyExpression expression)
+        public void VisitBodyExpression(BodyExpression expression)
         {
             while (expression.Body.Any())
             {
                 Visit(expression.Body.Dequeue());
             }
 
-            _listener?.VisitBodyStatementExpression(expression);
+            _listener?.VisitBodyExpression(expression);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)

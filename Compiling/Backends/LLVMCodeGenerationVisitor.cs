@@ -1,4 +1,5 @@
-﻿using LLVMSharp;
+﻿using Lexing;
+using LLVMSharp;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
@@ -45,8 +46,8 @@ namespace Compiling.Backends
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)
-        {    
-            _valueStack.Push(LLVM.ConstReal(LLVM.Int64Type(), expression.Value ? 1 : 0));
+        {
+            _valueStack.Push(LLVM.ConstReal(LLVM.Int1Type(), expression.Value ? 1 : 0));
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
@@ -66,12 +67,12 @@ namespace Compiling.Backends
         public void VisitCharacterExpression(CharacterExpression expression)
         {
             //todo: shouldnt a character be converted to an int?
-            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int64Type(), expression.Value.ToString(),1));
+            _valueStack.Push(LLVM.ConstReal(LLVM.Int16Type(), (int)expression.Value));
         }
 
         public void VisitStringExpression(StringExpression expression)
         {
-            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int64Type(), expression.Value, (uint)expression.Value.Length));
+            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int16Type(), expression.Value, (uint)expression.Value.Length));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -80,7 +81,6 @@ namespace Compiling.Backends
             {
                 throw new ArgumentException($"Unknown variable name {expression.Identifier}");
             }
-
             _valueStack.Push(value);
         }
 
@@ -105,7 +105,8 @@ namespace Compiling.Backends
                 argumentValues[i] = _valueStack.Pop();
             }
 
-            _valueStack.Push(LLVM.BuildCall(_builder, calleeFunction, argumentValues, "calltmp"));
+            var call = LLVM.BuildCall(_builder, calleeFunction, argumentValues, "calltmp");
+            _valueStack.Push(call);
         }
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
@@ -136,10 +137,10 @@ namespace Compiling.Backends
                 //todo: support values other than doubles? We do have access to the tokens and their types... so why not?
                 for (int i = 0; i < argumentCount; ++i)
                 {
-                    arguments[i] = LLVM.DoubleType();
+                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TokenType);
                 }
-                
-                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(LLVM.VoidType(), arguments, false));
+                var retType = GetReturnType(expression.ReturnTypeToken.TokenType);
+                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(retType, arguments, LLVMBoolFalse));
                 LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
             }
 
@@ -154,10 +155,48 @@ namespace Compiling.Backends
                 _namedValues[argumentName] = param;
             }
             LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+
             //todo: implement visit body and add it to the function? So actual code can be run
-            LLVM.BuildRetVoid(_builder);// todo: support return types...?
+            if (expression.ReturnTypeToken.TokenType is TokenType.Void)
+            {
+                LLVM.BuildRetVoid(_builder);
+            }
+            else
+            {
+                var retValue = _valueStack.Pop();
+                // below code is required for integers... why does LLVM turn ints into FPS?
+                var newVal = LLVM.BuildCast(_builder, LLVMOpcode.LLVMRet, retValue, GetReturnType(expression.ReturnTypeToken.TokenType), "tmpCast");
+                LLVM.BuildRet(_builder, newVal); // todo: support return types...?
+            }
+
             LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
+        }
+
+        private static LLVMTypeRef GetReturnType(TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Float:
+                    return LLVM.FloatType();
+                case TokenType.Double:
+                    return LLVM.DoubleType();
+                case TokenType.Boolean:
+                    return LLVM.Int1Type();
+                case TokenType.Integer:
+                    return LLVM.Int64Type();
+                case TokenType.Character:
+                    return LLVM.Int16Type();
+                case TokenType.String:
+                    return LLVM.Int16Type(); // should be an array i think ?
+                case TokenType.DateTime:
+                    throw new NotImplementedException();
+                case TokenType.Void:
+                    return LLVM.VoidType();
+                default:
+                    throw new InvalidOperationException($"TokenType {tokenType} is not supported as a return type for LLVM.");
+
+            }
         }
 
         public void VisitBinaryExpression(BinaryExpression expression)
@@ -170,53 +209,56 @@ namespace Compiling.Backends
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
-                    resultingValue = LLVM.BuildFAdd(_builder, lhsValue, rhsValue, "addtmp");
-                    break;
+                    {
+                        resultingValue = LLVM.BuildFAdd(_builder, lhsValue, rhsValue, "addtmp");
+                        break;
+                    }
                 case ExpressionType.Subtract:
-                    resultingValue = LLVM.BuildFSub(_builder, lhsValue, rhsValue, "subtmp");
-                    break;
+                    {
+                        resultingValue = LLVM.BuildFSub(_builder, lhsValue, rhsValue, "subtmp");
+                        break;
+                    }
                 case ExpressionType.Multiply:
-                    resultingValue = LLVM.BuildFMul(_builder, lhsValue, rhsValue, "multmp");
-                    break;
+                    {
+                        resultingValue = LLVM.BuildFMul(_builder, lhsValue, rhsValue, "multmp");
+                        break;
+                    }
                 case ExpressionType.Divide:
-                    resultingValue = LLVM.BuildFDiv(_builder, lhsValue, rhsValue, "divtmp");
-                    break;
+                    {
+                        resultingValue = LLVM.BuildFDiv(_builder, lhsValue, rhsValue, "divtmp");
+                        break;
+                    }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
                 case ExpressionType.Equals:
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
                 case ExpressionType.GreaterThan:
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
                 case ExpressionType.GreaterThanEqual:
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
                 case ExpressionType.LessThan:
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
                 case ExpressionType.LessThanEqual:
                     {
-                        var floatCompare = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
-                        resultingValue = LLVM.BuildUIToFP(_builder, floatCompare, LLVM.DoubleType(), "booltmp");
+                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
+    
                 default:
                     throw new ArgumentException("invalid binary operator");
             }
@@ -235,9 +277,11 @@ namespace Compiling.Backends
             throw new NotImplementedException();
         }
 
-        public void VisitBodyStatementExpression(BodyExpression expression)
+        public void VisitBodyExpression(BodyExpression expression)
         {
-            throw new NotImplementedException();
+            // BodyExpression should probably have a function name attached and some more info of the parent e.g. token type?
+            // if this body isn't valid then we should remove the function all together.. and throw an error.
+            // todo: do we need to do anything here?
         }
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
@@ -247,7 +291,7 @@ namespace Compiling.Backends
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            throw new NotImplementedException();
+            //todo: do we need to do something here?
         }
     }
 }

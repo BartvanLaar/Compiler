@@ -1,0 +1,7 @@
+﻿func Test() -> double {
+    return 69d;
+}
+
+func Main() -> double {
+    return Test();
+}

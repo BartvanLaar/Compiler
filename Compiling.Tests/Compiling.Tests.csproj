@@ -23,6 +23,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionReturnFunctionCall.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionCall.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\DoubleMainFuncNoParamsDefinition.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IntMainFuncNoParamsDefinitionCall.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IntMainFuncNoParamsDefinition.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\VoidLibFuncNoParamsDefinition.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

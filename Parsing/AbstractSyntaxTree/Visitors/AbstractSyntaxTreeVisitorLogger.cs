@@ -73,7 +73,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Log(expression);
         }
 
-        public void VisitBodyStatementExpression(BodyExpression expression)
+        public void VisitBodyExpression(BodyExpression expression)
         {
             Log(expression);
         }

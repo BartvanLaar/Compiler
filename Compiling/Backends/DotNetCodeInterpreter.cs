@@ -125,7 +125,7 @@ namespace Compiling.Backends
             _valueStack.Push(resultingValue);
         }
 
-        public void VisitBodyStatementExpression(BodyExpression expression)
+        public void VisitBodyExpression(BodyExpression expression)
         {
             throw new NotImplementedException();
         }

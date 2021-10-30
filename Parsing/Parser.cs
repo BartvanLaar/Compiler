@@ -307,13 +307,14 @@ namespace Parsing
             var body = new List<ExpressionBase> { };
             while (PeekToken().TokenType is not TokenType.AccoladesClose)
             {
-                if (PeekToken().TokenType is TokenType.EndOfFile)
+                var currentPeek = PeekToken();
+                if (currentPeek.TokenType is TokenType.EndOfFile)
                 {
                     ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
                     return null;
                 }
                
-                if(PeekToken().TokenType is TokenType.EndOfStatement)
+                if(currentPeek.TokenType is TokenType.EndOfStatement)
                 {
                     ConsumeToken();
                     continue;

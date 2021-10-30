@@ -19,7 +19,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitIfStatementExpression(IfStatementExpression expression);
         void VisitForStatementExpression(ForStatementExpression expression);
         void VisitWhileStatementExpression(WhileStatementExpression expression);
-        void VisitBodyStatementExpression(BodyExpression expression);
+        void VisitBodyExpression(BodyExpression expression);
 
     }
 }

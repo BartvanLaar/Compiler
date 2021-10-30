@@ -25,6 +25,12 @@ namespace Compiling.Tests
             {
                 yield return new object[] { FN("VoidMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("VoidLibFuncNoParamsDefinition"), new TestFile() { IsExecutable = false } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("DoubleMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionReturnFunctionCall"), new TestFile() { IsExecutable = true } };
+
             }
         }
 
@@ -51,6 +57,7 @@ namespace Compiling.Tests
                 TryRemoveResultsOfTest(filePath);
                 Assert.Pass();
             }
+            TryRemoveResultsOfTest(filePath);
             Assert.Fail();
         }
 
