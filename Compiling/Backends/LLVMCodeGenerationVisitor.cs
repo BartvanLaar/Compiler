@@ -258,7 +258,41 @@ namespace Compiling.Backends
                         resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
                         break;
                     }
-    
+                case ExpressionType.LogicalOr:
+                    {
+                        resultingValue = LLVM.BuildOr(_builder, lhsValue, rhsValue, "LogicalOrTmp");
+                        break;
+                    }
+                case ExpressionType.LogicalXOr:
+                    {
+                        resultingValue = LLVM.BuildXor(_builder, lhsValue, rhsValue, "LogicalXOrTmp");
+                        break;
+                    }
+                case ExpressionType.LogicalAnd:
+                    {
+                        resultingValue = LLVM.BuildAnd(_builder, lhsValue, rhsValue, "LogicalAndTmp");
+                        break;
+                    }
+                case ExpressionType.ConditionalOr:
+                    {
+                        resultingValue = LLVM.BuildOr(_builder, lhsValue, rhsValue, "ConditionalOrTmp");
+                        break;
+                    }
+                case ExpressionType.ConditionalAnd:
+                    {
+                        resultingValue = LLVM.BuildAnd(_builder, lhsValue, rhsValue, "ConditionalOrTmp");
+                        break;
+                    }
+                case ExpressionType.BitShiftLeft:
+                    {
+                        resultingValue = LLVM.BuildShl(_builder, lhsValue, rhsValue, "BitShiftLeftTmp");
+                        break;
+                    }
+                case ExpressionType.BitShiftRight:
+                    {
+                        resultingValue = LLVM.BuildLShr(_builder, lhsValue, rhsValue, "BitShiftRightTmp");
+                        break;
+                    }
                 default:
                     throw new ArgumentException("invalid binary operator");
             }
