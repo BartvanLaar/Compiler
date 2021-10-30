@@ -53,7 +53,7 @@ namespace Compiling
             Process lld;
             if (isExecutable)
             {
-                lld = Process.Start(@"clang++", $"{output} -o {Path.GetFileNameWithoutExtension(output)}.exe");
+                lld = Process.Start(@"clang", $"{output} -o {Path.GetFileNameWithoutExtension(output)}.exe");
             }
             else
             {
