@@ -1,4 +1,4 @@
-﻿func Main() -> double {
+﻿func main() -> double {
     return 1337d;
 }
-Main();
+main();

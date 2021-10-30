@@ -43,13 +43,17 @@ namespace Compiling
             //    // for some reason disposing the execution engine causes a crash?
             //}
 
-            var llc = Process.Start(@"llc", $"--filetype=obj {output}");
-            llc.WaitForExit();
+            if (!isExecutable)
+            {
+                var llc = Process.Start(@"llc", $"--filetype=obj {output}");
+                llc.WaitForExit();
+            }
+        
 
             Process lld;
             if (isExecutable)
             {
-                lld = Process.Start(@"lld-link", $"/subsystem:console /entry:Main {Path.GetFileNameWithoutExtension(output)}.obj");
+                lld = Process.Start(@"clang++", $"{output} -o {Path.GetFileNameWithoutExtension(output)}.exe");
             }
             else
             {

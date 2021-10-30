@@ -2,6 +2,6 @@
     return 69d;
 }
 
-func Main() -> double {
+func main() -> double {
     return Test();
 }

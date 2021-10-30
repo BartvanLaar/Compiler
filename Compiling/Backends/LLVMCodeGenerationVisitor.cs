@@ -52,7 +52,8 @@ namespace Compiling.Backends
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
-            _valueStack.Push(LLVM.ConstReal(LLVM.Int64Type(), expression.Value));
+            Debug.Assert(expression.Token is not null);
+            _valueStack.Push(LLVM.ConstReal(GetReturnType(expression.Token.TokenType), expression.Value));
         }
 
         public void VisitDoubleExpression(DoubleExpression expression)
