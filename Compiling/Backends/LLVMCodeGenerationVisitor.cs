@@ -155,6 +155,7 @@ namespace Compiling.Backends
 
                 _namedValues[argumentName] = param;
             }
+            //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
             LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
@@ -168,6 +169,7 @@ namespace Compiling.Backends
               
                 LLVM.BuildRet(_builder, retValue); // todo: support return types...?
             }
+            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
