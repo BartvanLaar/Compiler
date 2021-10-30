@@ -203,59 +203,145 @@ namespace Compiling.Backends
         {
             var rhsValue = _valueStack.Pop();
             var lhsValue = _valueStack.Pop();
-
+            var rhsValType = LLVM.TypeOf(rhsValue);
+            var lhsValType = LLVM.TypeOf(rhsValue);
+            var lhsAndRhsBothIntegers = rhsValType.TypeKind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValType.TypeKind is LLVMTypeKind.LLVMIntegerTypeKind;
             LLVMValueRef resultingValue;
+            //todo: handle unsigned ints doubles and floats?
             //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
                     {
-                        resultingValue = LLVM.BuildFAdd(_builder, lhsValue, rhsValue, "addtmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildAdd(_builder, lhsValue, rhsValue, "addtmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFAdd(_builder, lhsValue, rhsValue, "addtmp");
+                        }
                         break;
                     }
                 case ExpressionType.Subtract:
                     {
-                        resultingValue = LLVM.BuildFSub(_builder, lhsValue, rhsValue, "subtmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildSub(_builder, lhsValue, rhsValue, "addtmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFSub(_builder, lhsValue, rhsValue, "subtmp");
+                        }
                         break;
                     }
                 case ExpressionType.Multiply:
                     {
-                        resultingValue = LLVM.BuildFMul(_builder, lhsValue, rhsValue, "multmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildMul(_builder, lhsValue, rhsValue, "multmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFMul(_builder, lhsValue, rhsValue, "multmp");
+                        }
                         break;
                     }
                 case ExpressionType.Divide:
                     {
-                        resultingValue = LLVM.BuildFDiv(_builder, lhsValue, rhsValue, "divtmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildSDiv(_builder, lhsValue, rhsValue, "divtmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFDiv(_builder, lhsValue, rhsValue, "divtmp");
+                        }
+                        break;
+                    }
+                case ExpressionType.Modulo:
+                    {
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildSRem(_builder, lhsValue, rhsValue, "modtmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFRem(_builder, lhsValue, rhsValue, "modtmp");
+                        }
                         break;
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                        }
                         break;
                     }
                 case ExpressionType.Equals:
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                        }
                         break;
                     }
                 case ExpressionType.GreaterThan:
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
+
+                        }
                         break;
                     }
                 case ExpressionType.GreaterThanEqual:
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
+                        }
                         break;
                     }
                 case ExpressionType.LessThan:
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
+                        }
                         break;
                     }
                 case ExpressionType.LessThanEqual:
                     {
-                        resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue, "cmptmp");
+                        }
+                        else
+                        {
+                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
+                        }
                         break;
                     }
                 case ExpressionType.LogicalOr:
@@ -294,7 +380,9 @@ namespace Compiling.Backends
                         break;
                     }
                 default:
-                    throw new ArgumentException("invalid binary operator");
+                    {
+                        throw new ArgumentException("invalid binary operator");
+                    }
             }
 
             _valueStack.Push(resultingValue);
