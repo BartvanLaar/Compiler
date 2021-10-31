@@ -1,8 +1,4 @@
-﻿func Test() -> int {
-    return 69;
-}
-
-func main() -> int {
-    auto x = Test();
+﻿func main() -> int {
+    auto x = 42;
     return x;
 }

@@ -1,8 +1,4 @@
-﻿func Test() -> int {
-    return 69;
-}
-
-func main() -> int {
-    var x = Test();
+﻿func main() -> int {
+    var x = 42;
     return x;
 }
