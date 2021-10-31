@@ -25,7 +25,7 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
-                yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionReturnFunctionCall"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnFunctionCall"), new TestFile() { IsExecutable = true } };
 
             }
         }
@@ -46,7 +46,7 @@ namespace Compiling.Tests
         {
             var filename = Path.GetFileName(filepath);
             var file = await File.ReadAllTextAsync(filepath);
-            Driver.RunLLVM(file, filename, testFile.IsExecutable);
+            Driver.RunLLVM(file, filename, testFile.IsExecutable,useClangCompiler: true);
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), Path.ChangeExtension(filename, testFile.Extension));
             if (File.Exists(filePath))
             {

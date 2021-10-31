@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionReturnFunctionCall.bs">
+    <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnFunctionCall.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionCall.bs">

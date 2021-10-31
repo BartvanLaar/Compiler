@@ -1,7 +1,0 @@
-﻿func Test() -> double {
-    return 69d;
-}
-
-func main() -> double {
-    return Test();
-}

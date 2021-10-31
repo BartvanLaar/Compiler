@@ -111,7 +111,8 @@ namespace Compiling.Backends
                 argumentValues[i] = _valueStack.Pop();
             }
 
-            var call = _builder.BuildCall(calleeFunction, argumentValues, "calltmp");
+            var call = _builder.BuildCall(calleeFunction, argumentValues);
+
             _valueStack.Push(call);
         }
 
@@ -161,7 +162,7 @@ namespace Compiling.Backends
                 _namedValues[argumentName] = param;
             }
             //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
-            _builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
             if (expression.ReturnTypeToken.TokenType is TokenType.Void)
@@ -173,7 +174,7 @@ namespace Compiling.Backends
                 var retValue = _valueStack.Pop();
                 _builder.BuildRet(retValue);
             }
-            //_builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
@@ -209,11 +210,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildAdd(lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildAdd(lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFAdd(lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildFAdd(lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -221,11 +222,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSub(lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildSub(lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFSub(lhsValue, rhsValue, "subtmp");
+                            resultingValue = _builder.BuildFSub(lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -233,11 +234,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildMul(lhsValue, rhsValue, "multmp");
+                            resultingValue = _builder.BuildMul(lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFMul(lhsValue, rhsValue, "multmp");
+                            resultingValue = _builder.BuildFMul(lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -245,11 +246,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSDiv(lhsValue, rhsValue, "divtmp");
+                            resultingValue = _builder.BuildSDiv(lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFDiv(lhsValue, rhsValue, "divtmp");
+                            resultingValue = _builder.BuildFDiv(lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -257,11 +258,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSRem(lhsValue, rhsValue, "modtmp");
+                            resultingValue = _builder.BuildSRem(lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFRem(lhsValue, rhsValue, "modtmp");
+                            resultingValue = _builder.BuildFRem(lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -269,11 +270,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -281,11 +282,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -293,11 +294,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue);
 
                         }
                         break;
@@ -306,11 +307,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -318,11 +319,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -330,47 +331,47 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue);
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue);
                         }
                         break;
                     }
                 case ExpressionType.LogicalOr:
                     {
-                        resultingValue = _builder.BuildOr(lhsValue, rhsValue, "LogicalOrTmp");
+                        resultingValue = _builder.BuildOr(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.LogicalXOr:
                     {
-                        resultingValue = _builder.BuildXor(lhsValue, rhsValue, "LogicalXOrTmp");
+                        resultingValue = _builder.BuildXor(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.LogicalAnd:
                     {
-                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue, "LogicalAndTmp");
+                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.ConditionalOr:
                     {
-                        resultingValue = _builder.BuildOr(lhsValue, rhsValue, "ConditionalOrTmp");
+                        resultingValue = _builder.BuildOr(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.ConditionalAnd:
                     {
-                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue, "ConditionalOrTmp");
+                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.BitShiftLeft:
                     {
-                        resultingValue = _builder.BuildShl(lhsValue, rhsValue, "BitShiftLeftTmp");
+                        resultingValue = _builder.BuildShl(lhsValue, rhsValue);
                         break;
                     }
                 case ExpressionType.BitShiftRight:
                     {
-                        resultingValue = _builder.BuildLShr(lhsValue, rhsValue, "BitShiftRightTmp");
+                        resultingValue = _builder.BuildLShr(lhsValue, rhsValue);
                         break;
                     }
                 default:

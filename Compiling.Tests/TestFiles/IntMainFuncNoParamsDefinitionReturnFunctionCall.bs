@@ -1,0 +1,8 @@
+﻿func Test() -> int {
+    return 69;
+}
+
+func main() -> int {
+    int x = Test();
+    return x;
+}
