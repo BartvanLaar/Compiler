@@ -22,41 +22,36 @@ namespace Compiling
             }
         }
 
-        public static void RunLLVM(string text, string filename = "output", bool isExecutable = false)
+        public static void RunLLVM(string text, string filename = "output", bool isExecutable = false, bool isDebug = false)
         {
             var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
-
+            var sw = new Stopwatch();
+            sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             module.WriteBitcodeToFile(output);
+            sw.Stop();
+            Console.WriteLine($"Writing bitcode to file took {sw.ElapsedMilliseconds} ms.");
+            sw.Restart();
             module.Dump();
             ctx.Dispose();
             // i think the module is disposed by disposing the passManager and executionEngine...
             passManager.Dispose();
             executionEngine.Dispose();
             builder.Dispose();
+            sw.Stop();
+            Console.WriteLine($"Cleaning up LLVM leftovers took {sw.ElapsedMilliseconds} ms.");
+            sw.Restart();
 
-            if (!isExecutable)
-            {
-                var llc = Process.Start(@"llc", $"--filetype=obj {output}");
-                llc.WaitForExit();
-            }
-
-
-            Process lld;
-            if (isExecutable)
-            {
-                lld = Process.Start(@"clang", $"{output} -o {Path.GetFileNameWithoutExtension(output)}.exe");
-            }
-            else
-            {
-                lld = Process.Start(@"lld-link", $"/subsystem:console /noentry /dll {Path.GetFileNameWithoutExtension(output)}.obj");
-            }
+            var lld = Process.Start(@"clang", $"{(isExecutable ? string.Empty : "--shared")} {output} -o {Path.GetFileNameWithoutExtension(output)}.{(isExecutable ? "exe" : "dll")} {(isDebug ? "--debug" : string.Empty)}");
 
             lld.WaitForExit();
+            sw.Stop();
+            Console.WriteLine($"Creating exe or DLL took {sw.ElapsedMilliseconds} ms.");
 
         }
+
         internal static void Run(string text, IAbstractSyntaxTreeVisitorExecuter byteCodeGenerator, IByteCodeGeneratorListener byteCodeGeneratorListener)
         {
             var stopwatch = new Stopwatch();

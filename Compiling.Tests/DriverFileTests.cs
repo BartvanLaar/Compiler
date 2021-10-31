@@ -50,9 +50,10 @@ namespace Compiling.Tests
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), Path.ChangeExtension(filename, testFile.Extension));
             if (File.Exists(filePath))
             {
-                //TryRemoveResultsOfTest(filePath);
+                TryRemoveResultsOfTest(filePath);
                 Assert.Pass();
             }
+            //probably want to keep the files of failed tests for diagnose purposes..
             //TryRemoveResultsOfTest(filePath);
             Assert.Fail();
         }
