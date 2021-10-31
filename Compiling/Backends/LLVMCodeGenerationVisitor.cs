@@ -44,8 +44,13 @@ namespace Compiling.Backends
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
             var rhsValue = _valueStack.Pop();
-            Debug.Assert(expression.IdentificationExpression.Token?.Name is not null);
-            _namedValues.Add(expression.IdentificationExpression.Token.Name, rhsValue);
+            var variableName = expression.IdentificationExpression.Token?.Name;
+            Debug.Assert(variableName is not null);
+            if(_namedValues.ContainsKey(variableName))
+            {
+                throw new ArgumentException($"Redeclaration of {variableName}! Scopes are not yet supported! Don't re-use variable names!");
+            }
+            _namedValues.Add(variableName, rhsValue);
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)

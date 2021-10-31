@@ -26,6 +26,15 @@
     <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnFunctionCall.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnLocalVariableAsInt.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnLocalVariableAsVar.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionCall.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

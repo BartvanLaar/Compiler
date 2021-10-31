@@ -49,9 +49,6 @@ namespace Parsing
 
         private ExpressionBase? ParseTopLevelExpression()
         {
-            var peekedTokens = PeekTokens(2);
-            Debug.Assert(peekedTokens.Length == 2);
-
             switch (PeekToken().TokenType)
             {
                 case TokenType.EndOfFile:
@@ -540,7 +537,7 @@ namespace Parsing
             }
 
             var assignmentTok = ConsumeToken();
-            var valueExpression = ParseExpression();
+            var valueExpression = ParseTopLevelExpression();
             if (valueExpression == null)
             {
                 ThrowParseError(assignmentTok, "value expression", "assignment of variable");

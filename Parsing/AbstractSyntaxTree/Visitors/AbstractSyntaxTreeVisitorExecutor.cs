@@ -171,7 +171,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
-            Visit(expression.IdentificationExpression);
+            //todo: should we check in some way if it already exists? or if it illegaly overwrites a variable in the same scope?
             Visit(expression.ValueExpression);
 
             _listener?.VisitVariableDeclarationExpression(expression);

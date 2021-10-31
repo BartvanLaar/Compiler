@@ -3,5 +3,6 @@
 }
 
 func main() -> int {
-    return Test();
+    var x = Test();
+    return x;
 }

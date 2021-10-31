@@ -26,6 +26,9 @@ namespace Compiling.Tests
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnFunctionCall"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsVar"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsInt"), new TestFile() { IsExecutable = true } };
 
             }
         }

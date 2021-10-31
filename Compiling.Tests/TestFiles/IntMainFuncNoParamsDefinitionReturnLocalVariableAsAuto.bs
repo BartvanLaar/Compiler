@@ -3,5 +3,6 @@
 }
 
 func main() -> int {
-    return Test();
+    auto x = Test();
+    return x;
 }
