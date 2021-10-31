@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace Lexing.Tests
 {
-    [Parallelizable]
     internal class LexerTests
     {
         [TestCase("this is a text divided into 8 tokens")]

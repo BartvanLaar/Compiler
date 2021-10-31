@@ -5,7 +5,6 @@ using TestHelpers.Tests;
 
 namespace Parsing.Tests
 {
-    [Parallelizable]
     internal class ParserTests
     {
         [TestCase("x + 5", 1)]

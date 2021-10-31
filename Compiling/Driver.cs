@@ -84,6 +84,7 @@ namespace Compiling
             LLVMModuleRef module = LLVMModuleRef.CreateWithName("B#");
             LLVMContextRef ctx = LLVMContextRef.Create();
             LLVMBuilderRef builder = LLVMBuilderRef.Create(ctx);
+            //ctx.Dispose(); // todo: should i dispose of this context somewhere?
 
             LLVM.LinkInMCJIT();
             LLVM.InitializeX86TargetMC();

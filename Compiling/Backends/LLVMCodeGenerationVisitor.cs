@@ -50,7 +50,7 @@ namespace Compiling.Backends
         public void VisitIntegerExpression(IntegerExpression expression)
         {
             Debug.Assert(expression.Token is not null);
-            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int64, expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong) expression.Value, true));
 
         }
 
@@ -67,8 +67,7 @@ namespace Compiling.Backends
         public void VisitCharacterExpression(CharacterExpression expression)
         {
             //todo: shouldnt a character be converted to an int?
-
-            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int16, expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int16, (ulong)expression.Value, false));
         }
 
         public void VisitStringExpression(StringExpression expression)
@@ -166,8 +165,7 @@ namespace Compiling.Backends
             else
             {
                 var retValue = _valueStack.Pop();
-
-                _builder.BuildRet(retValue); // todo: support return types...?
+                _builder.BuildRet(retValue);
             }
             _builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 

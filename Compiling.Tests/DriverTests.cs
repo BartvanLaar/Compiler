@@ -4,7 +4,6 @@ using TestHelpers.Tests;
 
 namespace Compiling.Tests
 {
-    [Parallelizable]
     internal class DriverTests
     {
         // The tests below don't do ... atm. Might as well be Assert.Pass();...
@@ -52,7 +51,7 @@ namespace Compiling.Tests
         [Test]
         public void Driver_Test_LLVM_1()
         {
-            Driver.RunLLVM("(10-1)*5;");
+            Driver.RunLLVM("5+1;");
         }
 
         [TestCase("(10-1)*5;", 45)]
