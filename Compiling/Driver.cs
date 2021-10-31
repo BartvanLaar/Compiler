@@ -24,20 +24,18 @@ namespace Compiling
 
         public static void RunLLVM(string text, string filename = "output", bool isExecutable = false)
         {
-            var (module, builder, executionEngine, passManager) = SetupLLVM();
+            var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             module.WriteBitcodeToFile(output);
-            // don't know if dispose is required, but disposing may cause an error..
-            // update; test diposes below after refactor.
             module.Dump();
-            //module.Dispose();
-            //builder.Dispose();
-            //executionEngine.Dispose();
-            //passManager.Dispose();
-      
+            ctx.Dispose();
+            // i think the module is disposed by disposing the passManager and executionEngine...
+            passManager.Dispose();
+            executionEngine.Dispose();
+            builder.Dispose();
 
             if (!isExecutable)
             {
@@ -79,7 +77,7 @@ namespace Compiling
 
         }
 
-        private static (LLVMModuleRef Module, LLVMBuilderRef Builder, LLVMExecutionEngineRef engine, LLVMPassManagerRef passManager) SetupLLVM()
+        private static (LLVMModuleRef Module, LLVMBuilderRef Builder, LLVMExecutionEngineRef engine, LLVMPassManagerRef passManagerLLVMContextRef, LLVMContextRef Context) SetupLLVM()
         {
             LLVMModuleRef module = LLVMModuleRef.CreateWithName("B#");
             LLVMContextRef ctx = LLVMContextRef.Create();
@@ -130,7 +128,7 @@ namespace Compiling
 
             //var codeGenerationListener = new CodeGenerationParserListener(new CodeGenerationVisitor(module, builder), engine, passManager);
 
-            return (module, builder, engine, passManager);
+            return (module, builder, engine, passManager, ctx);
         }
 
     }
