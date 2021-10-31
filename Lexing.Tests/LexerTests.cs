@@ -409,6 +409,32 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.AccoladesClose, toks[counter++].TokenType);
         }
 
+        [Test]
+        public static void Lexer_Test_Declare_Int_Main_Function_With_Variable_Return()
+        {
+            var lexer = new Lexer("func Main() -> int { int x=5; return x;}");
+            var toks = lexer.ConsumeTokens(50);
+            var counter = 0;
+            Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionName, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AccoladesOpen, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Integer, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.ReturnStatement, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
+
+
+            Assert.AreEqual(TokenType.AccoladesClose, toks[counter++].TokenType);
+
+        }
 
         [Test]
         public static void Lexer_Test_Declare_Bool_Function_With_Params()
