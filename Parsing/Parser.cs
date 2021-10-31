@@ -49,7 +49,8 @@ namespace Parsing
 
         private ExpressionBase? ParseTopLevelExpression()
         {
-            switch (PeekToken().TokenType)
+            var peekedTokens = PeekTokens(2);
+            switch (peekedTokens[0].TokenType)
             {
                 case TokenType.EndOfFile:
                     {
@@ -83,7 +84,7 @@ namespace Parsing
                     {
                         return ParseFunctionCallExpression();
                     }
-                case TokenType.VariableDeclaration:
+                case TokenType.Type when(peekedTokens[1].TokenType is TokenType.Identifier):
                     {
                         return ParseVariableDeclaration();
                     }
@@ -129,15 +130,30 @@ namespace Parsing
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 TokenType.FunctionName => ParseIdentifierExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.Identifier => ParseIdentifierExpression(),
-                TokenType.Double => ParseDoubleExpression(),
-                TokenType.Float => ParseFloatExpression(),
-                TokenType.Integer => ParseIntegerExpression(),
-                TokenType.String => ParseStringExpression(),
-                TokenType.Character => ParseCharacterExpression(),
-                TokenType.True => ParseBooleanExpression(),
-                TokenType.False => ParseBooleanExpression(),
+                TokenType.Value => ParseValueExpression(),
+
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
+        }
+
+        private ExpressionBase? ParseValueExpression()
+        {
+            var peekedToken = PeekToken();
+            switch (peekedToken.TypeIndicator)
+            {
+                case TypeIndicator.None: throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value.");
+                case TypeIndicator.Inferred: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this");
+                //case TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
+                case TypeIndicator.Float: return ParseFloatExpression();
+                case TypeIndicator.Double: return ParseDoubleExpression();
+                case TypeIndicator.Boolean: return ParseBooleanExpression();
+                case TypeIndicator.Integer: return ParseIntegerExpression();
+                case TypeIndicator.Character: return ParseCharacterExpression();
+                case TypeIndicator.String: return ParseStringExpression();
+                case TypeIndicator.DateTime: throw new NotImplementedException();
+                case TypeIndicator.Void: throw new InvalidOperationException("Should not get here in case of void type.");
+                default: throw new InvalidOperationException($"Encountered an unkown type indicator {peekedToken.TypeIndicator}.");
+            }
         }
 
         private ExpressionBase ParseReturnStatementExpression()
@@ -166,7 +182,8 @@ namespace Parsing
 
         private ExpressionBase ParseBooleanExpression()
         {
-            if (PeekToken().TokenType is (TokenType.True or TokenType.False))
+            var peekedToken = PeekToken();
+            if (peekedToken.TokenType is TokenType.Value && peekedToken.TypeIndicator is TypeIndicator.Boolean)
             {
                 return new BooleanExpression(ConsumeToken());
             }
@@ -310,15 +327,15 @@ namespace Parsing
                     ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
                     return null;
                 }
-               
-                if(currentPeek.TokenType is TokenType.EndOfStatement)
+
+                if (currentPeek.TokenType is TokenType.EndOfStatement)
                 {
                     ConsumeToken();
                     continue;
                 }
 
                 var expression = ParseTopLevelExpression();
-                if(expression == null)
+                if (expression == null)
                 {
                     ConsumeToken();
                 }
@@ -337,7 +354,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.DO}' keyword");
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.DO}' keyword");
                 return null;
             }
 
@@ -370,7 +387,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.While)
             {
-                ThrowParseError(PeekToken(), LexerConstants.KeyWords.WHILE, $"'{LexerConstants.KeyWords.DO}' keyword");
+                ThrowParseError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
                 return null;
             }
             var prevTok = ConsumeToken();
@@ -402,7 +419,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                var keyword = hasDo ? LexerConstants.KeyWords.DO : LexerConstants.KeyWords.WHILE;
+                var keyword = hasDo ? LexerConstants.Keywords.DO : LexerConstants.Keywords.WHILE;
                 ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{keyword}' keyword");
                 return null;
             }
@@ -450,7 +467,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.KeyWords.IF}' keyword");
+                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.IF}' keyword");
                 return null;
             }
 
@@ -516,13 +533,13 @@ namespace Parsing
 
             var leftHandSideTok = PeekToken();
 
-            if (leftHandSideTok.TokenType is not TokenType.Identifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
                 ThrowParseError(leftHandSideTok, TokenType.Identifier, "assignment of variable");
                 return null;
             }
 
-            var leftHandSideIdentifierExpression = ParseIdentifierExpression(); // variable name...
+            var leftHandSideIdentifierExpression = ConsumeToken(); // variable name...
 
             if (leftHandSideIdentifierExpression == null)
             {
@@ -646,7 +663,7 @@ namespace Parsing
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
             var expr = ParseExpression();
-            if (expr == null || expr.Token is null || expr.Token.TokenType is not TokenType.String)
+            if (expr == null || expr.Token is null || expr.Token.TypeIndicator is not TypeIndicator.String)
             {
                 ThrowParseError("Expected string expression representing a file path after import statement", importTok);
                 return null;
@@ -658,12 +675,12 @@ namespace Parsing
                 return null;
             }
 
-            if (string.IsNullOrWhiteSpace(expr.Token.StringValue))
+            if (string.IsNullOrWhiteSpace(expr.Token.ValueAsString))
             {
                 ThrowParseError("Expected non empty string expression representing a file path after import statement", importTok);
                 return null;
             }
-            if (!File.Exists(expr.Token.StringValue))
+            if (!File.Exists(expr.Token.ValueAsString))
             {
                 ThrowParseError("File specified in import statement could not be found", importTok);
                 return null;
@@ -711,7 +728,7 @@ namespace Parsing
 
         private ExpressionBase ParseCharacterExpression()
         {
-            if (PeekToken().StringValue?.Length > 1)
+            if (PeekToken().ValueAsString?.Length > 1)
             {
                 ThrowParseError(PeekToken(), "Character with length of 1", "Character initializer");
             }

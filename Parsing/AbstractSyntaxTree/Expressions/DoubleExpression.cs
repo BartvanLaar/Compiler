@@ -9,8 +9,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public DoubleExpression(Token token) : base(token, ExpressionType.Double)
         {
             // todo: how to handle nullables?
-            Debug.Assert(token.FloatValue.HasValue);
-            Value = token.FloatValue.Value;
+            Debug.Assert(token.Value is not null);
+            Value = (double)token.Value;
         }
 
     }

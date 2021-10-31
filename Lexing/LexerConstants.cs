@@ -76,7 +76,7 @@ namespace Lexing
         public const string COMMENT_INDICATOR = "//";
         public const string SUMMARY_INDICATOR = "///";
 
-        public static class KeyWords
+        public static class Keywords
         {
             public const string VARIABLE_TYPE_INFERRED_1 = "var";
             public const string VARIABLE_TYPE_INFERRED_2 = "auto";
@@ -122,44 +122,65 @@ namespace Lexing
 
         private static readonly IDictionary<string, TokenType> _predefinedKeywords = new Dictionary<string, TokenType>()
         {
-            { KeyWords.VARIABLE_TYPE_INFERRED_1, TokenType.VariableDeclaration },
-            { KeyWords.VARIABLE_TYPE_INFERRED_2, TokenType.VariableDeclaration },
-            { KeyWords.FUNCTION_DEFINITION, TokenType.FunctionDefinition },
+            { Keywords.VARIABLE_TYPE_INFERRED_1, TokenType.Type },
+            { Keywords.VARIABLE_TYPE_INFERRED_2, TokenType.Type },
+            { Keywords.FUNCTION_DEFINITION, TokenType.FunctionDefinition },
 
-            {KeyWords.FOR, TokenType.For},
-            {KeyWords.FOREACH, TokenType.ForEach},
-            {KeyWords.WHILE, TokenType.While },
-            {KeyWords.DO, TokenType.Do },
+            {Keywords.FOR, TokenType.For},
+            {Keywords.FOREACH, TokenType.ForEach},
+            {Keywords.WHILE, TokenType.While },
+            {Keywords.DO, TokenType.Do },
 
-            {KeyWords.IF, TokenType.If },
-            {KeyWords.ELSE, TokenType.Else },
+            {Keywords.IF, TokenType.If },
+            {Keywords.ELSE, TokenType.Else },
 
-            { KeyWords.IS, TokenType.Is},
-            { KeyWords.NOT, TokenType.Not},
+            { Keywords.IS, TokenType.Is},
+            { Keywords.NOT, TokenType.Not},
 
-            { KeyWords.CONTINUE, TokenType.Continue},
-            { KeyWords.BREAK, TokenType.Break},
-            { KeyWords.RETURN, TokenType.ReturnStatement},
-            { KeyWords.IMPORT, TokenType.ImportStatement },
-            { KeyWords.EXPORT, TokenType.Export},
-            { KeyWords.EXTEND, TokenType.Extend },
-            { KeyWords.EXTERN, TokenType.Extern },
+            { Keywords.CONTINUE, TokenType.Continue},
+            { Keywords.BREAK, TokenType.Break},
+            { Keywords.RETURN, TokenType.ReturnStatement},
+            { Keywords.IMPORT, TokenType.ImportStatement },
+            { Keywords.EXPORT, TokenType.Export},
+            { Keywords.EXTEND, TokenType.Extend },
+            { Keywords.EXTERN, TokenType.Extern },
 
             //types ? todo: is this the right moment and place?
-            { KeyWords.DOUBLE, TokenType.Double },
-            { KeyWords.FLOAT, TokenType.Float },
-            { KeyWords.INTEGER, TokenType.Integer },
-            { KeyWords.STRING, TokenType.String },
-            { KeyWords.CHARACTER, TokenType.Character },
-            { KeyWords.BOOLEAN, TokenType.Boolean },
-            { KeyWords.PARAMS, TokenType.Params },
+            { Keywords.DOUBLE, TokenType.Type },
+            { Keywords.FLOAT, TokenType.Type },
+            { Keywords.INTEGER, TokenType.Type },
+            { Keywords.STRING, TokenType.Type },
+            { Keywords.CHARACTER, TokenType.Type },
+            { Keywords.BOOLEAN, TokenType.Type },
+            { Keywords.TRUE, TokenType.Value },
+            { Keywords.FALSE, TokenType.Value },
+            { Keywords.VOID, TokenType.Type },
+            { Keywords.PARAMS, TokenType.Params },
 
-            { KeyWords.TRUE, TokenType.True },
-            { KeyWords.FALSE, TokenType.False },
-            { KeyWords.VOID, TokenType.Void },
-            { KeyWords.NULL, TokenType.Null },
+
+            { Keywords.NULL, TokenType.Null },
+        };
+
+        private static readonly IDictionary<string, TypeIndicator> _keywordToTypeIndicatorConversiontable = new Dictionary<string, TypeIndicator>()
+        {
+            { Keywords.DOUBLE, TypeIndicator.Double },
+            { Keywords.FLOAT, TypeIndicator.Float },
+            { Keywords.INTEGER, TypeIndicator.Integer },
+            { Keywords.STRING, TypeIndicator.String },
+            { Keywords.CHARACTER, TypeIndicator.Character },
+            { Keywords.BOOLEAN, TypeIndicator.Boolean },
+            { Keywords.TRUE, TypeIndicator.Boolean },
+            { Keywords.FALSE, TypeIndicator.Boolean },
+            { Keywords.VOID, TypeIndicator.Void },
 
         };
+
+        public static TypeIndicator ConvertKeywordToTypeIndicator(string keyword)
+        {
+            var typeIndicator = TypeIndicator.None;
+            _keywordToTypeIndicatorConversiontable.TryGetValue(keyword, out typeIndicator);
+            return typeIndicator;
+        }
 
         public static bool IsPredefinedKeyword(string keyword)
         {

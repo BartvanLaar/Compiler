@@ -26,7 +26,7 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
-            
+
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
 
@@ -44,9 +44,9 @@ namespace Compiling.Backends
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
             var rhsValue = _valueStack.Pop();
-            var variableName = expression.IdentificationExpression.Token?.Name;
+            var variableName = expression.Identifier;
             Debug.Assert(variableName is not null);
-            if(_namedValues.ContainsKey(variableName))
+            if (_namedValues.ContainsKey(variableName))
             {
                 throw new ArgumentException($"Redeclaration of {variableName}! Scopes are not yet supported! Don't re-use variable names!");
             }
@@ -60,9 +60,7 @@ namespace Compiling.Backends
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
-            Debug.Assert(expression.Token is not null);
             _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)expression.Value, true));
-
         }
 
         public void VisitDoubleExpression(DoubleExpression expression)
@@ -78,7 +76,13 @@ namespace Compiling.Backends
         public void VisitCharacterExpression(CharacterExpression expression)
         {
             //todo: shouldnt a character be converted to an int?
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int16, (ulong)expression.Value, false));
+            if (expression.Value?.Length > 1)
+            {
+                throw new InvalidOperationException("Characters may only have a length of one");
+            }
+
+            Debug.Assert(expression.Value is not null);
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int16, (ulong)expression.Value.First(), false));
         }
 
         public void VisitStringExpression(StringExpression expression)
@@ -149,9 +153,9 @@ namespace Compiling.Backends
                 //todo: support values other than doubles? We do have access to the tokens and their types... so why not?
                 for (int i = 0; i < argumentCount; ++i)
                 {
-                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TokenType);
+                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
                 }
-                var retType = GetReturnType(expression.ReturnTypeToken.TokenType);
+                var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
                 function = _module.AddFunction(expressionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
                 function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             }
@@ -170,7 +174,7 @@ namespace Compiling.Backends
             _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
-            if (expression.ReturnTypeToken.TokenType is TokenType.Void)
+            if (expression.ReturnTypeToken.TypeIndicator is TypeIndicator.Void)
             {
                 _builder.BuildRetVoid();
             }
@@ -179,25 +183,25 @@ namespace Compiling.Backends
                 var retValue = _valueStack.Pop();
                 _builder.BuildRet(retValue);
             }
-            _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            //_builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
         }
 
-        private static LLVMTypeRef GetReturnType(TokenType tokenType)
+        private static LLVMTypeRef GetReturnType(TypeIndicator typeIndicator)
         {
-            return tokenType switch
+            return typeIndicator switch
             {
-                TokenType.Float => LLVMTypeRef.Float,
-                TokenType.Double => LLVMTypeRef.Double,
-                TokenType.Boolean => LLVMTypeRef.Int1,
-                TokenType.Integer => LLVMTypeRef.Int64,
-                TokenType.Character => LLVMTypeRef.Int16,
-                TokenType.String => LLVMTypeRef.Int16,// should be an array i think ?
-                TokenType.DateTime => throw new NotImplementedException(),
-                TokenType.Void => LLVMTypeRef.Void,
-                _ => throw new InvalidOperationException($"TokenType {tokenType} is not supported as a return type for LLVM."),
+                TypeIndicator.Float => LLVMTypeRef.Float,
+                TypeIndicator.Double => LLVMTypeRef.Double,
+                TypeIndicator.Boolean => LLVMTypeRef.Int1,
+                TypeIndicator.Integer => LLVMTypeRef.Int64,
+                TypeIndicator.Character => LLVMTypeRef.Int16,
+                TypeIndicator.String => LLVMTypeRef.Int16,// should be an array i think ?
+                TypeIndicator.DateTime => throw new NotImplementedException(),
+                TypeIndicator.Void => LLVMTypeRef.Void,
+                _ => throw new InvalidOperationException($"TypeIndicator {typeIndicator} is not supported as a return type for LLVM."),
             };
         }
 

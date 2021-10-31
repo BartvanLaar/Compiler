@@ -7,8 +7,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
     {
         public ImportStatementExpression(Token  token) : base(token, ExpressionType.DontCare)
         {
-            Debug.Assert(token.StringValue is not null);
-            Path = token.StringValue;
+            Debug.Assert(token.ValueAsString is not null);
+            Path = token.ValueAsString;
         }
 
         public string Path { get; set; }

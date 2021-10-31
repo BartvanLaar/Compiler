@@ -4,17 +4,8 @@
     {
         Error,
         EndOfFile,
-
-        Float, // should return types be their own enum type? and replaced as a token called ReturnType?
-        Double,
-        Boolean,
-        Integer,
-        Character,
-        String,
-        DateTime, // !notimplemented
-        Void,
-        Hexadecimal,
-
+        Type,
+        Value,
         AccoladesOpen,              // {
         AccoladesClose,             // }
         BracketOpen,               // [
@@ -72,7 +63,7 @@
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
-        VariableDeclaration,        // var, auto
+        //VariableDeclaration,        // var, auto
         FunctionDefinition,         // func
         ReturnTypeIndicator,        // ->
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
@@ -84,8 +75,8 @@
         Extend,                     // extend
         Extern,                     // extern
 
-        True,                       // should this be tokentype.Keyword and then their own enum? or just only strings? Now its kind of double administration
-        False,
+        //True,                       // should this be tokentype.Keyword and then their own enum? or just only strings? Now its kind of double administration
+        //False,
         Null,
         Params,
         Is,

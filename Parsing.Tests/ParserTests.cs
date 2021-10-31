@@ -163,9 +163,9 @@ namespace Parsing.Tests
             Assert.IsEmpty(errors);
         }
 
-        [TestCase("export func SomeFunc(bool x) -> void {var x = 5}")]
+        //[TestCase("export func SomeFunc(bool x) -> void {var x = 5}")]
         [TestCase("func SomeFunc() -> int {int x = 5; return x;}")]
-        [TestCase("func SomeFunc(bool x, double y, int z) -> int \n {\n var x = 5;\n auto y = 6;\n return x + y; \n }\n")]
+        //[TestCase("func SomeFunc(bool x, double y, int z) -> int \n {\n var x = 5;\n auto y = 6;\n return x + y; \n }\n")]
         public void Parse_Function_Definitions_Variable_Declaration_In_Body_No_Errors(string code)
         {
             var lexer = new Lexer(code);

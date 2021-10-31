@@ -7,8 +7,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
     {
         public BooleanExpression(Token token) : base(token, ExpressionType.BooleanValue)
         {
-            Debug.Assert(token.BooleanValue.HasValue);
-            Value = token.BooleanValue.Value;
+            Debug.Assert(token.Value is not null);
+            Value = (bool)token.Value;
         }
 
         public bool Value { get; }

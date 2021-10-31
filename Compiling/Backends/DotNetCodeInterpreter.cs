@@ -133,7 +133,7 @@ namespace Compiling.Backends
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
             var valueRhs = _valueStack.Pop(); 
-            var nameLhs = (string)Convert.ChangeType(_valueStack.Pop(), typeof(string));
+            var nameLhs = (string)Convert.ChangeType(expression.Identifier, typeof(string));
 
             if (!_namedValues.ContainsKey(nameLhs))
             {

@@ -7,10 +7,10 @@ namespace Parsing.AbstractSyntaxTree.Expressions
     {
         public CharacterExpression(Token token) : base(token, ExpressionType.Character)
         {
-            Debug.Assert(token.StringValue != null);
-            Value = token.StringValue.FirstOrDefault();//todo: handle invalid character lengths...
+            Debug.Assert(token.ValueAsString is not null);
+            Value = token.ValueAsString;
         }
 
-        public char Value { get; }
+        public string Value { get; }
     }
 }

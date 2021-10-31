@@ -5,7 +5,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class BinaryExpression : ExpressionBase
     {
-        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.StringValue))
+        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.ValueAsString))
         {
             LeftHandSide = leftHandSide;
             RightHandSide = rightHandSide;

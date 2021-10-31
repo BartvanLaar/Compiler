@@ -8,8 +8,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public StringExpression(Token token) : base(token, ExpressionType.String)
         {
             // todo: how to handle nullables?
-            Debug.Assert(token.StringValue != null);
-            Value = token.StringValue;
+            Debug.Assert(token.ValueAsString is not null);
+            Value = token.ValueAsString;
         }
 
         public string Value { get; }
