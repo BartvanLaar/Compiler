@@ -1,6 +1,7 @@
 ﻿using Compiling.Backends;
 using Lexing;
 using LLVMSharp;
+using LLVMSharp.Interop;
 using Parsing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
@@ -28,27 +29,22 @@ namespace Compiling
             Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
 
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
-            LLVM.WriteBitcodeToFile(module, output);
-            LLVM.DumpModule(module);
+            module.WriteBitcodeToFile(output);
             // don't know if dispose is required, but disposing may cause an error..
-            //try
-            //{
-            //    LLVM.DisposeModule(module);
-            //    LLVM.DisposeBuilder(builder);
-            //    LLVM.DisposeExecutionEngine(executionEngine);
-            //    LLVM.DisposePassManager(passManager);
-            //}
-            //catch
-            //{
-            //    // for some reason disposing the execution engine causes a crash?
-            //}
+            // update; test diposes below after refactor.
+            module.Dump();
+            //module.Dispose();
+            //builder.Dispose();
+            //executionEngine.Dispose();
+            //passManager.Dispose();
+      
 
             if (!isExecutable)
             {
                 var llc = Process.Start(@"llc", $"--filetype=obj {output}");
                 llc.WaitForExit();
             }
-        
+
 
             Process lld;
             if (isExecutable)
@@ -85,8 +81,9 @@ namespace Compiling
 
         private static (LLVMModuleRef Module, LLVMBuilderRef Builder, LLVMExecutionEngineRef engine, LLVMPassManagerRef passManager) SetupLLVM()
         {
-            LLVMModuleRef module = LLVM.ModuleCreateWithName("B#");
-            LLVMBuilderRef builder = LLVM.CreateBuilder();
+            LLVMModuleRef module = LLVMModuleRef.CreateWithName("B#");
+            LLVMContextRef ctx = LLVMContextRef.Create();
+            LLVMBuilderRef builder = LLVMBuilderRef.Create(ctx);
 
             LLVM.LinkInMCJIT();
             LLVM.InitializeX86TargetMC();
@@ -100,40 +97,34 @@ namespace Compiling
             //LLVM.InitializeAllTargetInfos();
             //LLVM.InitializeAllTargetMCs();
             //LLVM.InitializeAllTargets();
-
-            if (LLVM.CreateExecutionEngineForModule(out var engine, module, out var errorMessage).Value == 1)
-            {
-                Console.WriteLine(errorMessage);
-                // LLVM.DisposeMessage(errorMessage);
-                throw new Exception("Unable to setup LLVM.", new Exception(errorMessage));
-            }
+            var engine = module.CreateExecutionEngine();
 
             // Create a function pass manager for this engine
-            LLVMPassManagerRef passManager = LLVM.CreateFunctionPassManagerForModule(module);
+            LLVMPassManagerRef passManager = module.CreateFunctionPassManager();
 
             // Set up the optimizer pipeline.  Start with registering info about how the
             // target lays out data structures.
             //LLVM.DisposeTargetData(LLVM.GetExecutionEngineTargetData(engine));
 
             // Provide basic AliasAnalysis support for GVN.
-            LLVM.AddBasicAliasAnalysisPass(passManager);
+            passManager.AddBasicAliasAnalysisPass();
 
             // Promote allocations to registers.
-            LLVM.AddPromoteMemoryToRegisterPass(passManager);
+            passManager.AddPromoteMemoryToRegisterPass();
 
             // Do simple "peephole" optimizations and bit-twiddling optzns.
-            LLVM.AddInstructionCombiningPass(passManager);
+            passManager.AddInstructionCombiningPass();
 
             // Reassociate expressions.
-            LLVM.AddReassociatePass(passManager);
+            passManager.AddReassociatePass();
 
             // Eliminate Common SubExpressions.
-            LLVM.AddGVNPass(passManager);
+            passManager.AddGVNPass();
 
             // Simplify the control flow graph (deleting unreachable blocks, etc).
-            LLVM.AddCFGSimplificationPass(passManager);
+            passManager.AddCFGSimplificationPass();
 
-            LLVM.InitializeFunctionPassManager(passManager);
+            passManager.InitializeFunctionPassManager();
 
 
             //var codeGenerationListener = new CodeGenerationParserListener(new CodeGenerationVisitor(module, builder), engine, passManager);

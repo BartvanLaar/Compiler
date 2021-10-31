@@ -1,5 +1,5 @@
 ﻿using Lexing;
-using LLVMSharp;
+using LLVMSharp.Interop;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
@@ -8,9 +8,6 @@ namespace Compiling.Backends
 {
     internal class LLVMCodeGenerationVisitor : IByteCodeGeneratorListener
     {
-
-        private static readonly LLVMBool LLVMBoolFalse = new(0);
-
         private static readonly LLVMValueRef NullValue = new(IntPtr.Zero);
 
         private readonly LLVMModuleRef _module;
@@ -47,33 +44,36 @@ namespace Compiling.Backends
 
         public void VisitBooleanExpression(BooleanExpression expression)
         {
-            _valueStack.Push(LLVM.ConstReal(LLVM.Int1Type(), expression.Value ? 1 : 0));
+            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int1, expression.Value ? 1 : 0));
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
             Debug.Assert(expression.Token is not null);
-            _valueStack.Push(LLVM.ConstReal(GetReturnType(expression.Token.TokenType), expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int64, expression.Value));
+
         }
 
         public void VisitDoubleExpression(DoubleExpression expression)
         {
-            _valueStack.Push(LLVM.ConstReal(LLVM.DoubleType(), expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, expression.Value));
         }
 
         public void VisitFloatExpression(FloatExpression expression)
         {
-            _valueStack.Push(LLVM.ConstReal(LLVM.FloatType(), expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, expression.Value));
         }
+
         public void VisitCharacterExpression(CharacterExpression expression)
         {
             //todo: shouldnt a character be converted to an int?
-            _valueStack.Push(LLVM.ConstReal(LLVM.Int16Type(), (int)expression.Value));
+
+            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int16, expression.Value));
         }
 
         public void VisitStringExpression(StringExpression expression)
         {
-            _valueStack.Push(LLVM.ConstRealOfStringAndSize(LLVM.Int16Type(), expression.Value, (uint)expression.Value.Length));
+            _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.Int16, expression.Value));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -87,15 +87,15 @@ namespace Compiling.Backends
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
-            var calleeFunction = LLVM.GetNamedFunction(_module, expression.FunctionName);
+            var calleeFunction = _module.GetNamedFunction(expression.FunctionName);
 
-            if (calleeFunction.Pointer == IntPtr.Zero)
+            if (calleeFunction.Handle == IntPtr.Zero)
             {
                 throw new Exception($"Unknown function referenced: {expression.FunctionName}");
             }
 
             var argumentCount = (uint)expression.Arguments.Length;
-            if (LLVM.CountParams(calleeFunction) != argumentCount)
+            if (calleeFunction.ParamsCount != argumentCount)
             {
                 throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
             }
@@ -106,7 +106,7 @@ namespace Compiling.Backends
                 argumentValues[i] = _valueStack.Pop();
             }
 
-            var call = LLVM.BuildCall(_builder, calleeFunction, argumentValues, "calltmp");
+            var call = _builder.BuildCall(calleeFunction, argumentValues, "calltmp");
             _valueStack.Push(call);
         }
 
@@ -118,15 +118,15 @@ namespace Compiling.Backends
             var arguments = new LLVMTypeRef[argumentCount];
             var expressionName = expression.Token.Name;
 
-            var function = LLVM.GetNamedFunction(_module, expressionName);
-            if (function.Pointer != IntPtr.Zero)
+            var function = _module.GetNamedFunction(expressionName);
+            if (function.Handle != IntPtr.Zero)
             {
-                if (LLVM.CountBasicBlocks(function) != 0)
+                if (function.BasicBlocksCount != 0)
                 {
                     throw new Exception($"Redefinition of function :'{expressionName}'");
                 }
 
-                if (LLVM.CountParams(function) != argumentCount)
+                if (function.ParamsCount != argumentCount)
                 {
                     //todo: we should support method overloading...
                     throw new Exception($"Redefinition of function :'{expressionName}' with a different number of arguments.");
@@ -141,8 +141,8 @@ namespace Compiling.Backends
                     arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TokenType);
                 }
                 var retType = GetReturnType(expression.ReturnTypeToken.TokenType);
-                function = LLVM.AddFunction(_module, expressionName, LLVM.FunctionType(retType, arguments, LLVMBoolFalse));
-                LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
+                function = _module.AddFunction(expressionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
+                function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             }
 
             for (int i = 0; i < argumentCount; ++i)
@@ -150,64 +150,52 @@ namespace Compiling.Backends
                 Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
                 var argumentName = expression.Arguments[i].ValueToken.Name;// todo: is this right?
 
-                LLVMValueRef param = LLVM.GetParam(function, (uint)i);
-                LLVM.SetValueName(param, argumentName);
+                LLVMValueRef param = function.GetParam((uint)i);
+                param.Name = argumentName;
 
                 _namedValues[argumentName] = param;
             }
             //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
-            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            _builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
             if (expression.ReturnTypeToken.TokenType is TokenType.Void)
             {
-                LLVM.BuildRetVoid(_builder);
+                _builder.BuildRetVoid();
             }
             else
             {
                 var retValue = _valueStack.Pop();
-              
-                LLVM.BuildRet(_builder, retValue); // todo: support return types...?
-            }
-            LLVM.PositionBuilderAtEnd(_builder, LLVM.AppendBasicBlock(function, "entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
-            LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
+                _builder.BuildRet(retValue); // todo: support return types...?
+            }
+            _builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+
+            function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
         }
 
         private static LLVMTypeRef GetReturnType(TokenType tokenType)
         {
-            switch (tokenType)
+            return tokenType switch
             {
-                case TokenType.Float:
-                    return LLVM.FloatType();
-                case TokenType.Double:
-                    return LLVM.DoubleType();
-                case TokenType.Boolean:
-                    return LLVM.Int1Type();
-                case TokenType.Integer:
-                    return LLVM.Int64Type();
-                case TokenType.Character:
-                    return LLVM.Int16Type();
-                case TokenType.String:
-                    return LLVM.Int16Type(); // should be an array i think ?
-                case TokenType.DateTime:
-                    throw new NotImplementedException();
-                case TokenType.Void:
-                    return LLVM.VoidType();
-                default:
-                    throw new InvalidOperationException($"TokenType {tokenType} is not supported as a return type for LLVM.");
-
-            }
+                TokenType.Float => LLVMTypeRef.Float,
+                TokenType.Double => LLVMTypeRef.Double,
+                TokenType.Boolean => LLVMTypeRef.Int1,
+                TokenType.Integer => LLVMTypeRef.Int64,
+                TokenType.Character => LLVMTypeRef.Int16,
+                TokenType.String => LLVMTypeRef.Int16,// should be an array i think ?
+                TokenType.DateTime => throw new NotImplementedException(),
+                TokenType.Void => LLVMTypeRef.Void,
+                _ => throw new InvalidOperationException($"TokenType {tokenType} is not supported as a return type for LLVM."),
+            };
         }
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
             var rhsValue = _valueStack.Pop();
             var lhsValue = _valueStack.Pop();
-            var rhsValType = LLVM.TypeOf(rhsValue);
-            var lhsValType = LLVM.TypeOf(rhsValue);
-            var lhsAndRhsBothIntegers = rhsValType.TypeKind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValType.TypeKind is LLVMTypeKind.LLVMIntegerTypeKind;
+            var lhsAndRhsBothIntegers = rhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind;
             LLVMValueRef resultingValue;
             //todo: handle unsigned ints doubles and floats?
             //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
@@ -217,11 +205,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildAdd(_builder, lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildAdd(lhsValue, rhsValue, "addtmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFAdd(_builder, lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildFAdd(lhsValue, rhsValue, "addtmp");
                         }
                         break;
                     }
@@ -229,11 +217,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildSub(_builder, lhsValue, rhsValue, "addtmp");
+                            resultingValue = _builder.BuildSub(lhsValue, rhsValue, "addtmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFSub(_builder, lhsValue, rhsValue, "subtmp");
+                            resultingValue = _builder.BuildFSub(lhsValue, rhsValue, "subtmp");
                         }
                         break;
                     }
@@ -241,11 +229,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildMul(_builder, lhsValue, rhsValue, "multmp");
+                            resultingValue = _builder.BuildMul(lhsValue, rhsValue, "multmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFMul(_builder, lhsValue, rhsValue, "multmp");
+                            resultingValue = _builder.BuildFMul(lhsValue, rhsValue, "multmp");
                         }
                         break;
                     }
@@ -253,11 +241,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildSDiv(_builder, lhsValue, rhsValue, "divtmp");
+                            resultingValue = _builder.BuildSDiv(lhsValue, rhsValue, "divtmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFDiv(_builder, lhsValue, rhsValue, "divtmp");
+                            resultingValue = _builder.BuildFDiv(lhsValue, rhsValue, "divtmp");
                         }
                         break;
                     }
@@ -265,11 +253,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildSRem(_builder, lhsValue, rhsValue, "modtmp");
+                            resultingValue = _builder.BuildSRem(lhsValue, rhsValue, "modtmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFRem(_builder, lhsValue, rhsValue, "modtmp");
+                            resultingValue = _builder.BuildFRem(lhsValue, rhsValue, "modtmp");
                         }
                         break;
                     }
@@ -277,11 +265,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
                         }
                         break;
                     }
@@ -289,11 +277,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue, "cmptmp");
                         }
                         break;
                     }
@@ -301,11 +289,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue, "cmptmp");
 
                         }
                         break;
@@ -314,11 +302,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue, "cmptmp");
                         }
                         break;
                     }
@@ -326,11 +314,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue, "cmptmp");
                         }
                         break;
                     }
@@ -338,47 +326,47 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = LLVM.BuildICmp(_builder, LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue, "cmptmp");
                         }
                         else
                         {
-                            resultingValue = LLVM.BuildFCmp(_builder, LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue, "cmptmp");
                         }
                         break;
                     }
                 case ExpressionType.LogicalOr:
                     {
-                        resultingValue = LLVM.BuildOr(_builder, lhsValue, rhsValue, "LogicalOrTmp");
+                        resultingValue = _builder.BuildOr(lhsValue, rhsValue, "LogicalOrTmp");
                         break;
                     }
                 case ExpressionType.LogicalXOr:
                     {
-                        resultingValue = LLVM.BuildXor(_builder, lhsValue, rhsValue, "LogicalXOrTmp");
+                        resultingValue = _builder.BuildXor(lhsValue, rhsValue, "LogicalXOrTmp");
                         break;
                     }
                 case ExpressionType.LogicalAnd:
                     {
-                        resultingValue = LLVM.BuildAnd(_builder, lhsValue, rhsValue, "LogicalAndTmp");
+                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue, "LogicalAndTmp");
                         break;
                     }
                 case ExpressionType.ConditionalOr:
                     {
-                        resultingValue = LLVM.BuildOr(_builder, lhsValue, rhsValue, "ConditionalOrTmp");
+                        resultingValue = _builder.BuildOr(lhsValue, rhsValue, "ConditionalOrTmp");
                         break;
                     }
                 case ExpressionType.ConditionalAnd:
                     {
-                        resultingValue = LLVM.BuildAnd(_builder, lhsValue, rhsValue, "ConditionalOrTmp");
+                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue, "ConditionalOrTmp");
                         break;
                     }
                 case ExpressionType.BitShiftLeft:
                     {
-                        resultingValue = LLVM.BuildShl(_builder, lhsValue, rhsValue, "BitShiftLeftTmp");
+                        resultingValue = _builder.BuildShl(lhsValue, rhsValue, "BitShiftLeftTmp");
                         break;
                     }
                 case ExpressionType.BitShiftRight:
                     {
-                        resultingValue = LLVM.BuildLShr(_builder, lhsValue, rhsValue, "BitShiftRightTmp");
+                        resultingValue = _builder.BuildLShr(lhsValue, rhsValue, "BitShiftRightTmp");
                         break;
                     }
                 default:
