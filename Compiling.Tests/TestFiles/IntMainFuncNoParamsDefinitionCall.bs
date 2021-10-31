@@ -1,4 +1,8 @@
-﻿func main() -> int {
+﻿func test() -> int {
+    return 20;
+}
+
+func main() -> int {
+    test();
     return 1337;
 }
-main();

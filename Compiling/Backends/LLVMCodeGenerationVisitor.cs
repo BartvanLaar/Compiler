@@ -120,6 +120,21 @@ namespace Compiling.Backends
                 argumentValues[i] = _valueStack.Pop();
             }
 
+            /*
+             * Code below generates following IR, which is wrong, test should be called in main not in itself.. Causing an error.
+             * 
+              define i64 @test() {
+                test:
+                  ret i64 20
+                  %0 = call i64 @test()
+                }
+
+                define i64 @main() {
+                main:
+                  ret i64 6969
+                }
+             */
+
             var call = _builder.BuildCall(calleeFunction, argumentValues);
 
             _valueStack.Push(call);
@@ -183,8 +198,6 @@ namespace Compiling.Backends
                 var retValue = _valueStack.Pop();
                 _builder.BuildRet(retValue);
             }
-            //_builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
-
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
         }

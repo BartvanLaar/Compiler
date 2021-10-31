@@ -49,7 +49,7 @@ namespace Compiling.Tests
         {
             var filename = Path.GetFileName(filepath);
             var file = await File.ReadAllTextAsync(filepath);
-            Driver.RunLLVM(file, filename, testFile.IsExecutable, useClangCompiler: true);
+            Driver.RunLLVM(file, filename, testFile.IsExecutable, useClangCompiler: false);
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), Path.ChangeExtension(filename, testFile.Extension));
             if (File.Exists(filePath))
             {
