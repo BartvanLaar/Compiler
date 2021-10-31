@@ -12,7 +12,7 @@ namespace CLI
             Console.ReadKey();
             //var code = "2.0 + 5.0 / 5.0;";
             //var code = "10d*(10d-5d);";
-            var code = "func main() -> int {return 42;}";
+            var code = "func main() -> int {return 6969;}";
             Driver.RunLLVM(code, isExecutable: true);
             //code = "2.0 * 7.0;";
             //Driver.RunLLVM(code);

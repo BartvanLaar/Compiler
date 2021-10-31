@@ -22,7 +22,7 @@ namespace Compiling
             }
         }
 
-        public static void RunLLVM(string text, string filename = "output", bool isExecutable = false, bool isDebug = false)
+        public static void RunLLVM(string text, string filename = "output", bool isExecutable = false, bool isDebug = false, bool useClangCompiler = false)
         {
             var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
@@ -43,8 +43,18 @@ namespace Compiling
             sw.Stop();
             Console.WriteLine($"Cleaning up LLVM leftovers took {sw.ElapsedMilliseconds} ms.");
             sw.Restart();
-
-            var lld = Process.Start(@"clang", $"{(isExecutable ? string.Empty : "--shared")} {output} -o {Path.GetFileNameWithoutExtension(output)}.{(isExecutable ? "exe" : "dll")} {(isDebug ? "--debug" : string.Empty)}");
+            Process lld;
+            if (useClangCompiler)
+            {
+                lld = Process.Start(@"clang", $"{(isExecutable ? string.Empty : "--shared")} {output} -o {Path.GetFileNameWithoutExtension(output)}.{(isExecutable ? "exe" : "dll")} {(isDebug ? "--debug" : string.Empty)}");
+            }
+            else
+            {
+                var llc = Process.Start(@"llc", $"--filetype=obj {output}");
+                llc.WaitForExit();
+                lld = isExecutable ? Process.Start(@"lld-link", $"/entry:main {Path.GetFileNameWithoutExtension(output)}.obj") 
+                    : Process.Start(@"lld-link", $"/subsystem:console /dll /noentry {Path.GetFileNameWithoutExtension(output)}.obj");
+            }
 
             lld.WaitForExit();
             sw.Stop();

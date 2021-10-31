@@ -26,6 +26,12 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
+            
+            // hack below.. Some global constant value needs to be set in order to use doubles or floats...
+            // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
+
+            var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
+            glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1, false);
         }
 
         public Stack<LLVMValueRef> ResultStack => _valueStack;
@@ -50,7 +56,7 @@ namespace Compiling.Backends
         public void VisitIntegerExpression(IntegerExpression expression)
         {
             Debug.Assert(expression.Token is not null);
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong) expression.Value, true));
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)expression.Value, true));
 
         }
 
@@ -167,7 +173,7 @@ namespace Compiling.Backends
                 var retValue = _valueStack.Pop();
                 _builder.BuildRet(retValue);
             }
-            _builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            //_builder.PositionAtEnd(function.AppendBasicBlock("entry")); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
