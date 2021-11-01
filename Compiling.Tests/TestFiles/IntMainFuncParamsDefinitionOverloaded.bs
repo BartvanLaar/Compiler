@@ -1,0 +1,9 @@
+﻿func test(int someInteger) -> int {
+    return 69;
+}
+
+func test(double someInteger) -> int {
+    return 69;
+}
+
+func main() -> int {}

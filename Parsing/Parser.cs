@@ -84,7 +84,7 @@ namespace Parsing
                     {
                         return ParseFunctionCallExpression();
                     }
-                case TokenType.Type when(peekedTokens[1].TokenType is TokenType.Identifier):
+                case TokenType.Type when (peekedTokens[1].TokenType is TokenType.Identifier):
                     {
                         return ParseVariableDeclaration();
                     }
@@ -256,7 +256,13 @@ namespace Parsing
                     ConsumeToken();
                 }
 
-                var typeIdentifier = ConsumeToken();
+                var typeIdentifier = PeekToken();
+                if(typeIdentifier.TypeIndicator is TypeIndicator.Inferred)
+                {
+                    ThrowParseError("Inferred types are not allowed in function definitions.",typeIdentifier);
+                    return null;
+                }
+                ConsumeToken();
 
                 currentPeek = PeekToken();
                 if (currentPeek.TokenType is not TokenType.Identifier)
@@ -269,6 +275,11 @@ namespace Parsing
 
                 parameters.Add(new FunctionDefinitionArgument(typeIdentifier, variableName));
             }
+
+            //todo: mangled names can only be used after we add type checking...
+            // @IMPORTANT, TYPE CHECKING SHOULD ADD TYPE DATA TO TOKENS. e.g. auto, var, function calls passed as function arguments.. etc
+            //var functionName = CreateMangledName(funcIdentifier.Name, parameters.Select(x => x.TypeToken));
+            var functionName = funcIdentifier.Name;
 
             //todo: check resulting parameters if any... They either all should have a token, or none should. e.g. difference between function call and function definition.
             // However, we can not assume that it's a function call based on this, as functions are allowed to have zero parameters.
@@ -300,10 +311,9 @@ namespace Parsing
                 }
                 ConsumeToken();
 
-                Debug.Assert(isExtern);
                 Debug.Assert(!isExport);
 
-                return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, null, true, false);
+                return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, null, true, false);
             }
 
             if (peekedToken.TokenType is not TokenType.AccoladesOpen)
@@ -344,7 +354,7 @@ namespace Parsing
                     body.Add(expression);
                 }
             }
-            return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, new BodyExpression(body), isExtern, isExport);
+            return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, new BodyExpression(body), isExtern, isExport);
         }
 
         private ExpressionBase? ParseDoWhileStatementExpression()
@@ -654,8 +664,7 @@ namespace Parsing
             }
 
             ConsumeToken();
-
-            return new FunctionCallExpression(functionToken, functionArguments.ToArray());
+            return new FunctionCallExpression(functionToken.Name, functionArguments.ToArray());
         }
 
         private ExpressionBase? ParseImportStatementExpression()
@@ -738,6 +747,16 @@ namespace Parsing
             var result = new CharacterExpression(ConsumeToken());
 
             return result;
+        }
+
+        private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
+        {
+            var name = baseName;
+            foreach (var token in typeTokens)
+            {
+                name += token.Name.First();
+            }
+            return name;
         }
 
         private static void ThrowParseError(Token token, TokenType expectedTokenType, string expectedInOrAt)

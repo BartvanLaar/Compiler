@@ -172,6 +172,8 @@ namespace Lexing
             { Keywords.TRUE, TypeIndicator.Boolean },
             { Keywords.FALSE, TypeIndicator.Boolean },
             { Keywords.VOID, TypeIndicator.Void },
+            { Keywords.VARIABLE_TYPE_INFERRED_1, TypeIndicator.Inferred },
+            { Keywords.VARIABLE_TYPE_INFERRED_2, TypeIndicator.Inferred },
 
         };
 

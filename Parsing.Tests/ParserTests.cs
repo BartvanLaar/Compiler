@@ -177,6 +177,8 @@ namespace Parsing.Tests
         }
 
         [TestCase("export func SomeFunc() -> double {", 1)]
+        [TestCase("export func SomeFunc(var x) -> double {}", 1)] // test fails because parsing does currently not throw an exception or abort on error. probably should..
+        [TestCase("export func SomeFunc(auto x) -> double {}", 1)] // test fails because parsing does currently not throw an exception or abort on error. probably should..
         public void Parse_Function_Definition_N_Errors(string code, int amountOfErrors)
         {
             var lexer = new Lexer(code);

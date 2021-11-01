@@ -4,9 +4,9 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class FunctionCallExpression : ExpressionBase
     {
-        public FunctionCallExpression(Token functionIdentifierToken, ExpressionBase[] methodArguments) : base(functionIdentifierToken, ExpressionType.FunctionCall)
+        public FunctionCallExpression(string Name, ExpressionBase[] methodArguments) : base(ExpressionType.FunctionCall)
         {
-            FunctionName = functionIdentifierToken.Name;
+            FunctionName = Name;
             Arguments = methodArguments;
         }
 

@@ -122,7 +122,7 @@ namespace Compiling.Backends
 
             /*
              * Code below generates following IR, which is wrong, test should be called in main not in itself.. Causing an error.
-             * 
+             * THIS IS CAUSED BECAUSE THE FUNC DEF DOES NOT PROPERLY HANDLE ITS BODY.
               define i64 @test() {
                 test:
                   ret i64 20
@@ -134,19 +134,15 @@ namespace Compiling.Backends
                   ret i64 6969
                 }
              */
-
             var call = _builder.BuildCall(calleeFunction, argumentValues);
-
             _valueStack.Push(call);
         }
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Debug.Assert(expression?.Token is not null);
-
             var argumentCount = (uint)expression.Arguments.Length;
             var arguments = new LLVMTypeRef[argumentCount];
-            var expressionName = expression.Token.Name;
+            var expressionName = expression.FunctionName;
 
             var function = _module.GetNamedFunction(expressionName);
             if (function.Handle != IntPtr.Zero)
@@ -158,7 +154,8 @@ namespace Compiling.Backends
 
                 if (function.ParamsCount != argumentCount)
                 {
-                    //todo: we should support method overloading...
+                    // function overloading should be dealth with on language level
+                    // see https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/basic-constructs/functions.html#function-overloading
                     throw new Exception($"Redefinition of function :'{expressionName}' with a different number of arguments.");
                 }
 

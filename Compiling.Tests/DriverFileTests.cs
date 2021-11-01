@@ -15,6 +15,7 @@ namespace Compiling.Tests
             public string Extension => IsExecutable ? ".exe" : ".dll";
         }
 
+
         private class TestFiles : IEnumerable
         {
             public IEnumerator GetEnumerator()
@@ -29,6 +30,9 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsVar"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsInt"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncParamsDefinition"), new TestFile() { IsExecutable = true } };
+                //test below will fail untill we have proper type checking and inference (with required added type metadata) to support function name mangling at the calling side...
+                yield return new object[] { FN("IntMainFuncParamsDefinitionOverloaded"), new TestFile() { IsExecutable = true } };
 
             }
         }
@@ -42,7 +46,6 @@ namespace Compiling.Tests
 
             return Path.Combine(TEST_FILE_FOLDER, file);
         }
-
 
         [TestCaseSource(typeof(TestFiles))]
         public async Task Driver_Test_Code_Files(string filepath, TestFile testFile)

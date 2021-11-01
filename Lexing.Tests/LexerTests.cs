@@ -309,7 +309,21 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[3].TokenType);
         }
 
-        [Test]
+        [TestCase("int", ExpectedResult = TypeIndicator.Integer)]
+        [TestCase("double", ExpectedResult = TypeIndicator.Double)]
+        [TestCase("float", ExpectedResult = TypeIndicator.Float)]
+        [TestCase("string ", ExpectedResult = TypeIndicator.String)]
+        [TestCase("char", ExpectedResult = TypeIndicator.Character)]
+        [TestCase("auto", ExpectedResult = TypeIndicator.Inferred)]
+        [TestCase("var", ExpectedResult = TypeIndicator.Inferred)]
+        public static TypeIndicator Lexer_Test_Base_Types(string code)
+        {
+            var lexer = new Lexer(code);
+            var tok = lexer.ConsumeToken();
+            Assert.AreEqual(TokenType.Type, tok.TokenType);
+            return tok.TypeIndicator;
+        }
+
         public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_EndOfStatement()
         {
             var lexer = new Lexer("var x=x+7;");

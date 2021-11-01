@@ -1,0 +1,3 @@
+﻿func main(int someInteger) -> int {
+    return 69;
+}
