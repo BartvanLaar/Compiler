@@ -9,6 +9,7 @@ using System.Diagnostics;
 
 namespace Compiling
 {
+    //todo: handle parse exceptions?
     public class Driver
     {
         public static void Run(string text) => Run(text, new AbstractSyntaxTreeVisitorExecutor(), new AbstractSyntaxTreeVisitorLogger());
