@@ -16,6 +16,7 @@ namespace Lexing
         private int _cursorPosition;
         private int _lineCounter;
         private int _columnCounter;
+
         public Lexer(string text)
         {
             _text = text ?? throw new ArgumentNullException(nameof(text));
@@ -23,6 +24,7 @@ namespace Lexing
             _lineCounter = 1;
             _columnCounter = 0;
         }
+
         public Token ConsumeToken()
         {
             return TraverseTokens(1, true).First();

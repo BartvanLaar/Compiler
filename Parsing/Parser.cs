@@ -11,12 +11,18 @@ namespace Parsing
 
     public sealed class Parser : IParser
     {
-        private readonly Lexer _lexer;
+        private const string DIRECT_TEXT_INPUT = "Direct text input";
+
+        private readonly ILexer _lexer;
+        private readonly string _file;
         private readonly Queue<ExpressionBase> _expressions;
 
-        public Parser(Lexer lexer)
+        public Parser(ILexer lexer) : this(lexer, DIRECT_TEXT_INPUT) { }
+
+        public Parser(ILexer lexer, string file)
         {
             _lexer = lexer;
+            _file = file;
             _expressions = new();
         }
 
@@ -131,7 +137,6 @@ namespace Parsing
                 TokenType.FunctionName => ParseIdentifierExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
-
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -158,7 +163,6 @@ namespace Parsing
 
         private ExpressionBase ParseReturnStatementExpression()
         {
-            Debug.Assert(PeekToken().TokenType is TokenType.ReturnStatement);
             var expr = new ReturnExpression(ConsumeToken(), ParseTopLevelExpression());
             return expr;
         }
@@ -172,8 +176,7 @@ namespace Parsing
             var peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.ParanthesesClose)
             {
-                ThrowParseError($"Expected matching closing paranthese '{LexerConstants.PARANTHESES_CLOSE}' for opening paranthese at line: {paranOpenToken.Line} column: {paranOpenToken.Column}", peekedToken);
-                return null;
+                throw ParserError(peekedToken, $"matching closing paranthese '{LexerConstants.PARANTHESES_CLOSE}'",  $"for opening paranthese at line: {paranOpenToken.Line} column: {paranOpenToken.Column}");
             }
 
             ConsumeToken();
@@ -182,16 +185,10 @@ namespace Parsing
 
         private ExpressionBase ParseBooleanExpression()
         {
-            var peekedToken = PeekToken();
-            if (peekedToken.TokenType is TokenType.Value && peekedToken.TypeIndicator is TypeIndicator.Boolean)
-            {
-                return new BooleanExpression(ConsumeToken());
-            }
-
-            throw new InvalidOperationException($"{nameof(ParseBooleanExpression)} can only be used with Tokens True or False, in all other cases use a binary expression");
+            return new BooleanExpression(ConsumeToken());
         }
 
-        private ExpressionBase? ParseFunctionDefinitionExpression()
+        private ExpressionBase ParseFunctionDefinitionExpression()
         {
             var peekedToken = PeekToken();
             var isExtern = peekedToken.TokenType is TokenType.Extern;
@@ -199,8 +196,7 @@ namespace Parsing
 
             if (isExtern && isExport)
             {
-                ThrowParseError("Function definition can not be both extern and export at the same time", peekedToken);
-                return null;
+                throw ParserError(peekedToken, "Function definition can not be both extern and export at the same time");
             }
 
             if (isExtern || isExport)
@@ -211,16 +207,14 @@ namespace Parsing
 
             if (peekedToken.TokenType is not TokenType.FunctionDefinition)
             {
-                ThrowParseError(peekedToken, TokenType.FunctionDefinition, "after extern or export declaration");
-                return null;
+               throw ParserError(peekedToken, TokenType.FunctionDefinition, "after extern or export declaration");
             }
 
             ConsumeToken();
             peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.FunctionName)
             {
-                ThrowParseError(peekedToken, TokenType.FunctionName, "after func definition");
-                return null;
+                throw ParserError(peekedToken, TokenType.FunctionName, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
@@ -228,9 +222,9 @@ namespace Parsing
 
             if (peekedToken.TokenType is not TokenType.ParanthesesOpen)
             {
-                ThrowParseError(peekedToken, LexerConstants.PARANTHESES_OPEN, "after func identifier");
-                return null;
+                throw ParserError(peekedToken, LexerConstants.PARANTHESES_OPEN, "after func identifier");
             }
+
             ConsumeToken();
 
             var parameters = new List<FunctionDefinitionArgument>();
@@ -241,14 +235,12 @@ namespace Parsing
 
                 if (currentPeek.TokenType is TokenType.EndOfFile)
                 {
-                    ThrowParseError(currentPeek, LexerConstants.PARANTHESES_CLOSE, "after func parameter body");
-                    return null;
+                    throw ParserError(currentPeek, LexerConstants.PARANTHESES_CLOSE, "after func parameter body");
                 }
 
                 if (currentPeek.TokenType is not TokenType.ArgumentSeparator && parameters.Count() >= 1)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function definition");
-                    return null;
+                    throw ParserError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function definition");
                 }
 
                 if (currentPeek.TokenType is TokenType.ArgumentSeparator)
@@ -257,18 +249,16 @@ namespace Parsing
                 }
 
                 var typeIdentifier = PeekToken();
-                if(typeIdentifier.TypeIndicator is TypeIndicator.Inferred)
+                if (typeIdentifier.TypeIndicator is TypeIndicator.Inferred)
                 {
-                    ThrowParseError("Inferred types are not allowed in function definitions.",typeIdentifier);
-                    return null;
+                    throw ParserError(typeIdentifier, "Inferred types are not allowed in function definitions.");
                 }
                 ConsumeToken();
 
                 currentPeek = PeekToken();
                 if (currentPeek.TokenType is not TokenType.Identifier)
                 {
-                    ThrowParseError(currentPeek, TokenType.Identifier, "in func parameter body");
-                    return null;
+                    throw ParserError(currentPeek, TokenType.Identifier, "in func parameter body");
                 }
 
                 var variableName = ConsumeToken();
@@ -286,14 +276,14 @@ namespace Parsing
             peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.ParanthesesClose)
             {
-                ThrowParseError(peekedToken, LexerConstants.PARANTHESES_CLOSE, "after func identifier");
-                return null;
+               throw ParserError(peekedToken, LexerConstants.PARANTHESES_CLOSE, "after func identifier");
             }
             ConsumeToken();
             peekedToken = PeekToken();
+           
             if (peekedToken.TokenType is not TokenType.ReturnTypeIndicator)
             {
-                ThrowParseError(peekedToken, LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
+                throw ParserError(peekedToken, LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
             }
 
             ConsumeToken(); // don't care about return type indicator
@@ -306,8 +296,7 @@ namespace Parsing
             {
                 if (peekedToken.TokenType is not TokenType.EndOfStatement)
                 {
-                    ThrowParseError(peekedToken, LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
-                    return null;
+                   throw ParserError(peekedToken, LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
                 }
                 ConsumeToken();
 
@@ -318,8 +307,7 @@ namespace Parsing
 
             if (peekedToken.TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(peekedToken, LexerConstants.ACCOLADES_OPEN, $"after func type identifier");
-                return null;
+                throw ParserError(peekedToken, LexerConstants.ACCOLADES_OPEN, $"after func type identifier");
             }
 
             //Consume accolade...
@@ -334,8 +322,7 @@ namespace Parsing
                 var currentPeek = PeekToken();
                 if (currentPeek.TokenType is TokenType.EndOfFile)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
-                    return null;
+                   throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
                 }
 
                 if (currentPeek.TokenType is TokenType.EndOfStatement)
@@ -364,8 +351,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.DO}' keyword");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.DO}' keyword");
             }
 
             ConsumeToken();
@@ -377,8 +363,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
-                    return null;
+                   throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
                 }
 
                 var expression = ParseTopLevelExpression();
@@ -397,28 +382,26 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.While)
             {
-                ThrowParseError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
             }
-            var prevTok = ConsumeToken();
+            var whileTok = ConsumeToken();
             var condition = ParseExpression();
             if (condition == null)
             {
-                ThrowParseError("Expected an expression", prevTok);
-                return null;
+                throw ParserError(whileTok, "expression", "after while keyword.");
             }
             return new WhileStatementExpression(condition, new BodyExpression(body));
         }
 
-        private ExpressionBase? ParseWhileStatementExpression()
+        private ExpressionBase ParseWhileStatementExpression()
         {
+            //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
             var conditionalExpression = ParseExpression();
             if (conditionalExpression == null)
             {
-                ThrowParseError("Expected an expression", whileTok);
-                return null;
+                throw ParserError(whileTok, "expression", "after while keyword.");
             }
 
             var hasDo = PeekToken().TokenType is TokenType.Do;
@@ -430,8 +413,7 @@ namespace Parsing
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
                 var keyword = hasDo ? LexerConstants.Keywords.DO : LexerConstants.Keywords.WHILE;
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{keyword}' keyword");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{keyword}' keyword");
             }
             ConsumeToken();
 
@@ -442,8 +424,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
-                    return null;
+                    throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
                 }
 
                 var expression = ParseTopLevelExpression();
@@ -463,7 +444,7 @@ namespace Parsing
             return new WhileStatementExpression(conditionalExpression, new BodyExpression(body));
         }
 
-        private ExpressionBase? ParseIfStatementExpression()
+        private ExpressionBase ParseIfStatementExpression()
         {
             //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             var ifToken = ConsumeToken();
@@ -471,14 +452,12 @@ namespace Parsing
             var conditionalExpression = ParseExpression();
             if (conditionalExpression == null)
             {
-                ThrowParseError("Expected an expression", ifToken);
-                return null;
+                throw ParserError(ifToken, "Expected an expression but got none.");
             }
 
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.IF}' keyword");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.IF}' keyword");
             }
 
             ConsumeToken();
@@ -490,8 +469,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after if statement body");
-                    return null;
+                    throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after if statement body");
                 }
 
                 var expression = ParseTopLevelExpression();
@@ -538,40 +516,34 @@ namespace Parsing
 
         private ExpressionBase? ParseVariableDeclaration()
         {
-            // todo: Check if the value thats being assigned a new value actually Exists in scope?
             var declarationTypeToken = ConsumeToken();
 
             var leftHandSideTok = PeekToken();
 
             if (PeekToken().TokenType is not TokenType.Identifier)
             {
-                ThrowParseError(leftHandSideTok, TokenType.Identifier, "assignment of variable");
-                return null;
+                throw ParserError(leftHandSideTok, TokenType.Identifier, "assignment of variable");
             }
 
             var leftHandSideIdentifierExpression = ConsumeToken(); // variable name...
 
             if (leftHandSideIdentifierExpression == null)
             {
-                ThrowParseError(leftHandSideTok, "variable name", "assignment of variable");
-                return null;
+                throw ParserError(leftHandSideTok, "variable name", "assignment of variable");
             }
 
             if (PeekToken().TokenType is not (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
             {
-                ThrowParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
             }
 
             var assignmentTok = ConsumeToken();
             var valueExpression = ParseTopLevelExpression();
             if (valueExpression == null)
             {
-                ThrowParseError(assignmentTok, "value expression", "assignment of variable");
-                return null;
+                throw ParserError(assignmentTok, "value expression", "assignment of variable");
             }
 
-            //todo: fix and rename..
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
 
@@ -606,22 +578,21 @@ namespace Parsing
             return lhs;
         }
 
-        private FunctionCallExpression? ParseFunctionCallExpression()
+        private FunctionCallExpression ParseFunctionCallExpression()
         {
             if (PeekToken().TokenType != TokenType.FunctionName)
             {
                 // Expected a function name...
-                ThrowParseError(PeekToken(), "a function name", "function call");
-                return null;
+                throw ParserError(PeekToken(), "a function name", "function call");
             }
 
             var functionToken = ConsumeToken();
 
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
-                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call");
             }
+
             ConsumeToken();
 
             var functionArguments = new List<ExpressionBase>();
@@ -630,8 +601,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is not TokenType.ArgumentSeparator && functionArguments.Count >= 1)
                 {
-                    ThrowParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function call");
-                    return null;
+                    throw ParserError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function call");
                 }
 
                 if (PeekToken().TokenType is TokenType.ArgumentSeparator)
@@ -650,8 +620,7 @@ namespace Parsing
 
                 if (argumentExpression == null)
                 {
-                    ThrowParseError($"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ", PeekToken());
-                    return null;
+                    throw ParserError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ");
                 }
 
                 functionArguments.Add(argumentExpression);
@@ -659,46 +628,53 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
-                ThrowParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "function call");
-                return null;
+                throw ParserError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "function call");
             }
 
             ConsumeToken();
             return new FunctionCallExpression(functionToken.Name, functionArguments.ToArray());
         }
 
-        private ExpressionBase? ParseImportStatementExpression()
+        private ExpressionBase ParseImportStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
             var expr = ParseExpression();
             if (expr == null || expr.Token is null || expr.Token.TypeIndicator is not TypeIndicator.String)
             {
-                ThrowParseError("Expected string expression representing a file path after import statement", importTok);
-                return null;
+                throw ParserError(importTok, "string expression representing a file path", "after import statement");
+            }
+
+            Token? alias = null;
+            if (PeekToken().TokenType is TokenType.As)
+            {
+                ConsumeToken();
+
+                if (PeekToken().TokenType is not TokenType.Identifier)
+                {
+                    throw ParserError(expr.Token, TokenType.Identifier, "after specifying 'as' when creating an alias for an import.");
+                }
+                alias = ConsumeToken();
             }
 
             if (PeekToken().TokenType is not TokenType.EndOfStatement)
             {
-                ThrowParseError("Expected ; after specifying the file path of an import statement", expr.Token);
-                return null;
+                throw ParserError(expr.Token, LexerConstants.END_OF_STATEMENT, "after specifying the file path of an import statement.");
             }
 
             if (string.IsNullOrWhiteSpace(expr.Token.ValueAsString))
             {
-                ThrowParseError("Expected non empty string expression representing a file path after import statement", importTok);
-                return null;
-            }
-            if (!File.Exists(expr.Token.ValueAsString))
-            {
-                ThrowParseError("File specified in import statement could not be found", importTok);
-                return null;
+                throw ParserError(importTok, "Expected non empty string expression representing a file path after import statement.");
             }
 
+            if (!File.Exists(expr.Token.ValueAsString))
+            {
+                throw ParserError(importTok, "File specified in import statement could not be found.");
+            }
 
             ConsumeToken();
 
-            return new ImportStatementExpression(expr.Token);
+            return new ImportStatementExpression(expr.Token.ValueAsString, alias?.ValueAsString, _file);
         }
 
         private ExpressionBase? ParseIdentifierExpression()
@@ -739,7 +715,7 @@ namespace Parsing
         {
             if (PeekToken().ValueAsString?.Length > 1)
             {
-                ThrowParseError(PeekToken(), "Character with length of 1", "Character initializer");
+                ParserError(PeekToken(), "Character with length of 1", "Character initializer");
             }
 
             //todo: how to handle nullables?
@@ -759,19 +735,34 @@ namespace Parsing
             return name;
         }
 
-        private static void ThrowParseError(Token token, TokenType expectedTokenType, string expectedInOrAt)
+
+        private ParseException ParserError(TokenType expectedTokenType, string expectedInOrAt)
         {
-            ThrowParseError(token, expectedTokenType.ToString(), expectedInOrAt);
+            return ParserError(PeekToken(), expectedTokenType.ToString(), expectedInOrAt);
         }
 
-        private static void ThrowParseError(Token token, string expectedCharacter, string exptectedInOrAt)
+        private ParseException ParserError(Token token, TokenType expectedTokenType, string expectedInOrAt)
         {
-            ThrowParseError($"Expected '{expectedCharacter}' in {exptectedInOrAt}", token);
+            return ParserError(token, expectedTokenType.ToString(), expectedInOrAt);
         }
 
-        private static void ThrowParseError(string message, Token token)
+        private ParseException ParserError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
-            Console.WriteLine($"{message}, at line: {token.Line}, column: {token.Column}.");
+            return ParserError(token, $"Expected '{expectedCharacter}' {exptectedInOrAt}");
+        }
+
+        private ParseException ParserError(string message)
+        {
+            return ParserError(PeekToken(), message);
+        }
+
+        private ParseException ParserError(Token token, string message)
+        {
+            if (!message.EndsWith("!") && !message.EndsWith("."))
+            {
+                message += ".";
+            }
+            return new ParseException(token, message, _file);
         }
 
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);

@@ -88,5 +88,6 @@
         LogicalOrAssign,
         BitShiftLeftAssign,
         BitShiftRightAssign,
+        As,
     }
 }

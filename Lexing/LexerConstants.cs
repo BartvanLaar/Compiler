@@ -96,6 +96,7 @@ namespace Lexing
             public const string ELSE = "else";
 
             public const string IS = "is";
+            public const string AS = "as";
             public const string NOT = "not";
 
             public const string FOR = "for";
@@ -135,6 +136,7 @@ namespace Lexing
             {Keywords.ELSE, TokenType.Else },
 
             { Keywords.IS, TokenType.Is},
+            { Keywords.AS, TokenType.As},
             { Keywords.NOT, TokenType.Not},
 
             { Keywords.CONTINUE, TokenType.Continue},

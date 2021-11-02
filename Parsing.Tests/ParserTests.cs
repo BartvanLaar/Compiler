@@ -176,16 +176,15 @@ namespace Parsing.Tests
             Assert.IsEmpty(errors);
         }
 
-        [TestCase("export func SomeFunc() -> double {", 1)]
-        [TestCase("export func SomeFunc(var x) -> double {}", 1)] // test fails because parsing does currently not throw an exception or abort on error. probably should..
-        [TestCase("export func SomeFunc(auto x) -> double {}", 1)] // test fails because parsing does currently not throw an exception or abort on error. probably should..
-        public void Parse_Function_Definition_N_Errors(string code, int amountOfErrors)
+        [TestCase("export func SomeFunc() -> double {")]
+        [TestCase("export func SomeFunc(var x) -> double {}")] // test fails because parsing does currently not throw an exception or abort on error. probably should..
+        [TestCase("export func SomeFunc(auto x) -> double {}")] // test fails because parsing does currently not throw an exception or abort on error. probably should..
+        public void Parse_Function_Definition_Throws_Error(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(amountOfErrors, errors.Length);
+            Assert.Throws<ParseException>(() => parser.Parse());
         }
 
         [TestCase("SomeFunc();")]
@@ -216,27 +215,36 @@ namespace Parsing.Tests
 
 
         [TestCase("import \"this\\is\\a\\path\\\";")]
+        [TestCase("import \"this\\is\\a\\path\\\" as test;")]
         public void Parse_Import_Statement_No_Syntax_Errors(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-
-            Assert.IsEmpty(errors.Where(e => !e.Contains("could not be found")));
+            try
+            {
+                parser.Parse();
+            }
+            catch (ParseException ex)
+            {
+                if(ex.Message.ToLower().Contains("could not be found"))
+                {
+                    Assert.Pass();
+                }
+                Assert.Fail();
+            }
         }
-        
+
         [TestCase("import ;")]
         [TestCase("import \"\";")]
         [TestCase("import \"fileDoesNotExist\";")]
+        [TestCase("import \"fileDoesNotExist\" as ;")]
         public void Parse_Import_Statement_Errors(string code)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            var (errors, _) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-
-            Assert.IsNotEmpty(errors);
+            Assert.Throws<ParseException>(() => parser.Parse());
         }
     }
 }
