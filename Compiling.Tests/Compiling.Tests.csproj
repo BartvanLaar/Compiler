@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestFiles\IntMainFuncStoreFuncCallResIn2VarAndReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IntMainFuncParamsDefinitionOverloaded.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
