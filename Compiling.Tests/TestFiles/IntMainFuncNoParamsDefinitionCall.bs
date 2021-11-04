@@ -4,5 +4,5 @@
 
 func main() -> int {
     test();
-    return 1337;
+    return 42;
 }

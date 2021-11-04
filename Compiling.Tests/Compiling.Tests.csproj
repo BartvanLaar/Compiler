@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionReturnIntegerButTypeCheckShouldFix.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IntMainFuncStoreFuncCallResIn2VarAndReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

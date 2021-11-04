@@ -1,9 +1,11 @@
 ﻿func test(int someInteger) -> int {
-    return 69;
+    return 42;
 }
 
-func test(double someInteger) -> int {
-    return 69;
+func test(double someInteger) -> double {
+    return 1337d;
 }
 
-func main() -> int {}
+func main() -> int {
+    return test(5);
+}

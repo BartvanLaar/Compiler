@@ -1,1 +1,1 @@
-﻿func test() -> int {return 69;} func test2() -> int {return 420;} func main() -> int {var x = test(); var y = test2(); return x + y;}
+﻿func test() -> int {return 42;} func test2() -> int {return 42;} func main() -> int {var x = test(); var y = test2(); return x + y;}
