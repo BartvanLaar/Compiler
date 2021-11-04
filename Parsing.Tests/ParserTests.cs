@@ -33,6 +33,7 @@ namespace Parsing.Tests
         [TestCase("if(true){}else if(false){} else {}", 1)]
         [TestCase("if(true){}else if(false){}else if(false){}else if(false){}else if(false){} else {}", 1)]
         [TestCase("var x = 0d;if(true){}", 2)]
+        [TestCase("if(true){return 10;} else {return 50;}", 1)]
 
         public void General_Code_Test_Throw_No_Error_If_Statements(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
         {

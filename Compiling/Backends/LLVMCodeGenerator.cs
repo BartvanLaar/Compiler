@@ -428,10 +428,43 @@ namespace Compiling.Backends
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
+            // @todo: add support for else if else if else if...?
             Visit(expression.IfCondition);
+            var condExpr = _valueStack.Pop(); // this is true or false right? or should i compare this again like the example? ->   var condv = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealONE, this.valueStack.Pop(), LLVM.ConstReal(LLVM.DoubleType(), 0.0), "ifcond");
+            Debug.Assert(_module.LastFunction == _builder.InsertBlock.Parent);// if this does not fail, then replace?
+            var parentFuncBlock = _builder.InsertBlock.Parent;
+            var ifBodyBB = parentFuncBlock.AppendBasicBlock("ifBody");
+            var elseBB = parentFuncBlock.AppendBasicBlock("else");
+            var mergeBB = parentFuncBlock.AppendBasicBlock("ifcontext");
+
+            _builder.BuildCondBr(condExpr, ifBodyBB, elseBB);
+
+            _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
             Visit(expression.IfBody);
+            var ifBodyValue = _valueStack.Pop();
+            _builder.BuildBr(mergeBB);
+
+            //ifBody can change current code block, update thenBB for the PHI
+            ifBodyBB = _builder.InsertBlock;
+
+            // emit again before visit...
+            _builder.PositionAtEnd(elseBB);
             Visit(expression.Else);
-            throw new NotImplementedException();
+            var elseValue = _valueStack.Pop();
+            _builder.BuildBr(mergeBB);
+
+            //body of else can change current code block, update thenBB for the PHI
+            elseBB = _builder.InsertBlock;
+
+            // emit the merge of if and else
+            _builder.PositionAtEnd(mergeBB);
+            
+            // what does Phi mean? Phony? https://en.wikipedia.org/wiki/Static_single_assignment_form
+            var phi = _builder.BuildPhi(LLVMTypeRef.Int64); // example uses a double type... Will int also work? -> no, phi is a floating point operation...? but lets test it anyway
+            phi.AddIncoming(new[] { ifBodyValue }, new[] { ifBodyBB }, 1);
+            phi.AddIncoming(new[] { elseValue }, new[] { elseBB }, 1);
+         
+            _valueStack.Push(phi);
         }
 
         public void VisitForStatementExpression(ForStatementExpression expression)
