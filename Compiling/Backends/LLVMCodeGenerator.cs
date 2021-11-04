@@ -53,7 +53,7 @@ namespace Compiling.Backends
 
         public void VisitBooleanExpression(BooleanExpression expression)
         {
-            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Int1, expression.Value ? 1 : 0));
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)(expression.Value ? 1 : 0)));
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
@@ -238,7 +238,7 @@ namespace Compiling.Backends
         {
             Visit(expression.LeftHandSide);
             var lhsValue = _valueStack.Pop();
-            
+
             Visit(expression.RightHandSide);
             var rhsValue = _valueStack.Pop();
 
@@ -329,6 +329,30 @@ namespace Compiling.Backends
                         else
                         {
                             resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue);
+                        }
+                        break;
+                    }
+                case ExpressionType.NotEquivalent:
+                    {
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue);
+                        }
+                        else
+                        {
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue);
+                        }
+                        break;
+                    }
+                case ExpressionType.NotEquals:
+                    {
+                        if (lhsAndRhsBothIntegers)
+                        {
+                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue);
+                        }
+                        else
+                        {
+                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue);
                         }
                         break;
                     }
@@ -431,13 +455,13 @@ namespace Compiling.Backends
             // @todo: add support for else if else if else if...?
             Visit(expression.IfCondition);
             var condExpr = _valueStack.Pop(); // this is true or false right? or should i compare this again like the example? ->   var condv = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealONE, this.valueStack.Pop(), LLVM.ConstReal(LLVM.DoubleType(), 0.0), "ifcond");
-            Debug.Assert(_module.LastFunction == _builder.InsertBlock.Parent);// if this does not fail, then replace?
+            var condv = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, condExpr, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1), "ifcond");
             var parentFuncBlock = _builder.InsertBlock.Parent;
             var ifBodyBB = parentFuncBlock.AppendBasicBlock("ifBody");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
             var mergeBB = parentFuncBlock.AppendBasicBlock("ifcontext");
 
-            _builder.BuildCondBr(condExpr, ifBodyBB, elseBB);
+            _builder.BuildCondBr(condv, ifBodyBB, elseBB);
 
             _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
             Visit(expression.IfBody);
@@ -458,12 +482,12 @@ namespace Compiling.Backends
 
             // emit the merge of if and else
             _builder.PositionAtEnd(mergeBB);
-            
+
             // what does Phi mean? Phony? https://en.wikipedia.org/wiki/Static_single_assignment_form
             var phi = _builder.BuildPhi(LLVMTypeRef.Int64); // example uses a double type... Will int also work? -> no, phi is a floating point operation...? but lets test it anyway
             phi.AddIncoming(new[] { ifBodyValue }, new[] { ifBodyBB }, 1);
             phi.AddIncoming(new[] { elseValue }, new[] { elseBB }, 1);
-         
+
             _valueStack.Push(phi);
         }
 
@@ -477,7 +501,7 @@ namespace Compiling.Backends
             // BodyExpression should probably have a function name attached and some more info of the parent e.g. token type?
             // if this body isn't valid then we should remove the function all together.. and throw an error.
             // todo: do we need to do anything here?
-            foreach(var expr in expression.Body)
+            foreach (var expr in expression.Body)
             {
                 Visit(expr);
             }
@@ -487,7 +511,7 @@ namespace Compiling.Backends
         {
             Visit(expression.WhileCondition);
             var whileCondition = _valueStack.Pop();
-            
+
             Visit(expression.DoBody);
             var doBody = _valueStack.Pop();
         }
