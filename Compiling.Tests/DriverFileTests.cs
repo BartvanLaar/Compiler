@@ -40,6 +40,9 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IfFalseElseIfTrueTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IfFalseElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IfTrueElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IfTrueReturn"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IfFalseReturn"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IfTrueElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IfTrueIfFalseElseNestedElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IfTrueIfTrueElseNestedElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 //test below will fail untill we have proper type checking and inference (with required added type metadata) to support function name mangling at the calling side...

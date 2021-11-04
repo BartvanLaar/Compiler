@@ -35,6 +35,12 @@
     <None Update="TestFiles\IfFalseElseIfTrueElseTest.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\IfFalseReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfTrueReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IfTrueIfFalseElseNestedElseTest.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
