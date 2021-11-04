@@ -3,16 +3,20 @@ using Parsing.AbstractSyntaxTree.Visitors;
 
 namespace Compiling.Backends
 {
-    internal class DotNetCodeInterpreter : IByteCodeGeneratorListener
+    internal class DotNetCodeInterpreter : IAbstractSyntaxTreeVisitor
     {
-        private readonly Stack<object> _valueStack = new Stack<object>();
+        private readonly Stack<object?> _valueStack = new Stack<object?>();
         private readonly Dictionary<string, object?> _namedValues = new Dictionary<string, object?>();
-        public IEnumerable<object> Results => _valueStack;
+        public IEnumerable<object?> Results => _valueStack;
+        public string Name => "Dot Net Interpreter / simulator";
+        public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);        
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
-            var rhsValue = Convert.ToDouble(_valueStack.Pop());
+            Visit(expression.LeftHandSide);
             var lhsValue = Convert.ToDouble(_valueStack.Pop());
+            Visit(expression.RightHandSide);
+            var rhsValue = Convert.ToDouble(_valueStack.Pop());
 
             object resultingValue;
             //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
@@ -127,12 +131,16 @@ namespace Compiling.Backends
 
         public void VisitBodyExpression(BodyExpression expression)
         {
-            throw new NotImplementedException();
+            foreach (var expr in expression.Body)
+            {
+                Visit(expr);
+            }
         }
-        
+
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
-            var valueRhs = _valueStack.Pop(); 
+            Visit(expression.ValueExpression);
+            var valueRhs = _valueStack.Pop();
             var nameLhs = (string)Convert.ChangeType(expression.Identifier, typeof(string));
 
             if (!_namedValues.ContainsKey(nameLhs))
@@ -169,53 +177,55 @@ namespace Compiling.Backends
             throw new NotImplementedException();
         }
 
-        public void VisitFunctionCallExpression(FunctionDefinitionExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
             //todo, handle double identifiers in same or different scope?
-            _namedValues.Add(expression.Identifier, null);
-            _valueStack.Push(expression.Identifier);
+            if (!_namedValues.TryGetValue(expression.Identifier, out var value))
+            {
+                throw new ArgumentException($"Unknown variable name {expression.Identifier}");
+            }
+            _valueStack.Push(value);
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
-            throw new NotImplementedException();
+            Visit(expression.IfCondition);
+            Visit(expression.IfBody);
+            Visit(expression.Else);
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
         {
             _valueStack.Push(expression.Value);
         }
-
-        public void VisitFunctionCallExpression(FunctionCallExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
         public void VisitStringExpression(StringExpression expression)
         {
             _valueStack.Push(expression.Value);
         }
 
+        public void VisitFunctionCallExpression(FunctionCallExpression expression)
+        {
+            foreach (var expr in expression.Arguments)
+            {
+                Visit(expr);
+            }
+        }
+
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
+        {
+            Visit(expression.FunctionBody);
+        }
+
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
-            throw new NotImplementedException();
+            Visit(expression.WhileCondition);
+            Visit(expression.DoBody);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
             //todo: how do returns even work?
-            //_valueStack.Push(expression);
-            throw new NotImplementedException();
+            Visit(expression.Expression);
         }
     }
 }

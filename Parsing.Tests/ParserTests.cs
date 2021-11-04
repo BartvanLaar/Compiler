@@ -23,7 +23,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            Assert.AreEqual(expectedAmountOfTrees, ast.Count);
+            Assert.AreEqual(expectedAmountOfTrees, ast.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -40,7 +40,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -56,7 +56,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Count());
         }
 
@@ -133,7 +133,7 @@ namespace Parsing.Tests
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            Assert.AreEqual(1, ast.Count);
+            Assert.AreEqual(1, ast.Count());
             Assert.IsEmpty(errors);
         }
 

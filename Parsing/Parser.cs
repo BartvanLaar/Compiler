@@ -6,7 +6,7 @@ namespace Parsing
 {
     public interface IParser
     {
-        Queue<ExpressionBase> Parse();
+        ExpressionBase[] Parse();
     }
 
     public sealed class Parser : IParser
@@ -15,7 +15,7 @@ namespace Parsing
 
         private readonly ILexer _lexer;
         private readonly string _file;
-        private readonly Queue<ExpressionBase> _expressions;
+        private readonly List<ExpressionBase> _expressions;
 
         public Parser(ILexer lexer) : this(lexer, DIRECT_TEXT_INPUT) { }
 
@@ -26,7 +26,7 @@ namespace Parsing
             _expressions = new();
         }
 
-        public Queue<ExpressionBase> Parse()
+        public ExpressionBase[] Parse()
         {
             // how to handle multiple files.. 
             // Are we gonna added them to the same queue, or are we going to return a list of queues?
@@ -50,7 +50,7 @@ namespace Parsing
                 ConsumeExpression(expr);
             }
 
-            return _expressions;
+            return _expressions.ToArray();
         }
 
         private ExpressionBase? ParseTopLevelExpression()
@@ -118,7 +118,7 @@ namespace Parsing
             }
             else
             {
-                _expressions.Enqueue(expression);
+                _expressions.Add(expression);
             }
         }
 
@@ -176,7 +176,7 @@ namespace Parsing
             var peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.ParanthesesClose)
             {
-                throw ParserError(peekedToken, $"matching closing paranthese '{LexerConstants.PARANTHESES_CLOSE}'",  $"for opening paranthese at line: {paranOpenToken.Line} column: {paranOpenToken.Column}");
+                throw ParserError(peekedToken, $"matching closing paranthese '{LexerConstants.PARANTHESES_CLOSE}'", $"for opening paranthese at line: {paranOpenToken.Line} column: {paranOpenToken.Column}");
             }
 
             ConsumeToken();
@@ -207,7 +207,7 @@ namespace Parsing
 
             if (peekedToken.TokenType is not TokenType.FunctionDefinition)
             {
-               throw ParserError(peekedToken, TokenType.FunctionDefinition, "after extern or export declaration");
+                throw ParserError(peekedToken, TokenType.FunctionDefinition, "after extern or export declaration");
             }
 
             ConsumeToken();
@@ -276,11 +276,11 @@ namespace Parsing
             peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.ParanthesesClose)
             {
-               throw ParserError(peekedToken, LexerConstants.PARANTHESES_CLOSE, "after func identifier");
+                throw ParserError(peekedToken, LexerConstants.PARANTHESES_CLOSE, "after func identifier");
             }
             ConsumeToken();
             peekedToken = PeekToken();
-           
+
             if (peekedToken.TokenType is not TokenType.ReturnTypeIndicator)
             {
                 throw ParserError(peekedToken, LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
@@ -296,7 +296,7 @@ namespace Parsing
             {
                 if (peekedToken.TokenType is not TokenType.EndOfStatement)
                 {
-                   throw ParserError(peekedToken, LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
+                    throw ParserError(peekedToken, LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
                 }
                 ConsumeToken();
 
@@ -322,7 +322,7 @@ namespace Parsing
                 var currentPeek = PeekToken();
                 if (currentPeek.TokenType is TokenType.EndOfFile)
                 {
-                   throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
+                    throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
                 }
 
                 if (currentPeek.TokenType is TokenType.EndOfStatement)
@@ -363,7 +363,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
                 {
-                   throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
+                    throw ParserError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
                 }
 
                 var expression = ParseTopLevelExpression();

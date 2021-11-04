@@ -45,7 +45,7 @@ namespace Compiling.Tests
         [TestCase("auto x = 2 - 3; \r\n x = 2 - 3;")]
         public void Test(string code)
         {
-            Driver.Run(code);
+            Driver.RunLogger(code);
         }
 
         [Test]

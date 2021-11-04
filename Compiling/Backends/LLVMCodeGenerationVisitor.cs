@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Compiling.Backends
 {
-    internal class LLVMCodeGenerationVisitor : IByteCodeGeneratorListener
+    internal class LLVMCodeGenerationVisitor : IAbstractSyntaxTreeVisitor
     {
         private static readonly LLVMValueRef NullValue = new(IntPtr.Zero);
 
@@ -34,15 +34,13 @@ namespace Compiling.Backends
             glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1, false);
         }
 
-        public Stack<LLVMValueRef> ResultStack => _valueStack;
+        public string Name => "LLVM backend";
 
-        public void ClearResultStack()
-        {
-            _valueStack.Clear();
-        }
+        public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
+            Visit(expression.ValueExpression);
             var rhsValue = _valueStack.Pop();
             var variableName = expression.Identifier;
             Debug.Assert(variableName is not null);
@@ -108,14 +106,19 @@ namespace Compiling.Backends
                 throw new Exception($"Unknown function referenced: {expression.FunctionName}");
             }
 
-            var argumentCount = (uint)expression.Arguments.Length;
+            var argumentCount = expression.Arguments.Length;
             if (calleeFunction.ParamsCount != argumentCount)
             {
                 throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
             }
 
+            foreach (var argument in expression.Arguments)
+            {
+                Visit(argument);
+            }
+
             var argumentValues = new LLVMValueRef[argumentCount];
-            for (int i = 0; i < argumentCount; ++i)
+            for (int i = argumentCount - 1; i >= 0; i--) // shouldnt this be reverse?? last one on 
             {
                 argumentValues[i] = _valueStack.Pop();
             }
@@ -186,6 +189,21 @@ namespace Compiling.Backends
             _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
+            if (expression.FunctionBody is not null)
+            {
+                try
+                {
+                    Visit(expression.FunctionBody);
+                }
+                catch (Exception ex)
+                {
+                    // should we remove the function if an error happens in the body?
+#pragma warning disable CA2200 // Rethrow to preserve stack details is propbably not what we want for now...
+                    throw ex;
+#pragma warning restore CA2200 // Rethrow to preserve stack details is propbably not what we want for now...
+                }
+            }
+
             if (expression.ReturnTypeToken.TypeIndicator is TypeIndicator.Void)
             {
                 _builder.BuildRetVoid();
@@ -195,6 +213,7 @@ namespace Compiling.Backends
                 var retValue = _valueStack.Pop();
                 _builder.BuildRet(retValue);
             }
+
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
         }
@@ -217,8 +236,12 @@ namespace Compiling.Backends
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
-            var rhsValue = _valueStack.Pop();
+            Visit(expression.LeftHandSide);
             var lhsValue = _valueStack.Pop();
+            
+            Visit(expression.RightHandSide);
+            var rhsValue = _valueStack.Pop();
+
             var lhsAndRhsBothIntegers = rhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind;
             LLVMValueRef resultingValue;
             //todo: handle unsigned ints doubles and floats?
@@ -405,6 +428,9 @@ namespace Compiling.Backends
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
+            Visit(expression.IfCondition);
+            Visit(expression.IfBody);
+            Visit(expression.Else);
             throw new NotImplementedException();
         }
 
@@ -418,16 +444,25 @@ namespace Compiling.Backends
             // BodyExpression should probably have a function name attached and some more info of the parent e.g. token type?
             // if this body isn't valid then we should remove the function all together.. and throw an error.
             // todo: do we need to do anything here?
+            foreach(var expr in expression.Body)
+            {
+                Visit(expr);
+            }
         }
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
-            throw new NotImplementedException();
+            Visit(expression.WhileCondition);
+            var whileCondition = _valueStack.Pop();
+            
+            Visit(expression.DoBody);
+            var doBody = _valueStack.Pop();
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            //todo: do we need to do something here?
+            Visit(expression.Expression);
         }
+
     }
 }

@@ -4,6 +4,8 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 {
     public interface IAbstractSyntaxTreeVisitor
     {
+        public string Name { get; }
+        void Visit(ExpressionBase expression);
         void VisitBooleanExpression(BooleanExpression expression);
         void VisitIntegerExpression(IntegerExpression expression);
         void VisitDoubleExpression(DoubleExpression expression);

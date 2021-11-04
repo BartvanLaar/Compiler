@@ -5,9 +5,9 @@
     {
         public BodyExpression(IEnumerable<ExpressionBase> expressions) : base(ExpressionType.Body)
         {
-            Body = new Queue<ExpressionBase>(expressions);
+            Body = expressions as ExpressionBase[] ?? expressions.ToArray();
         }
 
-        public Queue<ExpressionBase> Body { get; }
+        public ExpressionBase[] Body { get; }
     }
 }

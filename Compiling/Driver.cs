@@ -12,22 +12,24 @@ namespace Compiling
     //todo: handle parse exceptions?
     public class Driver
     {
-        public static void Run(string text) => Run(text, new AbstractSyntaxTreeVisitorExecutor(), new AbstractSyntaxTreeVisitorLogger());
+        public static void RunLogger(string text) => Run(text, new AbstractSyntaxTreeVisitorLogger());
         public static void RunDotNet(string text)
         {
             var visitor = new DotNetCodeInterpreter();
-            Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);
+            Run(text, visitor);
             foreach (var res in visitor.Results)
             {
-                Console.WriteLine(res.ToString());
+                Console.WriteLine(res?.ToString() ?? "null value");
             }
         }
 
         public static void RunLLVM(string text, string filename = "output", bool isExecutable = false, bool isDebug = false, bool useClangCompiler = false)
         {
             var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
+
+            // below are all compilation steps..
             var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
-            Run(text, new AbstractSyntaxTreeVisitorExecutor(), visitor);// todo: replace with LLVM bytecode generator.
+            Run(text, visitor);// todo: replace with LLVM bytecode generator.
             var sw = new Stopwatch();
             sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
@@ -53,7 +55,7 @@ namespace Compiling
             {
                 var llc = Process.Start(@"llc", $"--filetype=obj {output}");
                 llc.WaitForExit();
-                lld = isExecutable ? Process.Start(@"lld-link", $"/entry:main {Path.GetFileNameWithoutExtension(output)}.obj") 
+                lld = isExecutable ? Process.Start(@"lld-link", $"/entry:main {Path.GetFileNameWithoutExtension(output)}.obj")
                     : Process.Start(@"lld-link", $"/subsystem:console /dll /noentry {Path.GetFileNameWithoutExtension(output)}.obj");
             }
 
@@ -63,24 +65,27 @@ namespace Compiling
 
         }
 
-        internal static void Run(string text, IAbstractSyntaxTreeVisitorExecuter byteCodeGenerator, IByteCodeGeneratorListener byteCodeGeneratorListener)
+        internal static void Run(string text, params IAbstractSyntaxTreeVisitor[] visitors)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var lexer = new Lexer(text);
-            var parser = new Parser(lexer);
-            Queue<ExpressionBase> abstractSyntaxTrees = parser.Parse();
+            ILexer lexer = new Lexer(text);
+            IParser parser = new Parser(lexer);
+            ExpressionBase[] abstractSyntaxTrees = parser.Parse();
             stopwatch.Stop();
             Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
 
-            stopwatch.Restart();
             // For now one file is enough to support.
             // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
-            string byteCodeFile = byteCodeGenerator.Execute(abstractSyntaxTrees, byteCodeGeneratorListener);
+            foreach (var visitor in visitors)
+            {
+                stopwatch.Restart();
+                AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
+                stopwatch.Stop();
+                Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.ElapsedMilliseconds} milliseconds.");
+            }
+
             stopwatch.Stop();
-
-            Console.WriteLine($"Generating bytecode took {stopwatch.ElapsedMilliseconds} milliseconds");
-
         }
 
         private static (LLVMModuleRef Module, LLVMBuilderRef Builder, LLVMExecutionEngineRef engine, LLVMPassManagerRef passManagerLLVMContextRef, LLVMContextRef Context) SetupLLVM()
