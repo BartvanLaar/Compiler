@@ -26,6 +26,27 @@
     <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionReturnIntegerButTypeCheckShouldFix.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\IfFalseElseIfFalseElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfFalseElseIfTrueTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfFalseElseIfTrueElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfTrueIfFalseElseNestedElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfTrueIfTrueElseNestedElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfFalseElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfTrueElseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IntMainFuncStoreFuncCallResIn2VarAndReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
