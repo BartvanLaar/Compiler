@@ -31,6 +31,7 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsInt"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncParamsDefinition"), new TestFile() { IsExecutable = true } };
+                yield return new object[] { FN("IntMainFuncStoreFuncCallResIn2VarAndReturn"), new TestFile() { IsExecutable = true } };
                 //test below will fail untill we have proper type checking and inference (with required added type metadata) to support function name mangling at the calling side...
                 yield return new object[] { FN("IntMainFuncParamsDefinitionOverloaded"), new TestFile() { IsExecutable = true } };
 

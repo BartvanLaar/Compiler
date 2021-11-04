@@ -28,7 +28,7 @@ namespace Compiling
             var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
 
             // below are all compilation steps..
-            var visitor = new LLVMCodeGenerationVisitor(module, builder, executionEngine, passManager);
+            var visitor = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
             Run(text, visitor);// todo: replace with LLVM bytecode generator.
             var sw = new Stopwatch();
             sw.Start();

@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Compiling.Backends
 {
-    internal class LLVMCodeGenerationVisitor : IAbstractSyntaxTreeVisitor
+    internal class LLVMCodeGenerator : IAbstractSyntaxTreeVisitor
     {
         private static readonly LLVMValueRef NullValue = new(IntPtr.Zero);
 
@@ -20,7 +20,7 @@ namespace Compiling.Backends
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
         //LLVM.LoadLibraryPermanently() // should i use this to load a c lib for printing to consoles?
-        public LLVMCodeGenerationVisitor(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
+        public LLVMCodeGenerator(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
         {
             _module = module;
             _builder = builder;
