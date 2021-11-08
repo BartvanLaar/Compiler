@@ -15,7 +15,7 @@ namespace Compiling.Backends
         private readonly LLVMBuilderRef _builder;
         private readonly LLVMExecutionEngineRef _executionEngine;
         private readonly LLVMPassManagerRef _passManager;
-        private readonly Dictionary<string, LLVMValueRef> _namedValues = new();
+        private readonly Dictionary<string, LLVMValueRef> _valueAllocationPointers = new();
         private delegate double D_FUNCTION_PTR(); // temp?
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
@@ -42,13 +42,14 @@ namespace Compiling.Backends
         {
             Visit(expression.ValueExpression);
             var rhsValue = _valueStack.Pop();
-            var variableName = expression.Identifier;
-            Debug.Assert(variableName is not null);
-            if (_namedValues.ContainsKey(variableName))
+            Debug.Assert(expression.Identifier is not null);
+            if (_valueAllocationPointers.ContainsKey(expression.Identifier))
             {
-                throw new ArgumentException($"Redeclaration of {variableName}! Scopes are not yet supported! Don't re-use variable names!");
+                throw new ArgumentException($"Redeclaration of {expression.Identifier}! Scopes are not yet supported! Don't re-use variable names!");
             }
-            _namedValues.Add(variableName, rhsValue);
+            var alloca = CreateEntryBlockAlloca(_builder.InsertBlock.Parent, rhsValue.TypeOf, expression.Identifier);
+            _builder.BuildStore(rhsValue, alloca);
+            _valueAllocationPointers.Add(expression.Identifier, alloca);
         }
 
         public void VisitBooleanExpression(BooleanExpression expression)
@@ -90,11 +91,11 @@ namespace Compiling.Backends
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
-            if (!_namedValues.TryGetValue(expression.Identifier, out var value))
+            if (!_valueAllocationPointers.TryGetValue(expression.Identifier, out var alloca))
             {
                 throw new ArgumentException($"Unknown variable name {expression.Identifier}");
             }
-            _valueStack.Push(value);
+            _valueStack.Push(_builder.BuildLoad(alloca));
         }
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
@@ -169,7 +170,7 @@ namespace Compiling.Backends
                 LLVMValueRef param = function.GetParam((uint)i);
                 param.Name = argumentName;
 
-                _namedValues[argumentName] = param;
+                _valueAllocationPointers[argumentName] = param;
             }
             //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
             _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
@@ -233,7 +234,9 @@ namespace Compiling.Backends
                 case ExpressionType.Assignment:
                     {
                         //todo: refactor the code so all assignments end here.. e.g. += -= *=, etc...?
-                        _namedValues[((IdentifierExpression)expression.LeftHandSide).Identifier] = rhsValue;
+                        Debug.Assert(_valueAllocationPointers.ContainsKey(((IdentifierExpression)expression.LeftHandSide).Identifier));
+                        var alloca = _valueAllocationPointers[((IdentifierExpression)expression.LeftHandSide).Identifier];
+                        _builder.BuildStore(rhsValue, alloca);
                         break;
                     }
                 case ExpressionType.Add:
@@ -452,7 +455,7 @@ namespace Compiling.Backends
 
             _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
             Visit(expression.IfBody);
-    
+
             var ifBodyValue = _valueStack.Pop();
             _builder.BuildBr(mergeBB);
 
@@ -462,7 +465,7 @@ namespace Compiling.Backends
             // emit again before visit...
             _builder.PositionAtEnd(elseBB);
             Visit(expression.Else);
- 
+
             var elseValue = _valueStack.Pop();
             _builder.BuildBr(mergeBB);
 
@@ -478,6 +481,12 @@ namespace Compiling.Backends
             phi.AddIncoming(new[] { elseValue }, new[] { elseBB }, 1);
 
             _valueStack.Push(phi);
+        }
+        private LLVMValueRef CreateEntryBlockAlloca(LLVMValueRef function, LLVMTypeRef typeRef, string variableName)
+        {
+            //_builder.buildC
+            //var tmpBuilder = new LLVMBuilderRef(function.EntryBasicBlock.Handle);
+            return _builder.BuildAlloca(typeRef, variableName);
         }
 
         public void VisitForStatementExpression(ForStatementExpression expression)
@@ -498,72 +507,53 @@ namespace Compiling.Backends
             //   br endcond, loop, endloop
             // outloop:
 
-            // Emit the start code first, without 'variable' in scope.
-            _namedValues.TryGetValue(expression.VariableName, out var oldVal);
+            var function = _builder.InsertBlock.Parent;
+            _valueAllocationPointers.TryGetValue(expression.VariableName, out var oldValueAlloca);
+            
             Visit(expression.VariableDeclaration);
-            var startValue = _namedValues[expression.VariableName];
+
             // Make the new basic block for the loop header, inserting after current
             // block.
-            var preHeaderBB = _builder.InsertBlock;
-            var function = preHeaderBB.Parent;
+
             var loopBB = function.AppendBasicBlock("loop");
 
             // Insert an explicit fall through from the current block to the LoopBB.
             _builder.BuildBr(loopBB);
             // Start insertion in LoopBB.
             _builder.PositionAtEnd(loopBB);
-            var variable = _builder.BuildPhi(LLVMTypeRef.Double, expression.VariableName);
-            variable.AddIncoming(new[] { startValue }, new[] { preHeaderBB }, 1);
 
             // Within the loop, the variable is defined equal to the PHI node.  If it
             // shadows an existing variable, we have to restore it, so save it now.
-
-            //LLVMValueRef oldVal;
-            //if (_namedValues.TryGetValue(expression.VariableName, out oldVal))
-            //{
-            //    _namedValues[expression.VariableName] = variable;
-            //}
-            //else
-            //{
-            //    _namedValues.Add(expression.VariableName, variable);
-            //}
 
             // Emit the body of the loop.  This, like any other expr, can change the
             // current BB.  Note that we ignore the value computed by the body, but don't
             // allow an error.
             Visit(expression.Body);
 
-            Visit(expression.VariableIncreaseExpression);
-            var stepValue = _namedValues[expression.VariableName];
-            //var stepValue = _valueStack.Pop();
-
-            var nextVariable = _builder.BuildFAdd(variable, stepValue, "nextvar");
+            Visit(expression.VariableIncreaseExpression); // visiting increases the value allocated to the variable.
 
             // Compute the end condition.
             Visit(expression.Condition);
             var conditionExprValue = _valueStack.Pop();
-
-            var endCondition = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, conditionExprValue, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0));
+            var endCondition = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, conditionExprValue, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1,1), "loopcond");
+            
             // Create the "after loop" block and insert it.
-            var loopEndBB = _builder.InsertBlock;
             var afterBB = function.AppendBasicBlock("afterLoop");
 
             _builder.BuildCondBr(endCondition, loopBB, afterBB);
             // Any new code will be inserted in AfterBB.
             _builder.PositionAtEnd(afterBB);
-            variable.AddIncoming(new[] { nextVariable }, new[] { loopEndBB }, 1);
 
             // Restore the unshadowed variable.
-            if (oldVal.Handle != IntPtr.Zero)
+            if (oldValueAlloca.Handle != IntPtr.Zero)
             {
-                _namedValues[expression.VariableName] = oldVal;
+                _valueAllocationPointers[expression.VariableName] = oldValueAlloca;
             }
             else
             {
-                _namedValues.Remove(expression.VariableName);
+                _valueAllocationPointers.Remove(expression.VariableName);
             }
 
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0));// why?
         }
 
         public void VisitBodyExpression(BodyExpression expression)
