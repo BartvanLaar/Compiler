@@ -38,6 +38,9 @@
     <None Update="TestFiles\IfFalseReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\ForILoopReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IfTrueReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

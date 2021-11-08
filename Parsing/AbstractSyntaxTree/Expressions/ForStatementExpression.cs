@@ -4,6 +4,7 @@
     {
         public ForStatementExpression(VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(ExpressionType.ForStatementExpression)
         {
+            VariableDeclaration = variableDeclaration;
             VariableName = variableDeclaration.Identifier;
             Condition = conditionExpression;
             VariableIncreaseExpression = variableIncreaseExpression;

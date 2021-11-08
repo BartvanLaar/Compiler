@@ -123,20 +123,6 @@ namespace Compiling.Backends
                 argumentValues[i] = _valueStack.Pop();
             }
 
-            /*
-             * Code below generates following IR, which is wrong, test should be called in main not in itself.. Causing an error.
-             * THIS IS CAUSED BECAUSE THE FUNC DEF DOES NOT PROPERLY HANDLE ITS BODY.
-              define i64 @test() {
-                test:
-                  ret i64 20
-                  %0 = call i64 @test()
-                }
-
-                define i64 @main() {
-                main:
-                  ret i64 6969
-                }
-             */
             var call = _builder.BuildCall(calleeFunction, argumentValues);
             _valueStack.Push(call);
         }
@@ -195,12 +181,10 @@ namespace Compiling.Backends
                 {
                     Visit(expression.FunctionBody);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // should we remove the function if an error happens in the body?
-#pragma warning disable CA2200 // Rethrow to preserve stack details is propbably not what we want for now...
-                    throw ex;
-#pragma warning restore CA2200 // Rethrow to preserve stack details is propbably not what we want for now...
+                    throw;
                 }
             }
 
@@ -243,20 +227,24 @@ namespace Compiling.Backends
             var rhsValue = _valueStack.Pop();
 
             var lhsAndRhsBothIntegers = rhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind;
-            LLVMValueRef resultingValue;
-            //todo: handle unsigned ints doubles and floats?
-            //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
+
             switch (expression.NodeExpressionType)
             {
+                case ExpressionType.Assignment:
+                    {
+                        //todo: refactor the code so all assignments end here.. e.g. += -= *=, etc...?
+                        _namedValues[((IdentifierExpression)expression.LeftHandSide).Identifier] = rhsValue;
+                        break;
+                    }
                 case ExpressionType.Add:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildAdd(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildAdd(lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFAdd(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFAdd(lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -264,11 +252,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSub(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildSub(lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFSub(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFSub(lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -276,11 +264,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildMul(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildMul(lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFMul(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFMul(lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -288,11 +276,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSDiv(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildSDiv(lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFDiv(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFDiv(lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -300,11 +288,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildSRem(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildSRem(lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFRem(lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFRem(lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -312,11 +300,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -324,11 +312,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUEQ, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -336,11 +324,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -348,11 +336,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNE, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -360,11 +348,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGT, lhsValue, rhsValue));
 
                         }
                         break;
@@ -373,11 +361,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealUGE, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -385,11 +373,11 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealULT, lhsValue, rhsValue));
                         }
                         break;
                     }
@@ -397,62 +385,61 @@ namespace Compiling.Backends
                     {
                         if (lhsAndRhsBothIntegers)
                         {
-                            resultingValue = _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, lhsValue, rhsValue));
                         }
                         else
                         {
-                            resultingValue = _builder.BuildFCmp(LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue);
+                            _valueStack.Push(_builder.BuildFCmp(LLVMRealPredicate.LLVMRealULE, lhsValue, rhsValue));
                         }
                         break;
                     }
                 case ExpressionType.LogicalOr:
                     {
-                        resultingValue = _builder.BuildOr(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.LogicalXOr:
                     {
-                        resultingValue = _builder.BuildXor(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildXor(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.LogicalAnd:
                     {
-                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildAnd(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.ConditionalOr:
                     {
-                        resultingValue = _builder.BuildOr(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.ConditionalAnd:
                     {
-                        resultingValue = _builder.BuildAnd(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildAnd(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.BitShiftLeft:
                     {
-                        resultingValue = _builder.BuildShl(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildShl(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.BitShiftRight:
                     {
-                        resultingValue = _builder.BuildLShr(lhsValue, rhsValue);
+                        _valueStack.Push(_builder.BuildLShr(lhsValue, rhsValue));
                         break;
                     }
                 default:
                     {
-                        throw new ArgumentException("invalid binary operator");
+                        throw new ArgumentException($"Invalid binary operator: '{expression.NodeExpressionType}'.");
                     }
             }
 
-            _valueStack.Push(resultingValue);
 
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
-            // @todo: add support for else if else if else if...?
+            // todo: fix so it works without else...
             Visit(expression.IfCondition);
             var condExpr = _valueStack.Pop(); // this is true or false right? or should i compare this again like the example? ->   var condv = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealONE, this.valueStack.Pop(), LLVM.ConstReal(LLVM.DoubleType(), 0.0), "ifcond");
             var condv = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, condExpr, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1), "ifcond");
@@ -465,6 +452,7 @@ namespace Compiling.Backends
 
             _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
             Visit(expression.IfBody);
+    
             var ifBodyValue = _valueStack.Pop();
             _builder.BuildBr(mergeBB);
 
@@ -474,6 +462,7 @@ namespace Compiling.Backends
             // emit again before visit...
             _builder.PositionAtEnd(elseBB);
             Visit(expression.Else);
+ 
             var elseValue = _valueStack.Pop();
             _builder.BuildBr(mergeBB);
 
@@ -493,7 +482,88 @@ namespace Compiling.Backends
 
         public void VisitForStatementExpression(ForStatementExpression expression)
         {
-            throw new NotImplementedException();
+            // Output this as:
+            //   ...
+            //   start = startexpr
+            //   goto loop
+            // loop:
+            //   variable = phi [start, loopheader], [nextvariable, loopend]
+            //   ...
+            //   bodyexpr
+            //   ...
+            // loopend:
+            //   step = stepexpr
+            //   nextvariable = variable + step
+            //   endcond = endexpr
+            //   br endcond, loop, endloop
+            // outloop:
+
+            // Emit the start code first, without 'variable' in scope.
+            _namedValues.TryGetValue(expression.VariableName, out var oldVal);
+            Visit(expression.VariableDeclaration);
+            var startValue = _namedValues[expression.VariableName];
+            // Make the new basic block for the loop header, inserting after current
+            // block.
+            var preHeaderBB = _builder.InsertBlock;
+            var function = preHeaderBB.Parent;
+            var loopBB = function.AppendBasicBlock("loop");
+
+            // Insert an explicit fall through from the current block to the LoopBB.
+            _builder.BuildBr(loopBB);
+            // Start insertion in LoopBB.
+            _builder.PositionAtEnd(loopBB);
+            var variable = _builder.BuildPhi(LLVMTypeRef.Double, expression.VariableName);
+            variable.AddIncoming(new[] { startValue }, new[] { preHeaderBB }, 1);
+
+            // Within the loop, the variable is defined equal to the PHI node.  If it
+            // shadows an existing variable, we have to restore it, so save it now.
+
+            //LLVMValueRef oldVal;
+            //if (_namedValues.TryGetValue(expression.VariableName, out oldVal))
+            //{
+            //    _namedValues[expression.VariableName] = variable;
+            //}
+            //else
+            //{
+            //    _namedValues.Add(expression.VariableName, variable);
+            //}
+
+            // Emit the body of the loop.  This, like any other expr, can change the
+            // current BB.  Note that we ignore the value computed by the body, but don't
+            // allow an error.
+            Visit(expression.Body);
+
+            Visit(expression.VariableIncreaseExpression);
+            var stepValue = _namedValues[expression.VariableName];
+            //var stepValue = _valueStack.Pop();
+
+            var nextVariable = _builder.BuildFAdd(variable, stepValue, "nextvar");
+
+            // Compute the end condition.
+            Visit(expression.Condition);
+            var conditionExprValue = _valueStack.Pop();
+
+            var endCondition = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, conditionExprValue, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0));
+            // Create the "after loop" block and insert it.
+            var loopEndBB = _builder.InsertBlock;
+            var afterBB = function.AppendBasicBlock("afterLoop");
+
+            _builder.BuildCondBr(endCondition, loopBB, afterBB);
+            // Any new code will be inserted in AfterBB.
+            _builder.PositionAtEnd(afterBB);
+            variable.AddIncoming(new[] { nextVariable }, new[] { loopEndBB }, 1);
+
+            // Restore the unshadowed variable.
+            if (oldVal.Handle != IntPtr.Zero)
+            {
+                _namedValues[expression.VariableName] = oldVal;
+            }
+            else
+            {
+                _namedValues.Remove(expression.VariableName);
+            }
+
+            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0));// why?
         }
 
         public void VisitBodyExpression(BodyExpression expression)
@@ -519,6 +589,14 @@ namespace Compiling.Backends
         public void VisitReturnExpression(ReturnExpression expression)
         {
             Visit(expression.Expression);
+            //if (_valueStack.Count > 0)
+            //{
+            //    _valueStack.Push(_builder.BuildRet(_valueStack.Pop()));
+            //}
+            //else
+            //{
+            //    _valueStack.Push(_builder.BuildRetVoid());
+            //}
         }
 
     }
