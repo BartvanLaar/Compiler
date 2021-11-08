@@ -53,7 +53,7 @@ namespace Parsing
             return _expressions.ToArray();
         }
 
-        private ExpressionBase? ParseTopLevelExpression()
+        private ExpressionBase? ParseTopLevelExpression(bool shouldThrowErrorOnMissingSemiColon = true)
         {
             var peekedTokens = PeekTokens(2);
             switch (peekedTokens[0].TokenType)
@@ -78,6 +78,10 @@ namespace Parsing
                 case TokenType.While:
                     {
                         return ParseWhileStatementExpression();
+                    }
+                case TokenType.For:
+                    {
+                        return ParseForLoopStatementExpression();
                     }
                 case TokenType.Extern:
                 case TokenType.Export:
@@ -104,7 +108,19 @@ namespace Parsing
                     }
                 default:
                     {
-                        return ParseExpression();
+                        var expr = ParseExpression();
+                        if (PeekToken().TokenType is not TokenType.EndOfStatement)
+                        {
+                            if (shouldThrowErrorOnMissingSemiColon)
+                            {
+                                throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, "after expression statement");
+                            }
+                        }
+                        else
+                        {
+                            ConsumeToken();
+                        }
+                        return expr;
                     }
             }
 
@@ -164,8 +180,7 @@ namespace Parsing
 
         private ExpressionBase ParseReturnStatementExpression()
         {
-            var expr = new ReturnExpression(ConsumeToken(), ParseTopLevelExpression());
-            return expr;
+            return new ReturnExpression(ConsumeToken(), ParseTopLevelExpression());
         }
 
         private ExpressionBase? ParseParantheseOpen()
@@ -189,7 +204,7 @@ namespace Parsing
             return new BooleanExpression(ConsumeToken());
         }
 
-        private ExpressionBase ParseFunctionDefinitionExpression()
+        private FunctionDefinitionExpression ParseFunctionDefinitionExpression()
         {
             var peekedToken = PeekToken();
             var isExtern = peekedToken.TokenType is TokenType.Extern;
@@ -306,45 +321,10 @@ namespace Parsing
                 return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, null, true, false);
             }
 
-            if (peekedToken.TokenType is not TokenType.AccoladesOpen)
-            {
-                throw ParseError(peekedToken, LexerConstants.ACCOLADES_OPEN, $"after func type identifier");
-            }
 
-            //Consume accolade...
-            ConsumeToken();
-            peekedToken = PeekToken();
+            var body = ParseBodyExpression("function body");
 
-            //todo: handle multiple { and } signs indented inside ?
-            //todo: Or should we disallow such weird scopes.
-            var body = new List<ExpressionBase> { };
-            while (PeekToken().TokenType is not TokenType.AccoladesClose or TokenType.EndOfFile)
-            {
-                var currentPeek = PeekToken();
-                if (currentPeek.TokenType is TokenType.EndOfFile)
-                {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after func body");
-                }
-
-                if (currentPeek.TokenType is TokenType.EndOfStatement)
-                {
-                    ConsumeToken();
-                    continue;
-                }
-
-                var expression = ParseTopLevelExpression();
-                if (expression == null)
-                {
-                    ConsumeToken();
-                }
-                else
-                {
-                    body.Add(expression);
-                }
-            }
-
-            ConsumeToken();
-            return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, new BodyExpression(body), isExtern, isExport);
+            return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, body, isExtern, isExport);
         }
 
         private ExpressionBase? ParseDoWhileStatementExpression()
@@ -352,82 +332,59 @@ namespace Parsing
             Debug.Assert(PeekToken().TokenType is TokenType.Do);
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
-            {
-                throw ParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.DO}' keyword");
-            }
-
-            ConsumeToken();
-
-            //todo: handle multiple { and } signs indented inside ?
-            //todo: Or should we disallow such weird scopes.
-            var body = new List<ExpressionBase> { };
-            while (PeekToken().TokenType is not TokenType.AccoladesClose)
-            {
-                if (PeekToken().TokenType is TokenType.EndOfFile)
-                {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
-                }
-
-                var expression = ParseTopLevelExpression();
-                if (expression == null)
-                {
-                    ConsumeToken();
-                }
-                else
-                {
-                    body.Add(expression);
-                }
-            }
-            
-            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
-            ConsumeToken();
+            var doBody = ParseBodyExpression("while statement");
 
             if (PeekToken().TokenType is not TokenType.While)
             {
                 throw ParseError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
             }
             var whileTok = ConsumeToken();
-            var condition = ParseTopLevelExpression();
+            var condition = ParseTopLevelExpression(false);
             if (condition == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
             }
-            return new WhileStatementExpression(condition, new BodyExpression(body));
+            return new WhileStatementExpression(condition, doBody);
         }
 
-        private ExpressionBase ParseWhileStatementExpression()
+        private WhileStatementExpression ParseWhileStatementExpression()
         {
             //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
-            var conditionalExpression = ParseTopLevelExpression();
+            var conditionalExpression = ParseTopLevelExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
             }
 
-            var hasDo = PeekToken().TokenType is TokenType.Do;
             if (PeekToken().TokenType is TokenType.Do)
             {
                 ConsumeToken();
             }
 
-            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
-            {
-                var keyword = hasDo ? LexerConstants.Keywords.DO : LexerConstants.Keywords.WHILE;
-                throw ParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{keyword}' keyword");
-            }
-            ConsumeToken();
-
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
+            var bodyExpr = ParseBodyExpression("after while statement body");
+
+            return new WhileStatementExpression(conditionalExpression, bodyExpr);
+        }
+
+        private BodyExpression ParseBodyExpression(string bodyName)
+        {
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                throw ParseError(PeekToken(), $"Expected opening '{ LexerConstants.ACCOLADES_OPEN}'", $"at start of {bodyName} body");
+            }
+
+            ConsumeToken();
+
             var body = new List<ExpressionBase> { };
             while (PeekToken().TokenType is not TokenType.AccoladesClose)
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
                 {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after while statement body");
+                    throw ParseError(PeekToken(), $"Expected matching closing '{ LexerConstants.ACCOLADES_CLOSE}'", $"after {bodyName} body");
                 }
 
                 var expression = ParseTopLevelExpression();
@@ -443,55 +400,27 @@ namespace Parsing
 
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
             ConsumeToken();
-
-            return new WhileStatementExpression(conditionalExpression, new BodyExpression(body));
+            return new BodyExpression(body);
         }
 
-        private ExpressionBase ParseIfStatementExpression()
+        private IfStatementExpression ParseIfStatementExpression()
         {
             //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             var ifToken = ConsumeToken();
             Debug.Assert(ifToken.TokenType == TokenType.If);
-            var conditionalExpression = ParseTopLevelExpression();
+            var conditionalExpression = ParseTopLevelExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParserError(ifToken, "Expected an expression but got none.");
             }
 
-            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
-            {
-                throw ParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, $"'{LexerConstants.Keywords.IF}' keyword");
-            }
-
-            ConsumeToken();
-
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
-            var ifBody = new List<ExpressionBase> { };
-            while (PeekToken().TokenType != TokenType.AccoladesClose)
-            {
-                if (PeekToken().TokenType is TokenType.EndOfFile)
-                {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after if statement body");
-                }
-
-                var expression = ParseTopLevelExpression();
-                if (expression == null)
-                {
-                    ConsumeToken();
-                }
-                else
-                {
-                    ifBody.Add(expression);
-                }
-            }
-
-            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
-            ConsumeToken();
+            var ifBody = ParseBodyExpression("if statement");
 
             if (PeekToken().TokenType is not TokenType.Else)
             {
-                return new IfStatementExpression(conditionalExpression, new BodyExpression(ifBody), null);
+                return new IfStatementExpression(conditionalExpression, ifBody, null);
             }
 
             ConsumeToken();
@@ -501,50 +430,16 @@ namespace Parsing
             if (isIfStatementNext)
             {
                 elseExpression = ParseIfStatementExpression();
-
             }
             else
             {
-                if (PeekToken().TokenType is not TokenType.AccoladesOpen)
-                {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_OPEN, "aftter else keyword.");
-                }
-
-                ConsumeToken();
-
-                var elseBody = new List<ExpressionBase> { };
-                while (PeekToken().TokenType != TokenType.AccoladesClose)
-                {
-                    if (PeekToken().TokenType is TokenType.EndOfFile)
-                    {
-                        throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after if statement body");
-                    }
-
-                    var expression = ParseTopLevelExpression();
-                    if (expression == null)
-                    {
-                        ConsumeToken();
-                    }
-                    else
-                    {
-                        elseBody.Add(expression);
-                    }
-                }
-                elseExpression = new BodyExpression(elseBody);
-                //elseExpression = ParseTopLevelExpression(); // this is the body of the else statement, so it should be top level parse.
-
-                if (PeekToken().TokenType is not TokenType.AccoladesClose)
-                {
-                    throw ParseError(PeekToken(), LexerConstants.ACCOLADES_CLOSE, "after else body.");
-                }
-
-                ConsumeToken();
+                elseExpression = ParseBodyExpression("else statement body");
             }
 
-            return new IfStatementExpression(conditionalExpression, new BodyExpression(ifBody), elseExpression);
+            return new IfStatementExpression(conditionalExpression, ifBody, elseExpression);
         }
 
-        private ExpressionBase? ParseVariableDeclaration()
+        private VariableDeclarationExpression? ParseVariableDeclaration()
         {
             var declarationTypeToken = ConsumeToken();
 
@@ -552,27 +447,34 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.Identifier)
             {
-                throw ParserError(leftHandSideTok, TokenType.Identifier, "assignment of variable");
+                throw ParserError(leftHandSideTok, TokenType.Identifier, "before assignment of variable");
             }
 
             var leftHandSideIdentifierExpression = ConsumeToken(); // variable name...
 
             if (leftHandSideIdentifierExpression == null)
             {
-                throw ParseError(leftHandSideTok, "variable name", "assignment of variable");
+                throw ParseError(leftHandSideTok, "variable name", "before assignment of variable");
             }
 
             if (PeekToken().TokenType is not (TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign))
             {
-                throw ParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "assignment of variable");
+                throw ParseError(PeekToken(), LexerConstants.ASSIGN_OPERATOR, "at assignment of variable");
             }
 
             var assignmentTok = ConsumeToken();
             var valueExpression = ParseTopLevelExpression();
             if (valueExpression == null)
             {
-                throw ParseError(assignmentTok, "value expression", "assignment of variable");
+                throw ParseError(assignmentTok, "value expression", "after assignment of variable");
             }
+
+            //if (PeekToken().TokenType is not TokenType.EndOfStatement)
+            //{
+            //    throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, "after variable declaration");
+            //}
+
+            //ConsumeToken();
 
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
@@ -705,6 +607,42 @@ namespace Parsing
             ConsumeToken();
 
             return new ImportStatementExpression(expr.Token.ValueAsString, alias?.ValueAsString, _file);
+        }
+
+        private ExpressionBase? ParseForLoopStatementExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.For);
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.ParanthesesOpen)
+            {
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "at start of 'for loop' header");
+            }
+
+            ConsumeToken();
+
+            //todo: add error messages when expected expressions are null?
+
+            var variableDeclExp = ParseVariableDeclaration();
+            Debug.Assert(variableDeclExp is not null, "UNFINISHED");
+            var conditionExpr = ParseTopLevelExpression();
+            Debug.Assert(conditionExpr is not null, "UNFINISHED");
+
+            var variableIncreaseExpression = ParseTopLevelExpression(false);
+
+            if (PeekToken().TokenType is not TokenType.ParanthesesClose)
+            {
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "at end of 'for loop' header");
+            }
+
+            ConsumeToken();
+            Debug.Assert(variableIncreaseExpression is not null, "UNFINISHED");
+
+
+            var forBody = ParseBodyExpression("for statement");
+            Debug.Assert(forBody is not null, "UNFINISHED");
+
+            return new ForStatementExpression(variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
 
         private ExpressionBase? ParseIdentifierExpression()

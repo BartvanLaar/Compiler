@@ -2,19 +2,18 @@
 {
     public sealed class ForStatementExpression : ExpressionBase
     {
-        public ForStatementExpression(string variableName, ExpressionBase start, ExpressionBase end, ExpressionBase step, BodyExpression actionBody) : base(ExpressionType.ForStatementExpression)
+        public ForStatementExpression(VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(ExpressionType.ForStatementExpression)
         {
-            VariableName = variableName;
-            Start = start;
-            End = end;
-            Step = step;
-            Body = actionBody;
+            VariableName = variableDeclaration.Identifier;
+            Condition = conditionExpression;
+            VariableIncreaseExpression = variableIncreaseExpression;
+            Body = forBody;
         }
 
         public string VariableName { get; }
-        public ExpressionBase Start { get; }
-        public ExpressionBase End { get; }
-        public ExpressionBase Step { get; }
+        public ExpressionBase Condition { get; }
+        public ExpressionBase VariableDeclaration { get; }
+        public ExpressionBase VariableIncreaseExpression { get; }
         public ExpressionBase Body { get; }
     }
 }

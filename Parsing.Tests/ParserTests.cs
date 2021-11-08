@@ -7,9 +7,9 @@ namespace Parsing.Tests
 {
     internal class ParserTests
     {
-        [TestCase("x + 5", 1)]
+        [TestCase("x + 5;", 1)]
         [TestCase("x+5;", 1)]
-        [TestCase("x+5;x+=5", 2)]
+        [TestCase("x+5;x+=5;", 2)]
         [TestCase("x+5;x+=5;", 2)]
         [TestCase("x+5*5/5*5/5;", 1)]
         [TestCase("var x = 10*5;", 1)]
@@ -52,6 +52,18 @@ namespace Parsing.Tests
         [TestCase("do{} while(true)", 1)]
         [TestCase("do{}while(true)", 1)]
         public void General_Code_Test_Throw_No_Error_While_Statements(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
+
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Count());
+            Assert.AreEqual(expectedAmountOfErrors, errors.Count());
+        }
+
+        [TestCase("for(var x = 0; x < 100; x = x + 1) {}", 1)]
+        [TestCase("for(var x = 0; x < 100; x = x + 1) {var y = 5;}", 1)]
+        public void General_Code_Test_Throw_No_Error_For_Loop_Statements(string code, int expectedAmountOfExpressionTrees, int expectedAmountOfErrors = 0)
         {
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
