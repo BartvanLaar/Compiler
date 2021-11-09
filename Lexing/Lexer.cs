@@ -147,7 +147,7 @@ namespace Lexing
             return (tok, cursor, lineCount, columnCount);
         }
 
-        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount)
+        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount, bool isKnownToBeNegative = false) // optiobal bool is Hack!
         {
             if (!char.IsDigit(_text[cursor]))
             {
@@ -191,6 +191,11 @@ namespace Lexing
             {
                 TypeIndicator = typeIndicator
             };
+
+            if (isKnownToBeNegative) // Hack!
+            {
+                result = $"-{result}";
+            }
 
             switch (token.TypeIndicator)
             {
@@ -398,7 +403,7 @@ namespace Lexing
                         }
                         else
                         {
-                            var numberToken = GetNumberToken(cursor, lineCount, columnCount);
+                            var numberToken = GetNumberToken(cursor, lineCount, columnCount, true);
                             if (numberToken.Token is not null)
                             {
                                 token = numberToken.Token;
