@@ -403,7 +403,7 @@ namespace Lexing
                         }
                         else
                         {
-                            var numberToken = GetNumberToken(cursor, lineCount, columnCount, true);
+                            var numberToken = GetNumberToken(cursor, lineCount, columnCount, isKnownToBeNegative:true);
                             if (numberToken.Token is not null)
                             {
                                 token = numberToken.Token;
