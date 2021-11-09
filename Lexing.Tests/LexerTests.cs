@@ -473,6 +473,7 @@ namespace Lexing.Tests
 
         [TestCase("var x=x+(7-(8+2));")]
         [TestCase("var x = x + ( 7 - ( 8 + 2 ) ) ;")]
+
         public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_PrecedenceOperators(string code)
         {
             var lexer = new Lexer(code);
@@ -489,6 +490,31 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[8].TokenType);
             Assert.AreEqual(TokenType.Value, toks[9].TokenType);
             Assert.AreEqual(TokenType.Add, toks[10].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[11].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[12].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesClose, toks[13].TokenType);
+            Assert.AreEqual(TokenType.EndOfStatement, toks[14].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[15].TokenType);
+        }
+
+        [TestCase("var x=x+(7-(8-2));")]
+        [TestCase("var x = x + ( 7 - ( 8 - 2 ) ) ;")]
+        public static void Lexer_Test_Assign_And_Use_Variable_No_Whitespace_PrecedenceOperators2(string code)
+        {
+            var lexer = new Lexer(code);
+            var toks = lexer.ConsumeTokens(16);
+
+            Assert.AreEqual(TokenType.Type, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[1].TokenType);
+            Assert.AreEqual(TokenType.Assignment, toks[2].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[3].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[4].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[5].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[6].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[7].TokenType);
+            Assert.AreEqual(TokenType.ParanthesesOpen, toks[8].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[9].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[10].TokenType);
             Assert.AreEqual(TokenType.Value, toks[11].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[12].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[13].TokenType);

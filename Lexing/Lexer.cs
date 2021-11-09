@@ -149,7 +149,7 @@ namespace Lexing
 
         private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount, bool isKnownToBeNegative = false) // optiobal bool is Hack!
         {
-            if (!char.IsDigit(_text[cursor]))
+            if (cursor >= _text.Length || !char.IsDigit(_text[cursor]))
             {
                 return (null, cursor, lineCount, columnCount);
             }
