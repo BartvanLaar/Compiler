@@ -161,21 +161,21 @@ namespace Parsing
         private ExpressionBase? ParseValueExpression()
         {
             var peekedToken = PeekToken();
-            switch (peekedToken.TypeIndicator)
+            return peekedToken.TypeIndicator switch
             {
-                case TypeIndicator.None: throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value.");
-                case TypeIndicator.Inferred: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this");
+                TypeIndicator.None => throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value."),
+                TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this"),
                 //case TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
-                case TypeIndicator.Float: return ParseFloatExpression();
-                case TypeIndicator.Double: return ParseDoubleExpression();
-                case TypeIndicator.Boolean: return ParseBooleanExpression();
-                case TypeIndicator.Integer: return ParseIntegerExpression();
-                case TypeIndicator.Character: return ParseCharacterExpression();
-                case TypeIndicator.String: return ParseStringExpression();
-                case TypeIndicator.DateTime: throw new NotImplementedException();
-                case TypeIndicator.Void: throw new InvalidOperationException("Should not get here in case of void type.");
-                default: throw new InvalidOperationException($"Encountered an unkown type indicator {peekedToken.TypeIndicator}.");
-            }
+                TypeIndicator.Float => ParseFloatExpression(),
+                TypeIndicator.Double => ParseDoubleExpression(),
+                TypeIndicator.Boolean => ParseBooleanExpression(),
+                TypeIndicator.Integer => ParseIntegerExpression(),
+                TypeIndicator.Character => ParseCharacterExpression(),
+                TypeIndicator.String => ParseStringExpression(),
+                TypeIndicator.DateTime => throw new NotImplementedException(),
+                TypeIndicator.Void => throw new InvalidOperationException("Should not get here in case of void type."),
+                _ => throw new InvalidOperationException($"Encountered an unkown type indicator {peekedToken.TypeIndicator}."),
+            };
         }
 
         private ExpressionBase ParseReturnStatementExpression()
@@ -254,7 +254,7 @@ namespace Parsing
                     throw ParseError(currentPeek, LexerConstants.PARANTHESES_CLOSE, "after func parameter body");
                 }
 
-                if (currentPeek.TokenType is not TokenType.ArgumentSeparator && parameters.Count() >= 1)
+                if (currentPeek.TokenType is not TokenType.ArgumentSeparator && parameters.Count >= 1)
                 {
                     throw ParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function definition");
                 }
@@ -305,7 +305,7 @@ namespace Parsing
             ConsumeToken(); // don't care about return type indicator
 
             var returnType = ConsumeToken();
-            //todo: check return type??
+            
             peekedToken = PeekToken();
 
             if (isExtern)
@@ -349,7 +349,6 @@ namespace Parsing
 
         private WhileStatementExpression ParseWhileStatementExpression()
         {
-            //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
             var conditionalExpression = ParseTopLevelExpression(false);
@@ -405,7 +404,6 @@ namespace Parsing
 
         private IfStatementExpression ParseIfStatementExpression()
         {
-            //todo: @fix, a lot of these debug.asserts should actually be normal checks and throw parser errors accordingly...
             var ifToken = ConsumeToken();
             Debug.Assert(ifToken.TokenType == TokenType.If);
             var conditionalExpression = ParseTopLevelExpression(false);
@@ -468,13 +466,6 @@ namespace Parsing
             {
                 throw ParseError(assignmentTok, "value expression", "after assignment of variable");
             }
-
-            //if (PeekToken().TokenType is not TokenType.EndOfStatement)
-            //{
-            //    throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, "after variable declaration");
-            //}
-
-            //ConsumeToken();
 
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
@@ -621,26 +612,36 @@ namespace Parsing
 
             ConsumeToken();
 
-            //todo: add error messages when expected expressions are null?
-
             var variableDeclExp = ParseVariableDeclaration();
-            Debug.Assert(variableDeclExp is not null, "UNFINISHED");
+            if(variableDeclExp is null)
+            {
+                throw ParseError(PeekToken(), "variable declaration", "inside, but at the start of, the 'for loop' header");
+            }
+
             var conditionExpr = ParseTopLevelExpression();
-            Debug.Assert(conditionExpr is not null, "UNFINISHED");
+            if (conditionExpr is null)
+            {
+                throw ParseError(PeekToken(), "conditional expression", "inside, but in the center of, the 'for loop' header");
+            }
 
             var variableIncreaseExpression = ParseTopLevelExpression(false);
-
+            if (variableIncreaseExpression is null)
+            {
+                throw ParseError(PeekToken(), "variable modifier expression", "inside, but at the end of, the 'for loop' header");
+            }
+            
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
                 throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "at end of 'for loop' header");
             }
 
             ConsumeToken();
-            Debug.Assert(variableIncreaseExpression is not null, "UNFINISHED");
-
 
             var forBody = ParseBodyExpression("for statement");
-            Debug.Assert(forBody is not null, "UNFINISHED");
+            if (forBody is null)
+            {
+                throw ParseError(PeekToken(), "body of for loop", "after the 'for loop' header");
+            }
 
             return new ForStatementExpression(variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
@@ -681,16 +682,14 @@ namespace Parsing
 
         private ExpressionBase ParseCharacterExpression()
         {
+            //todo: fix.. This should be caught sooner, e.g. at type checking...
             if (PeekToken().ValueAsString?.Length > 1)
             {
                 ParseError(PeekToken(), "Character with length of 1", "Character initializer");
             }
 
             //todo: how to handle nullables?
-            //should string value be filled?
-            var result = new CharacterExpression(ConsumeToken());
-
-            return result;
+            return new CharacterExpression(ConsumeToken());
         }
 
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)

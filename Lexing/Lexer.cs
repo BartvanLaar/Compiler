@@ -187,9 +187,11 @@ namespace Lexing
                           ? TypeIndicator.Double : TypeIndicator.Integer;
             }
 
-            var token = new Token(TokenType.Value, lineCount, originalColumnCount);
-            token.TypeIndicator = typeIndicator;
-            
+            var token = new Token(TokenType.Value, lineCount, originalColumnCount)
+            {
+                TypeIndicator = typeIndicator
+            };
+
             switch (token.TypeIndicator)
             {
                 case TypeIndicator.Integer: token.Value = int.Parse(result); break;

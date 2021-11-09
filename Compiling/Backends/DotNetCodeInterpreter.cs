@@ -1,12 +1,13 @@
 ﻿using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
+using System.Diagnostics;
 
 namespace Compiling.Backends
 {
     internal class DotNetCodeInterpreter : IAbstractSyntaxTreeVisitor
     {
-        private readonly Stack<object?> _valueStack = new Stack<object?>();
-        private readonly Dictionary<string, object?> _namedValues = new Dictionary<string, object?>();
+        private readonly Stack<object?> _valueStack = new();
+        private readonly Dictionary<string, object?> _namedValues = new();
         public IEnumerable<object?> Results => _valueStack;
         public string Name => "Dot Net Interpreter / simulator";
         public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);        
@@ -18,115 +19,114 @@ namespace Compiling.Backends
             Visit(expression.RightHandSide);
             var rhsValue = Convert.ToDouble(_valueStack.Pop());
 
-            object resultingValue;
-            //todo: should we use BuildAdd instead of BuildFAdd when dealing with integers?
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
                     {
-                        resultingValue = lhsValue + rhsValue;
+                         _valueStack.Push(lhsValue + rhsValue);
                         break;
                     }
                 case ExpressionType.Subtract:
                     {
-                        resultingValue = lhsValue - rhsValue;
+                         _valueStack.Push(lhsValue - rhsValue);
                         break;
                     }
                 case ExpressionType.Multiply:
                     {
-                        resultingValue = lhsValue * rhsValue;
+                         _valueStack.Push(lhsValue * rhsValue);
                         break;
                     }
                 case ExpressionType.Divide:
                     {
-                        resultingValue = lhsValue / rhsValue;
+                         _valueStack.Push(lhsValue / rhsValue);
                         break;
                     }
                 case ExpressionType.Assignment:
                     {
-                        // what to do here?
-                        resultingValue = lhsValue;
+                        var expr = expression.LeftHandSide as IdentifierExpression;
+                        Debug.Assert(expr is not null);
+                        Debug.Assert(_namedValues.ContainsKey(expr.Identifier));
+                        _namedValues[expr.Identifier] = lhsValue;
                         break;
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
-                        resultingValue = lhsValue == rhsValue;
+                         _valueStack.Push(lhsValue == rhsValue);
                         break;
                     }
                 case ExpressionType.Equals:
                     {
-                        resultingValue = lhsValue == rhsValue;
+                         _valueStack.Push(lhsValue == rhsValue);
                         break;
                     }
                 case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
-                        resultingValue = lhsValue != rhsValue;
+                         _valueStack.Push(lhsValue != rhsValue);
                         break;
                     }
                 case ExpressionType.NotEquals:
                     {
-                        resultingValue = lhsValue != rhsValue;
+                         _valueStack.Push(lhsValue != rhsValue);
                         break;
                     }
                 case ExpressionType.GreaterThan:
                     {
-                        resultingValue = lhsValue > rhsValue;
+                         _valueStack.Push(lhsValue > rhsValue);
                         break;
                     }
                 case ExpressionType.GreaterThanEqual:
                     {
-                        resultingValue = lhsValue >= rhsValue;
+                         _valueStack.Push(lhsValue >= rhsValue);
                         break;
                     }
                 case ExpressionType.LessThan:
                     {
-                        resultingValue = lhsValue < rhsValue;
+                         _valueStack.Push(lhsValue < rhsValue);
                         break;
                     }
                 case ExpressionType.LessThanEqual:
                     {
-                        resultingValue = lhsValue <= rhsValue;
+                         _valueStack.Push(lhsValue <= rhsValue);
                         break;
                     }
                 case ExpressionType.LogicalOr:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.LogicalXOr:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.LogicalAnd:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.ConditionalOr:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.ConditionalAnd:
                     {
-                        resultingValue = (bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool));
+                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.BitShiftLeft:
                     {
-                        resultingValue = (int)lhsValue << (int)rhsValue;
+                         _valueStack.Push((int)lhsValue << (int)rhsValue);
                         break;
                     }
                 case ExpressionType.BitShiftRight:
                     {
-                        resultingValue = (int)lhsValue >> (int)rhsValue;
+                         _valueStack.Push((int)lhsValue >> (int)rhsValue);
                         break;
                     }
                 default:
                     throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
             }
-            _valueStack.Push(resultingValue);
         }
 
         public void VisitBodyExpression(BodyExpression expression)

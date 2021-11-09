@@ -181,8 +181,7 @@ namespace Lexing
 
         public static TypeIndicator ConvertKeywordToTypeIndicator(string keyword)
         {
-            var typeIndicator = TypeIndicator.None;
-            _keywordToTypeIndicatorConversiontable.TryGetValue(keyword, out typeIndicator);
+            _keywordToTypeIndicatorConversiontable.TryGetValue(keyword, out var typeIndicator);
             return typeIndicator;
         }
 
@@ -245,7 +244,7 @@ namespace Lexing
                 [TokenType.ConditionalAnd] = CONDITIONAL_AND,
                 [TokenType.ConditionalOr] = CONDITIONAL_OR,
 
-                [TokenType.NullableCoalesceAssign] = NULLABLE_COALESCE,
+                [TokenType.NullableCoalesce] = NULLABLE_COALESCE,
 
                 [TokenType.TerniaryOperatorTrue] = CONDITIONAL_OPERATOR,
                 [TokenType.TerniaryOperatorFalse] = CONDITIONAL_OPERATOR,
