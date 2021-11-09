@@ -144,9 +144,9 @@ namespace Compiling.Backends
 
                 if (function.ParamsCount != argumentCount)
                 {
-                    // function overloading should be dealth with on language level
+                    // function overloading should be dealth with on language level -> mangling function names
                     // see https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/basic-constructs/functions.html#function-overloading
-                    throw new Exception($"Redefinition of function :'{expressionName}' with a different number of arguments.");
+                    Debug.Assert(false, $"Redefinition of function :'{expressionName}' with a different number of arguments.");
                 }
 
             }
@@ -508,8 +508,9 @@ namespace Compiling.Backends
             // outloop:
 
             var function = _builder.InsertBlock.Parent;
+            // save (shadowed) outer scope variable pointer if it exists.          
             _valueAllocationPointers.TryGetValue(expression.VariableName, out var oldValueAlloca);
-            
+
             Visit(expression.VariableDeclaration);
 
             // Make the new basic block for the loop header, inserting after current
@@ -522,25 +523,27 @@ namespace Compiling.Backends
             // Start insertion in LoopBB.
             _builder.PositionAtEnd(loopBB);
 
-            // Within the loop, the variable is defined equal to the PHI node.  If it
-            // shadows an existing variable, we have to restore it, so save it now.
+
 
             // Emit the body of the loop.  This, like any other expr, can change the
             // current BB.  Note that we ignore the value computed by the body, but don't
             // allow an error.
+
+            //Todo: fix! shouldn't this only be done when the endCond is true? i = 0 i< 0; i++ still runs the loop once, when the condition is false!
             Visit(expression.Body);
 
             Visit(expression.VariableIncreaseExpression); // visiting increases the value allocated to the variable.
-
+            
             // Compute the end condition.
             Visit(expression.Condition);
-            var conditionExprValue = _valueStack.Pop();
-            var endCondition = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, conditionExprValue, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1,1), "loopcond");
-            
+            var endCondition = _valueStack.Pop();
+
             // Create the "after loop" block and insert it.
+
             var afterBB = function.AppendBasicBlock("afterLoop");
 
             _builder.BuildCondBr(endCondition, loopBB, afterBB);
+
             // Any new code will be inserted in AfterBB.
             _builder.PositionAtEnd(afterBB);
 
@@ -569,11 +572,43 @@ namespace Compiling.Backends
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
-            Visit(expression.WhileCondition);
-            var whileCondition = _valueStack.Pop();
+            var function = _builder.InsertBlock.Parent;
 
-            Visit(expression.DoBody);
-            var doBody = _valueStack.Pop();
+            var loopBB = function.AppendBasicBlock("loop");
+
+            // Insert an explicit fall through from the current block to the LoopBB.
+            _builder.BuildBr(loopBB);
+            // Start insertion in LoopBB.
+            _builder.PositionAtEnd(loopBB);
+
+            // Compute the end condition.
+            if (expression.RunDoFirst) // dowhile
+            {
+                //Todo: fix! shouldn't this only be done when the endCond is true? while(false) still runs the loop once, when the condition is false!
+                Visit(expression.DoBody);
+            }
+
+            Visit(expression.WhileCondition);
+            var endCondition = _valueStack.Pop();
+
+            // Create the "after loop" block and insert it.
+
+            var afterBB = function.AppendBasicBlock("afterLoop");
+
+            _builder.BuildCondBr(endCondition, loopBB, afterBB);
+
+            // Emit the body of the loop.  This, like any other expr, can change the
+            // current BB.  Note that we ignore the value computed by the body, but don't
+            // allow an error.
+            if (!expression.RunDoFirst)
+            {
+                //Todo: fix! shouldn't this only be done when the endCond is true? while(false) still runs the loop once, when the condition is false!
+                Visit(expression.DoBody);
+            }
+
+            // Any new code will be inserted in AfterBB.
+            _builder.PositionAtEnd(afterBB);
+
         }
 
         public void VisitReturnExpression(ReturnExpression expression)

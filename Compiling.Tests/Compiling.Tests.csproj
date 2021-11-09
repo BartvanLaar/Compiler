@@ -26,6 +26,15 @@
     <None Update="TestFiles\DoubleMainFuncNoParamsDefinitionReturnIntegerButTypeCheckShouldFix.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\DoWhileLoopReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\ForILoopDontExecuteBody.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\WhileLoopReturn.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IfFalseElseIfFalseElseTest.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

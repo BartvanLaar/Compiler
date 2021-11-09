@@ -344,7 +344,7 @@ namespace Parsing
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
             }
-            return new WhileStatementExpression(condition, doBody);
+            return new WhileStatementExpression(condition, doBody, true);
         }
 
         private WhileStatementExpression ParseWhileStatementExpression()

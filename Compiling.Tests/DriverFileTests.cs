@@ -22,13 +22,13 @@ namespace Compiling.Tests
         {
             public IEnumerator GetEnumerator()
             {
-                yield return new object[] { FN("VoidMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true} }; // null exit code cause void main...
+                yield return new object[] { FN("VoidMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } }; // null exit code cause void main...
                 yield return new object[] { FN("VoidLibFuncNoParamsDefinition"), new TestFile() { IsExecutable = false } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true } };
-                yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionReturnIntegerButTypeCheckShouldFix"), new TestFile() { IsExecutable = true} };
+                yield return new object[] { FN("DoubleMainFuncNoParamsDefinitionReturnIntegerButTypeCheckShouldFix"), new TestFile() { IsExecutable = true } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnFunctionCall"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsVar"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
@@ -46,6 +46,9 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IfTrueIfFalseElseNestedElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IfTrueIfTrueElseNestedElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("ForILoopReturn"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("WhileLoopReturn"), new TestFile() { IsExecutable = true, ExitCode = 0 } };
+                yield return new object[] { FN("DoWhileLoopReturn"), new TestFile() { IsExecutable = true, ExitCode = 1 } };
+                yield return new object[] { FN("ForILoopDontExecuteBody"), new TestFile() { IsExecutable = true, ExitCode = 0 } };
                 //test below will fail untill we have proper type checking and inference (with required added type metadata) to support function name mangling at the calling side...
                 yield return new object[] { FN("IntMainFuncParamsDefinitionOverloaded"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
 
@@ -75,7 +78,7 @@ namespace Compiling.Tests
                 {
                     var proc = Process.Start(filePath);
                     proc.WaitForExit();
-                    Assert.AreEqual(proc.ExitCode, testFile.ExitCode);
+                    Assert.AreEqual(testFile.ExitCode, proc.ExitCode);
                 }
                 TryRemoveResultsOfTest(filePath);
                 Assert.Pass();

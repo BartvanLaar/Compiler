@@ -11,20 +11,41 @@ namespace CLI
         {
             Console.WriteLine("Press to start.");
             Console.ReadKey();
+
+            var x = 0;
+            do { x++; } while (x < 0);
+            Console.WriteLine(x.ToString());
+            
+            x = 0;
+            while (x < 0) { x++; };
+            Console.WriteLine(x.ToString());
             //var code = "2.0 + 5.0 / 5.0;";
             //var code = "10d*(10d-5d);";
             //var code = "func main() -> int {if(false){return 69;} else { if(false) {return 666;} else {return 1337;}}}";
             //var code = "func main() -> int {if(true) {return 10;} return 69;}";
+
             var code = @"func main() -> int {
                             var x = 0;
 
-                            for (var i = 0; i < 42; i = i + 1)
+                            for (var i = 0; i < 0; i = i + 1)
                             {
                                 x =  x + 1;
                             }
 
                             return x;
                        }";
+
+            //var code = @" func main() -> int 
+            //            {
+            //                var x = 0;
+            //                while(false)
+            //                do
+            //                {
+            //                    x = x + 1;
+            //                }
+
+            //                return x;
+            //            }";
 
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
             var proc = Process.Start("output.exe");
