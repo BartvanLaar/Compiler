@@ -119,8 +119,8 @@ namespace Compiling.Tests
         [TestCase("true == false;", false)]
         [TestCase("true != false;", true)]
         [TestCase("false != false;", false)]
-        [TestCase("0 <= -1", false)]
-        [TestCase("0 < -1", false)]
+        [TestCase("0 <= -1;", false)]
+        [TestCase("0 < -1;", false)]
         public void Driver_Test_Validate_Operator_Predence_Boolean_Logic_comparisons(string code, bool expectedResult)
         {
             var messages = StandardOutputHelper.RunActionAndCaptureStdOut(() => Driver.RunDotNet(code));
