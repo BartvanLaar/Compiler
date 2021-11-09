@@ -361,17 +361,17 @@ namespace Lexing
                             cursor++;
                             columnCount++;
                         }
-                        else
-                        {
-                            var numberToken = GetNumberToken(cursor, lineCount, columnCount);
-                            if (numberToken.Token is not null)
-                            {
-                                token = numberToken.Token;
-                                cursor = numberToken.Cursor;
-                                columnCount = numberToken.ColumnCount;
-                                lineCount = numberToken.LineCount;
-                            }
-                        }
+                        //else
+                        //{
+                        //    var numberToken = GetNumberToken(cursor, lineCount, columnCount);
+                        //    if (numberToken.Token is not null)
+                        //    {
+                        //        token = numberToken.Token;
+                        //        cursor = numberToken.Cursor;
+                        //        columnCount = numberToken.ColumnCount;
+                        //        lineCount = numberToken.LineCount;
+                        //    }
+                        //}
 
 
 
@@ -401,17 +401,17 @@ namespace Lexing
                             cursor++;
                             columnCount++;
                         }
-                        else
-                        {
-                            var numberToken = GetNumberToken(cursor, lineCount, columnCount, isKnownToBeNegative:true);
-                            if (numberToken.Token is not null)
-                            {
-                                token = numberToken.Token;
-                                cursor = numberToken.Cursor;
-                                columnCount = numberToken.ColumnCount;
-                                lineCount = numberToken.LineCount;
-                            }
-                        }
+                        //else
+                        //{
+                        //    var numberToken = GetNumberToken(cursor, lineCount, columnCount, isKnownToBeNegative:true);
+                        //    if (numberToken.Token is not null)
+                        //    {
+                        //        token = numberToken.Token;
+                        //        cursor = numberToken.Cursor;
+                        //        columnCount = numberToken.ColumnCount;
+                        //        lineCount = numberToken.LineCount;
+                        //    }
+                        //}
 
                         return (token, cursor, lineCount, columnCount);
                     }
