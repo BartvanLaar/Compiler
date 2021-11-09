@@ -1,0 +1,16 @@
+﻿func main() -> int {
+    for(var i = 0; i < 42; i = i + 1) {}
+    do{}while(false)
+    while(false){}
+    while(false)do{}
+
+    if(true){}
+    
+    if(false){} else if(true) {}
+    
+    if(false){} else {}
+    
+    if(true) {} else if(false) {} else{}       
+    
+    return 42;
+}

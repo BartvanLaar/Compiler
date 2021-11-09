@@ -32,6 +32,9 @@
     <None Update="TestFiles\ForILoopDontExecuteBody.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\EmptyCodeBodiesTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\WhileLoopReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
