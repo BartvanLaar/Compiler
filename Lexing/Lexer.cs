@@ -356,6 +356,19 @@ namespace Lexing
                             cursor++;
                             columnCount++;
                         }
+                        else
+                        {
+                            var numberToken = GetNumberToken(cursor, lineCount, columnCount);
+                            if (numberToken.Token is not null)
+                            {
+                                token = numberToken.Token;
+                                cursor = numberToken.Cursor;
+                                columnCount = numberToken.ColumnCount;
+                                lineCount = numberToken.LineCount;
+                            }
+                        }
+
+
 
                         return (token, cursor, lineCount, columnCount);
                     }
@@ -382,6 +395,17 @@ namespace Lexing
                             token.Value = LexerConstants.MINUS_MINUS;
                             cursor++;
                             columnCount++;
+                        }
+                        else
+                        {
+                            var numberToken = GetNumberToken(cursor, lineCount, columnCount);
+                            if (numberToken.Token is not null)
+                            {
+                                token = numberToken.Token;
+                                cursor = numberToken.Cursor;
+                                columnCount = numberToken.ColumnCount;
+                                lineCount = numberToken.LineCount;
+                            }
                         }
 
                         return (token, cursor, lineCount, columnCount);
@@ -498,7 +522,8 @@ namespace Lexing
             }
 
             //@incomplete
-            // todo: Why not make this a static dictionary in LexerConstants as this is accessed a **** lot... and then set line + columnCount afterwards...
+            // todo: Why not make this a static dictionary in LexerConstants as this is accessed a lot... and then set line + columnCount afterwards...
+            // actually need to know if this is a performance issue though...
             return _text[cursor].ToString() switch
             {
                 LexerConstants.END_OF_STATEMENT => new Token(TokenType.EndOfStatement, lineCount, columnCount) { Value = LexerConstants.END_OF_STATEMENT },

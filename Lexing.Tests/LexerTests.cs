@@ -113,7 +113,7 @@ namespace Lexing.Tests
         {
             var lexer = new Lexer(text);
             var toks = lexer.ConsumeTokens(2);
-
+                        
             Assert.AreEqual(2, toks.Length);
             Assert.AreEqual(expectedTokenType, toks.First().TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks.Last().TokenType);
@@ -162,6 +162,122 @@ namespace Lexing.Tests
             Assert.AreEqual(expectedTokenType, toks[0].TokenType);
             Assert.AreEqual(expectedTokenType, toks[1].TokenType);
             Assert.AreEqual(TokenType.EndOfFile, toks[2].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Minus()
+        {
+            var text = "x--";
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(10);
+            var counter = 0;
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+
+            counter = 0;
+            text = "--x";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+
+            counter = 0;
+            text = "-1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+
+            counter = 0;
+            text = "x-- - 1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+
+            counter = 0;
+            text = "x-- - -1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+
+            counter = 0;
+            text = "x-- - --x";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+        }
+
+        [Test]
+        public static void Lexer_Test_Plus()
+        {
+            var text = "x++";
+            var lexer = new Lexer(text);
+            var toks = lexer.ConsumeTokens(10);
+            var counter = 0;
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+
+            counter = 0;
+            text = "++x";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+
+            counter = 0;
+            text = "+1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+
+            counter = 0;
+            text = "x++ + 1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+            
+            counter = 0;
+            text = "x++ + +1";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
+            Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
+
+            counter = 0;
+            text = "x++ + ++x";
+            lexer = new Lexer(text);
+            toks = lexer.ConsumeTokens(10);
+
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Identifier, toks[counter++].TokenType);
         }
 
         [TestCase("\"t\"c", ExpectedResult = "t")]
