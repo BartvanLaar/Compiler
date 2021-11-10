@@ -191,7 +191,7 @@ namespace Compiling.Backends
         {
             Visit(expression.IfCondition);
             Visit(expression.IfBody);
-            Visit(expression.Else);
+            Visit(expression.ElseBody);
         }
 
         public void VisitIntegerExpression(IntegerExpression expression)
@@ -218,8 +218,14 @@ namespace Compiling.Backends
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
-            Visit(expression.WhileCondition);
+            Visit(expression.Condition);
             Visit(expression.DoBody);
+        }
+
+        public void VisitDoWhileStatementExpression(DoWhileStatementExpression expression)
+        {
+            Visit(expression.DoBody);
+            Visit(expression.Condition);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
@@ -227,5 +233,6 @@ namespace Compiling.Backends
             //todo: how do returns even work?
             Visit(expression.Expression);
         }
+
     }
 }

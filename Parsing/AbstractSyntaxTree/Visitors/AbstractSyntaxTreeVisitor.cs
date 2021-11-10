@@ -85,6 +85,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.IfStatementExpression:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);
                     break;
+                case ExpressionType.DoWhileStatementExpression:
+                    visitor.VisitDoWhileStatementExpression((DoWhileStatementExpression)expression);
+                    break;
                 case ExpressionType.WhileStatementExpression:
                     visitor.VisitWhileStatementExpression((WhileStatementExpression)expression);
                     break;

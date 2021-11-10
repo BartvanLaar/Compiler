@@ -1,8 +1,8 @@
 ﻿namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public class WhileStatementExpression : ExpressionBase
+    public class DoWhileStatementExpression : ExpressionBase
     {
-        public WhileStatementExpression(ExpressionBase whileCondition, BodyExpression doBody) : base(ExpressionType.WhileStatementExpression)
+        public DoWhileStatementExpression(ExpressionBase whileCondition, BodyExpression doBody) : base(ExpressionType.DoWhileStatementExpression)
         {
             Condition = whileCondition;
             DoBody = doBody;

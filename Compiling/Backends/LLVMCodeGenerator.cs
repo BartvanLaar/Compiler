@@ -31,7 +31,7 @@ namespace Compiling.Backends
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
 
             var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
-            glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1, false);
+            glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
         }
 
         public string Name => "LLVM backend";
@@ -441,11 +441,9 @@ namespace Compiling.Backends
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
-        {
-            //todo: fix so it works without else ...
+        {           
             Visit(expression.IfCondition);
-            var condExpr = _valueStack.Pop(); // this is true or false right? or should i compare this again like the example? ->   var condv = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealONE, this.valueStack.Pop(), LLVM.ConstReal(LLVM.DoubleType(), 0.0), "ifcond");
-            var condv = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, condExpr, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1), "ifcond");
+            var condv = _valueStack.Pop();
             var parentFuncBlock = _builder.InsertBlock.Parent;
             var ifBodyBB = parentFuncBlock.AppendBasicBlock("ifBody");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
@@ -453,14 +451,16 @@ namespace Compiling.Backends
 
             _builder.BuildCondBr(condv, ifBodyBB, elseBB);
 
-            _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
+
+            // set insertion point to ifBody basic block before visiting...
+            _builder.PositionAtEnd(ifBodyBB);
             Visit(expression.IfBody);
  
             _builder.BuildBr(mergeBB);
 
-            // emit again before visit...
+            // set insertion point to elseBody basic block before visiting
             _builder.PositionAtEnd(elseBB);
-            Visit(expression.Else);
+            Visit(expression.ElseBody);
    
             _builder.BuildBr(mergeBB);
 
@@ -476,61 +476,28 @@ namespace Compiling.Backends
 
         public void VisitForStatementExpression(ForStatementExpression expression)
         {
-            // Output this as:
-            //   ...
-            //   start = startexpr
-            //   goto loop
-            // loop:
-            //   variable = phi [start, loopheader], [nextvariable, loopend]
-            //   ...
-            //   bodyexpr
-            //   ...
-            // loopend:
-            //   step = stepexpr
-            //   nextvariable = variable + step
-            //   endcond = endexpr
-            //   br endcond, loop, endloop
-            // outloop:
-
-            var function = _builder.InsertBlock.Parent;
             // save (shadowed) outer scope variable pointer if it exists.          
             _valueAllocationPointers.TryGetValue(expression.VariableName, out var oldValueAlloca);
+            Visit(expression.VariableDeclaration); // visit var decl outside loop scope.
 
-            Visit(expression.VariableDeclaration);
+            var function = _builder.InsertBlock.Parent;
+            var loopHeaderBB = function.AppendBasicBlock("loopHeader");
+            var loopBodyBB = function.AppendBasicBlock("loopBody");
+            var afterLoopBB = function.AppendBasicBlock("afterLoop"); // aka mergeBB
 
-            // Make the new basic block for the loop header, inserting after current
-            // block.
-
-            var loopBB = function.AppendBasicBlock("loop");
-
-            // Insert an explicit fall through from the current block to the LoopBB.
-            _builder.BuildBr(loopBB);
-            // Start insertion in LoopBB.
-            _builder.PositionAtEnd(loopBB);
-
-
-
-            // Emit the body of the loop.  This, like any other expr, can change the
-            // current BB.  Note that we ignore the value computed by the body, but don't
-            // allow an error.
-
-            //Todo: fix! shouldn't this only be done when the endCond is true? i = 0 i< 0; i++ still runs the loop once, when the condition is false!
-            Visit(expression.Body);
-
-            Visit(expression.VariableIncreaseExpression); // visiting increases the value allocated to the variable.
-
-            // Compute the end condition.
+            _builder.BuildBr(loopHeaderBB); // Insert an explicit fall through from the current block to the LoopHeaderBB.
+            _builder.PositionAtEnd(loopHeaderBB); // Start insertion in LoopBB.
             Visit(expression.Condition);
             var endCondition = _valueStack.Pop();
+            _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
 
-            // Create the "after loop" block and insert it.
+            _builder.PositionAtEnd(loopBodyBB); // Start insertion in LoopBodyBB.
+            Visit(expression.Body);
+            Visit(expression.VariableIncreaseExpression); // visiting increases the value allocated to the variable.
 
-            var afterBB = function.AppendBasicBlock("afterLoop");
+            _builder.BuildBr(loopHeaderBB);
 
-            _builder.BuildCondBr(endCondition, loopBB, afterBB);
-
-            // Any new code will be inserted in AfterBB.
-            _builder.PositionAtEnd(afterBB);
+            _builder.PositionAtEnd(afterLoopBB); // set insertion point to afterLoopBB
 
             // Restore the unshadowed variable.
             if (oldValueAlloca.Handle != IntPtr.Zero)
@@ -541,7 +508,6 @@ namespace Compiling.Backends
             {
                 _valueAllocationPointers.Remove(expression.VariableName);
             }
-
         }
 
         public void VisitBodyExpression(BodyExpression expression)
@@ -558,42 +524,51 @@ namespace Compiling.Backends
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
             var function = _builder.InsertBlock.Parent;
+            var loopHeaderBB = function.AppendBasicBlock("loopHeader");
+            var loopBodyBB = function.AppendBasicBlock("loop");
+            var afterLoopBB = function.AppendBasicBlock("afterLoop");
 
-            var loopBB = function.AppendBasicBlock("loop");
-
-            // Insert an explicit fall through from the current block to the LoopBB.
-            _builder.BuildBr(loopBB);
-            // Start insertion in LoopBB.
-            _builder.PositionAtEnd(loopBB);
-
-            // Compute the end condition.
-            if (expression.RunDoFirst) // dowhile
-            {
-                //Todo: fix! shouldn't this only be done when the endCond is true? while(false) still runs the loop once, when the condition is false!
-                Visit(expression.DoBody);
-            }
-
-            Visit(expression.WhileCondition);
+            _builder.BuildBr(loopHeaderBB); // Insert an explicit fall through from the current block to the LoopHeaderBB.
+            _builder.PositionAtEnd(loopHeaderBB); // Start insertion in LoopHeaderBB.
+            Visit(expression.Condition);
             var endCondition = _valueStack.Pop();
+            _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
+            _builder.PositionAtEnd(loopBodyBB); // Start insertion in LoopBodyBB.
+            
+            Visit(expression.DoBody);
 
-            // Create the "after loop" block and insert it.
+            _builder.BuildBr(loopHeaderBB); // go back to header and check condition
 
-            var afterBB = function.AppendBasicBlock("afterLoop");
+            _builder.PositionAtEnd(afterLoopBB); // set insertion point to after the loop...
+        }
 
-            _builder.BuildCondBr(endCondition, loopBB, afterBB);
+        public void VisitDoWhileStatementExpression(DoWhileStatementExpression expression)
+        {
+            var function = _builder.InsertBlock.Parent;
+            var loopBodyBB = function.AppendBasicBlock("loop");
+            var loopFooterBB = function.AppendBasicBlock("loopHeader");
+            var afterLoopBB = function.AppendBasicBlock("afterLoop");
 
-            // Emit the body of the loop.  This, like any other expr, can change the
-            // current BB.  Note that we ignore the value computed by the body, but don't
-            // allow an error.
-            if (!expression.RunDoFirst)
-            {
-                //Todo: fix! shouldn't this only be done when the endCond is true? while(false) still runs the loop once, when the condition is false!
-                Visit(expression.DoBody);
-            }
+            _builder.BuildBr(loopBodyBB);
+            _builder.PositionAtEnd(loopBodyBB);
+            Visit(expression.DoBody);
 
-            // Any new code will be inserted in AfterBB.
-            _builder.PositionAtEnd(afterBB);
+            _builder.BuildBr(loopFooterBB);
+            _builder.PositionAtEnd(loopFooterBB);
+            Visit(expression.Condition);
+            var endCondition = _valueStack.Pop();
+            _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
+            _builder.PositionAtEnd(afterLoopBB);
 
+            //_builder.BuildBr(loopHeaderBB); // Insert an explicit fall through from the current block to the LoopHeaderBB.
+            //_builder.PositionAtEnd(loopHeaderBB); // Start insertion in LoopHeaderBB.
+            //_builder.PositionAtEnd(loopBodyBB); // Start insertion in LoopBodyBB.
+
+            //Visit(expression.DoBody);
+
+            //_builder.BuildBr(loopHeaderBB); // go back to header and check condition
+
+            //_builder.PositionAtEnd(afterLoopBB); // set insertion point to after the loop...
         }
 
         public void VisitReturnExpression(ReturnExpression expression)

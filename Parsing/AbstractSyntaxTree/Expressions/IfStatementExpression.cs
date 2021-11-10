@@ -6,11 +6,11 @@
         {
             IfCondition = ifCondition;
             IfBody = ifBody;
-            Else = @else;
+            ElseBody = @else;
         }
 
         public ExpressionBase IfCondition { get; }
         public ExpressionBase IfBody { get; }
-        public ExpressionBase? Else { get; }
+        public ExpressionBase? ElseBody { get; }
     }   
 }

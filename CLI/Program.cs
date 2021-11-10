@@ -17,17 +17,16 @@ namespace CLI
             //var code = "func main() -> int {if(true) {return 10;} return 69;}";
 
             //var code = @"func main() -> int {
-            //                var x = 5;
-            //                if(false) { x =69; } else if(false) {x = 420;} else {x = 1337;}
-                                
+            //                var x = 1;
+            //                if(0 > x) { x =69; } else if(false) {x = 420;} else {x = 1337;}
+
             //                return x;
             //           }";
 
             var code = @" func main() -> int 
                         {
                             var x = 0;
-                            while(false)
-                            do
+                            for(var i = 0; i < 42; i = i + 1)
                             {
                                 x = x + 1;
                             }

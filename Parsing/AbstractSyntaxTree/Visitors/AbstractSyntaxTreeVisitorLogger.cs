@@ -73,7 +73,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Visit(expression.IfCondition);
             Visit(expression.IfBody);
-            Visit(expression.Else);
+            Visit(expression.ElseBody);
             Log(expression);
         }
 
@@ -94,7 +94,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Log(expression);
         }
 
-
+        public void VisitDoWhileStatementExpression(DoWhileStatementExpression expression)
+        {
+            Log(expression);
+        }
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
@@ -111,5 +114,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
+
+
     }
 }
