@@ -39,9 +39,8 @@ namespace Compiling
             sw.Restart();
             module.Dump();
             ctx.Dispose();
+            module.Dispose();
             // i think the module is disposed by disposing the passManager and executionEngine...
-            passManager.Dispose();
-            executionEngine.Dispose();
             builder.Dispose();
             sw.Stop();
             Console.WriteLine($"Cleaning up LLVM leftovers took {sw.ElapsedMilliseconds} ms.");
@@ -120,7 +119,7 @@ namespace Compiling
             passManager.AddBasicAliasAnalysisPass();
 
             // Promote allocations to registers.
-            passManager.AddPromoteMemoryToRegisterPass();
+            passManager.AddPromoteMemoryToRegisterPass();            
 
             // Do simple "peephole" optimizations and bit-twiddling optzns.
             passManager.AddInstructionCombiningPass();

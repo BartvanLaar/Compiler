@@ -47,7 +47,7 @@ namespace Compiling.Backends
             {
                 throw new ArgumentException($"Redeclaration of {expression.Identifier}! Scopes are not yet supported! Don't re-use variable names!");
             }
-            var alloca = CreateEntryBlockAlloca(_builder.InsertBlock.Parent, rhsValue.TypeOf, expression.Identifier);
+            var alloca = CreateEntryBlockAlloca(rhsValue.TypeOf, expression.Identifier);
             _builder.BuildStore(rhsValue, alloca);
             _valueAllocationPointers.Add(expression.Identifier, alloca);
         }
@@ -173,7 +173,8 @@ namespace Compiling.Backends
                 _valueAllocationPointers[argumentName] = param;
             }
             //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
-            _builder.PositionAtEnd(function.AppendBasicBlock(expressionName)); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
+            var entryBB = function.AppendBasicBlock("entry");            
+            _builder.PositionAtEnd(entryBB); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
             if (expression.FunctionBody is not null)
@@ -468,9 +469,16 @@ namespace Compiling.Backends
             _builder.PositionAtEnd(mergeBB);
         }
 
-        private LLVMValueRef CreateEntryBlockAlloca(LLVMValueRef function, LLVMTypeRef typeRef, string variableName)
+        private LLVMValueRef CreateEntryBlockAlloca(LLVMTypeRef typeRef, string variableName)
         {
-            //todo: make sure the alloca is added to the entry block of the function...?
+            //var currentPos = _builder.InsertBlock;
+
+            //var function = _builder.InsertBlock.Parent.EntryBasicBlock;
+            //todo: make sure the alloca is added to the entry block of the function...? and make sure that this works
+            //_builder.PositionAtEnd(function);
+            //var alloca = _builder.BuildAlloca(typeRef, variableName);
+            //_builder.PositionAtEnd(currentPos);
+            //return alloca;
             return _builder.BuildAlloca(typeRef, variableName);
         }
 
@@ -559,29 +567,24 @@ namespace Compiling.Backends
             var endCondition = _valueStack.Pop();
             _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
             _builder.PositionAtEnd(afterLoopBB);
-
-            //_builder.BuildBr(loopHeaderBB); // Insert an explicit fall through from the current block to the LoopHeaderBB.
-            //_builder.PositionAtEnd(loopHeaderBB); // Start insertion in LoopHeaderBB.
-            //_builder.PositionAtEnd(loopBodyBB); // Start insertion in LoopBodyBB.
-
-            //Visit(expression.DoBody);
-
-            //_builder.BuildBr(loopHeaderBB); // go back to header and check condition
-
-            //_builder.PositionAtEnd(afterLoopBB); // set insertion point to after the loop...
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
             Visit(expression.Expression);
+            //var function = _builder.InsertBlock.Parent;
+            //var returnBB = function.AppendBasicBlock("return");
+            //_builder.PositionAtEnd(_builder.InsertBlock.Parent.);
+
             //if (_valueStack.Count > 0)
             //{
-            //    _valueStack.Push(_builder.BuildRet(_valueStack.Pop()));
+            //    _builder.BuildRet(_valueStack.Pop());
             //}
             //else
             //{
-            //    _valueStack.Push(_builder.BuildRetVoid());
+            //    _builder.BuildRetVoid();
             //}
+
         }
 
     }
