@@ -35,6 +35,12 @@
     <None Update="TestFiles\EmptyCodeBodiesTest.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\IfFalseTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\IfTrueTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\WhileLoopReturn.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

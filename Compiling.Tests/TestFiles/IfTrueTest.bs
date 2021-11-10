@@ -1,0 +1,9 @@
+﻿func main() -> int {
+    var x = 1337;
+    if(x == 1337)
+    {
+        x = 42;
+    } 
+
+    return x;
+}

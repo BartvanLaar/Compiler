@@ -50,6 +50,8 @@ namespace Compiling.Tests
                 yield return new object[] { FN("DoWhileLoopReturn"), new TestFile() { IsExecutable = true, ExitCode = 1 } };
                 yield return new object[] { FN("ForILoopDontExecuteBody"), new TestFile() { IsExecutable = true, ExitCode = 0 } };
                 yield return new object[] { FN("EmptyCodeBodiesTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IfFalseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IfTrueTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 //test below will fail untill we have proper type checking and inference (with required added type metadata) to support function name mangling at the calling side...
                 yield return new object[] { FN("IntMainFuncParamsDefinitionOverloaded"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
 

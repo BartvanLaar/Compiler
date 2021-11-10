@@ -442,7 +442,7 @@ namespace Compiling.Backends
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
-            // todo: fix so it works without else...
+            //todo: fix so it works without else ...
             Visit(expression.IfCondition);
             var condExpr = _valueStack.Pop(); // this is true or false right? or should i compare this again like the example? ->   var condv = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealONE, this.valueStack.Pop(), LLVM.ConstReal(LLVM.DoubleType(), 0.0), "ifcond");
             var condv = _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, condExpr, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1), "ifcond");
@@ -455,37 +455,22 @@ namespace Compiling.Backends
 
             _builder.PositionAtEnd(ifBodyBB); // this is called "emitting the value..." even though we havent visited it yet.. Perhaps it now starts registering or something?
             Visit(expression.IfBody);
-
-            var ifBodyValue = _valueStack.Pop();
+ 
             _builder.BuildBr(mergeBB);
-
-            //ifBody can change current code block, update thenBB for the PHI
-            ifBodyBB = _builder.InsertBlock;
 
             // emit again before visit...
             _builder.PositionAtEnd(elseBB);
             Visit(expression.Else);
-
-            var elseValue = _valueStack.Pop();
+   
             _builder.BuildBr(mergeBB);
-
-            //body of else can change current code block, update thenBB for the PHI
-            elseBB = _builder.InsertBlock;
 
             // emit the merge of if and else
             _builder.PositionAtEnd(mergeBB);
-
-            // what does Phi mean? Phony? https://en.wikipedia.org/wiki/Static_single_assignment_form
-            var phi = _builder.BuildPhi(LLVMTypeRef.Int64); // example uses a double type... Will int also work? -> no, phi is a floating point operation...? but lets test it anyway
-            phi.AddIncoming(new[] { ifBodyValue }, new[] { ifBodyBB }, 1);
-            phi.AddIncoming(new[] { elseValue }, new[] { elseBB }, 1);
-
-            _valueStack.Push(phi);
         }
+
         private LLVMValueRef CreateEntryBlockAlloca(LLVMValueRef function, LLVMTypeRef typeRef, string variableName)
         {
-            //_builder.buildC
-            //var tmpBuilder = new LLVMBuilderRef(function.EntryBasicBlock.Handle);
+            //todo: make sure the alloca is added to the entry block of the function...?
             return _builder.BuildAlloca(typeRef, variableName);
         }
 
@@ -533,7 +518,7 @@ namespace Compiling.Backends
             Visit(expression.Body);
 
             Visit(expression.VariableIncreaseExpression); // visiting increases the value allocated to the variable.
-            
+
             // Compute the end condition.
             Visit(expression.Condition);
             var endCondition = _valueStack.Pop();
