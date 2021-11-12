@@ -1,4 +1,5 @@
 ﻿using Parsing.AbstractSyntaxTree.Expressions;
+using System;
 using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Visitors
@@ -16,7 +17,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public static void Visit(IAbstractSyntaxTreeVisitor visitor, ExpressionBase? expression)
         {
-            if(expression is null)
+            if (expression is null)
             {
                 return;
             }

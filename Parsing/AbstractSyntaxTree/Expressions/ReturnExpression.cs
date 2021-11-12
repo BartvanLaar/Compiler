@@ -4,11 +4,13 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class ReturnExpression : ExpressionBase
     {
-        public ReturnExpression(Token returnToken, ExpressionBase? expression) : base(returnToken, ExpressionType.Return)
+        public ReturnExpression(Token returnToken, ExpressionBase? returnExpression, TypeIndicator functionReturnTypeIndicator) : base(returnToken, ExpressionType.Return)
         {
-            Expression = expression;
+            ReturnExpr = returnExpression;
+            FunctionReturnTypeIndicator = functionReturnTypeIndicator;
         }
 
-        public ExpressionBase? Expression { get; }
+        public ExpressionBase? ReturnExpr { get; }
+        public TypeIndicator FunctionReturnTypeIndicator { get; }
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace TestHelpers.Tests
+﻿using System;
+using System.IO;
+using System.Linq;
+
+namespace TestHelpers.Tests
 {
     public static class StandardOutputHelper
     {

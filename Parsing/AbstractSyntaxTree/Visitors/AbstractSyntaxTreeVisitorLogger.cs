@@ -54,7 +54,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Visit(expression.FunctionBody);
+            Visit(expression.Body);
             Log(expression);
         }
 
@@ -101,7 +101,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            Visit(expression.Expression);
+            Visit(expression.ReturnExpr);
             Log(expression);
         }
 

@@ -16,6 +16,7 @@ namespace Parsing
         private readonly ILexer _lexer;
         private readonly string _file;
         private readonly List<ExpressionBase> _expressions;
+        private TypeIndicator? _currentFunctionReturnType = null; // not THREAD SAFE! May be visited at a later date... Perhaps files should be parsed one at a time?
 
         public Parser(ILexer lexer) : this(lexer, DIRECT_TEXT_INPUT) { }
 
@@ -180,7 +181,12 @@ namespace Parsing
 
         private ExpressionBase ParseReturnStatementExpression()
         {
-            return new ReturnExpression(ConsumeToken(), ParseTopLevelExpression());
+            if (!_currentFunctionReturnType.HasValue)
+            {
+                throw ParseError(PeekToken(), "return statements are only allowed within a function");
+            }
+
+            return new ReturnExpression(ConsumeToken(), ParseTopLevelExpression(), _currentFunctionReturnType.Value);
         }
 
         private ExpressionBase? ParseParantheseOpen()
@@ -206,39 +212,37 @@ namespace Parsing
 
         private FunctionDefinitionExpression ParseFunctionDefinitionExpression()
         {
-            var peekedToken = PeekToken();
-            var isExtern = peekedToken.TokenType is TokenType.Extern;
-            var isExport = peekedToken.TokenType is TokenType.Export;
+            var isExtern = PeekToken().TokenType is TokenType.Extern;
+            var isExport = PeekToken().TokenType is TokenType.Export;
 
             if (isExtern && isExport)
             {
-                throw ParserError(peekedToken, "Function definition can not be both extern and export at the same time");
+                throw ParseError(PeekToken(), "Function definition can not be both extern and export at the same time");
             }
 
             if (isExtern || isExport)
             {
-                ConsumeToken();
-                peekedToken = PeekToken();
+                ConsumeToken();   
             }
 
-            if (peekedToken.TokenType is not TokenType.FunctionDefinition)
+            if (PeekToken().TokenType is not TokenType.FunctionDefinition)
             {
-                throw ParserError(peekedToken, TokenType.FunctionDefinition, "after extern or export declaration");
+                throw ParserError(PeekToken(), TokenType.FunctionDefinition, "after extern or export declaration");
             }
 
             ConsumeToken();
-            peekedToken = PeekToken();
-            if (peekedToken.TokenType is not TokenType.FunctionName)
+   ;
+            if (PeekToken().TokenType is not TokenType.FunctionName)
             {
-                throw ParserError(peekedToken, TokenType.FunctionName, "after func definition");
+                throw ParserError(PeekToken(), TokenType.FunctionName, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
-            peekedToken = PeekToken();
+   
 
-            if (peekedToken.TokenType is not TokenType.ParanthesesOpen)
+            if (PeekToken().TokenType is not TokenType.ParanthesesOpen)
             {
-                throw ParseError(peekedToken, LexerConstants.PARANTHESES_OPEN, "after func identifier");
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "after func identifier");
             }
 
             ConsumeToken();
@@ -267,7 +271,7 @@ namespace Parsing
                 var typeIdentifier = PeekToken();
                 if (typeIdentifier.TypeIndicator is TypeIndicator.Inferred)
                 {
-                    throw ParserError(typeIdentifier, "Inferred types are not allowed in function definitions.");
+                    throw ParseError(typeIdentifier, "Inferred types are not allowed in function definitions.");
                 }
                 ConsumeToken();
 
@@ -282,38 +286,38 @@ namespace Parsing
                 parameters.Add(new FunctionDefinitionArgument(typeIdentifier, variableName));
             }
 
-            //todo: mangled names can only be used after we add type checking...
-            // @IMPORTANT, TYPE CHECKING SHOULD ADD TYPE DATA TO TOKENS. e.g. auto, var, function calls passed as function arguments.. etc
-            //var functionName = CreateMangledName(funcIdentifier.Name, parameters.Select(x => x.TypeToken));
             var functionName = funcIdentifier.Name;
-
-            //todo: check resulting parameters if any... They either all should have a token, or none should. e.g. difference between function call and function definition.
-            // However, we can not assume that it's a function call based on this, as functions are allowed to have zero parameters.
-            peekedToken = PeekToken();
-            if (peekedToken.TokenType is not TokenType.ParanthesesClose)
+  
+            if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
-                throw ParseError(peekedToken, LexerConstants.PARANTHESES_CLOSE, "after func identifier");
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "after func identifier");
             }
-            ConsumeToken();
-            peekedToken = PeekToken();
 
-            if (peekedToken.TokenType is not TokenType.ReturnTypeIndicator)
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.ReturnTypeIndicator)
             {
-                throw ParseError(peekedToken, LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
+                throw ParseError(PeekToken(), LexerConstants.RETURN_TYPE_INDICATOR, "after func parameter body");
             }
 
             ConsumeToken(); // don't care about return type indicator
 
+            if(PeekToken().TokenType is not TokenType.Type or TokenType.Identifier)
+            {
+                throw ParseError(PeekToken(), "Type", "after return type indicator");
+            }
+
             var returnType = ConsumeToken();
-            
-            peekedToken = PeekToken();
+            Debug.Assert(returnType is not null);
+            _currentFunctionReturnType = returnType.TypeIndicator; // if none is present... assume void...
 
             if (isExtern)
             {
-                if (peekedToken.TokenType is not TokenType.EndOfStatement)
+                if (PeekToken().TokenType is not TokenType.EndOfStatement)
                 {
-                    throw ParseError(peekedToken, LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
+                    throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, $"after func type identifier in extern function definition");
                 }
+
                 ConsumeToken();
 
                 Debug.Assert(!isExport);
@@ -409,7 +413,7 @@ namespace Parsing
             var conditionalExpression = ParseTopLevelExpression(false);
             if (conditionalExpression == null)
             {
-                throw ParserError(ifToken, "Expected an expression but got none.");
+                throw ParseError(ifToken, "Expected an expression but got none.");
             }
 
             //todo: handle multiple { and } signs indented inside ?
@@ -543,7 +547,7 @@ namespace Parsing
 
                 if (argumentExpression == null)
                 {
-                    throw ParserError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ");
+                    throw ParseError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ");
                 }
 
                 functionArguments.Add(argumentExpression);
@@ -587,12 +591,12 @@ namespace Parsing
 
             if (string.IsNullOrWhiteSpace(expr.Token.ValueAsString))
             {
-                throw ParserError(importTok, "Expected non empty string expression representing a file path after import statement.");
+                throw ParseError(importTok, "Expected non empty string expression representing a file path after import statement.");
             }
 
             if (!File.Exists(expr.Token.ValueAsString))
             {
-                throw ParserError(importTok, "File specified in import statement could not be found.");
+                throw ParseError(importTok, "File specified in import statement could not be found.");
             }
 
             ConsumeToken();
@@ -613,7 +617,7 @@ namespace Parsing
             ConsumeToken();
 
             var variableDeclExp = ParseVariableDeclaration();
-            if(variableDeclExp is null)
+            if (variableDeclExp is null)
             {
                 throw ParseError(PeekToken(), "variable declaration", "inside, but at the start of, the 'for loop' header");
             }
@@ -629,7 +633,7 @@ namespace Parsing
             {
                 throw ParseError(PeekToken(), "variable modifier expression", "inside, but at the end of, the 'for loop' header");
             }
-            
+
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
                 throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "at end of 'for loop' header");
@@ -692,17 +696,6 @@ namespace Parsing
             return new CharacterExpression(ConsumeToken());
         }
 
-        private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
-        {
-            var name = baseName;
-            foreach (var token in typeTokens)
-            {
-                name += token.Name.First();
-            }
-            return name;
-        }
-
-
         private ParseException ParserError(TokenType expectedTokenType, string expectedInOrAt)
         {
             return ParseError(PeekToken(), expectedTokenType.ToString(), expectedInOrAt);
@@ -715,15 +708,15 @@ namespace Parsing
 
         private ParseException ParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
-            return ParserError(token, $"Expected '{expectedCharacter}' {exptectedInOrAt}");
+            return ParseError(token, $"Expected '{expectedCharacter}' {exptectedInOrAt}");
         }
 
         private ParseException ParserError(string message)
         {
-            return ParserError(PeekToken(), message);
+            return ParseError(PeekToken(), message);
         }
 
-        private ParseException ParserError(Token token, string message)
+        private ParseException ParseError(Token token, string message)
         {
             if (!message.EndsWith("!") && !message.EndsWith("."))
             {

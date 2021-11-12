@@ -1,5 +1,7 @@
 ﻿using Compiling;
+using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace CLI
 {
@@ -18,12 +20,12 @@ namespace CLI
             //var code = "func main() -> int {if(false){return 69;} else { if(false) {return 666;} else {return 1337;}}}";
             //var code = "func main() -> int {if(true) {return 10;} return 69;}";
 
-            var code = @"func main() -> int {
-                            var x = 1;
-                            if(0 > x) { x =69; } else {x = 1337;}
+            //var code = @"func main() -> int {
+            //                var x = 1;
+            //                if(0 > x) { x =69; } else {x = 1337;}
 
-                            return x;
-                       }";
+            //                return x;
+            //           }";
 
             //var code = @" func main() -> int 
             //            {
@@ -36,12 +38,11 @@ namespace CLI
             //                return x;
             //            }";
 
-            //var code = @" func main() -> int 
-            //            {
-            //                if(true){return 420;} else {return 1337;} return 69;
-            //            }";
-
+            var code = "func main() -> int   {      var x =\"test\";      } return 5;";
+            //var code = " func main() -> int                  {                                printf(\"%f\\n\", 5);                            if(true){return 420;} else {return 1337;}                        }";
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
+
+            //todo: add support for order independent code? required 2 separate parse phases
             if (File.Exists("output.exe"))
             {
                 var proc = Process.Start("output.exe");

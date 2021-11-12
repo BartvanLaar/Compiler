@@ -5,10 +5,10 @@
         public DoWhileStatementExpression(ExpressionBase whileCondition, BodyExpression doBody) : base(ExpressionType.DoWhileStatementExpression)
         {
             Condition = whileCondition;
-            DoBody = doBody;
+            Body = doBody;
         }
 
         public ExpressionBase Condition { get; set; }
-        public ExpressionBase DoBody {  get; set; }
+        public ExpressionBase Body {  get; set; }
     }
 }

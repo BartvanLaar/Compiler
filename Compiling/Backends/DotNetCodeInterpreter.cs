@@ -213,25 +213,25 @@ namespace Compiling.Backends
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Visit(expression.FunctionBody);
+            Visit(expression.Body);
         }
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
         {
             Visit(expression.Condition);
-            Visit(expression.DoBody);
+            Visit(expression.Body);
         }
 
         public void VisitDoWhileStatementExpression(DoWhileStatementExpression expression)
         {
-            Visit(expression.DoBody);
+            Visit(expression.Body);
             Visit(expression.Condition);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
             //todo: how do returns even work?
-            Visit(expression.Expression);
+            Visit(expression.ReturnExpr);
         }
 
     }

@@ -10,15 +10,15 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             FunctionName = name;
             Arguments = arguments;
             ReturnTypeToken = returnTypeToken;
-            FunctionBody = functionBody;
+            Body = functionBody;
             IsExtern = isExtern;
             IsExport = isExport;
         }
 
-        public string FunctionName { get; }
+        public string FunctionName { get; set; }
         public FunctionDefinitionArgument[] Arguments { get; }
         public Token ReturnTypeToken { get; }
-        public BodyExpression? FunctionBody { get; }
+        public BodyExpression? Body { get; }
         public bool IsExtern { get; }
         public bool IsExport { get; }
     }

@@ -2,7 +2,10 @@
 using LLVMSharp.Interop;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Compiling.Backends
 {
@@ -26,7 +29,10 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
-
+            //var type = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
+            //var func = _module.AddFunction("printf", type);
+            //func.Linkage = LLVMLinkage.LLVMDLLImportLinkage;
+            
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
 
@@ -86,7 +92,7 @@ namespace Compiling.Backends
 
         public void VisitStringExpression(StringExpression expression)
         {
-            _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.Int16, expression.Value));
+            _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8,0), expression.Value, (uint)expression.Value.Length));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -173,15 +179,15 @@ namespace Compiling.Backends
                 _valueAllocationPointers[argumentName] = param;
             }
             //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
-            var entryBB = function.AppendBasicBlock("entry");            
+            var entryBB = function.AppendBasicBlock("entry");
             _builder.PositionAtEnd(entryBB); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
             //todo: implement visit body and add it to the function? So actual code can be run
-            if (expression.FunctionBody is not null)
+            if (expression.Body is not null)
             {
                 try
                 {
-                    Visit(expression.FunctionBody);
+                    Visit(expression.Body);
                 }
                 catch (Exception)
                 {
@@ -190,15 +196,15 @@ namespace Compiling.Backends
                 }
             }
 
-            if (expression.ReturnTypeToken.TypeIndicator is TypeIndicator.Void)
-            {
-                _builder.BuildRetVoid();
-            }
-            else
-            {
-                var retValue = _valueStack.Pop();
-                _builder.BuildRet(retValue);
-            }
+            //if (expression.ReturnTypeToken.TypeIndicator is TypeIndicator.Void)
+            //{
+            //    _builder.BuildRetVoid();
+            //}
+            //else
+            //{
+            //    var retValue = _valueStack.Pop();
+            //    _builder.BuildRet(retValue);
+            //}
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
@@ -442,7 +448,7 @@ namespace Compiling.Backends
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
-        {           
+        {
             Visit(expression.IfCondition);
             var condv = _valueStack.Pop();
             var parentFuncBlock = _builder.InsertBlock.Parent;
@@ -456,13 +462,13 @@ namespace Compiling.Backends
             // set insertion point to ifBody basic block before visiting...
             _builder.PositionAtEnd(ifBodyBB);
             Visit(expression.IfBody);
- 
+
             _builder.BuildBr(mergeBB);
 
             // set insertion point to elseBody basic block before visiting
             _builder.PositionAtEnd(elseBB);
             Visit(expression.ElseBody);
-   
+
             _builder.BuildBr(mergeBB);
 
             // emit the merge of if and else
@@ -542,8 +548,8 @@ namespace Compiling.Backends
             var endCondition = _valueStack.Pop();
             _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
             _builder.PositionAtEnd(loopBodyBB); // Start insertion in LoopBodyBB.
-            
-            Visit(expression.DoBody);
+
+            Visit(expression.Body);
 
             _builder.BuildBr(loopHeaderBB); // go back to header and check condition
 
@@ -554,12 +560,12 @@ namespace Compiling.Backends
         {
             var function = _builder.InsertBlock.Parent;
             var loopBodyBB = function.AppendBasicBlock("loop");
-            var loopFooterBB = function.AppendBasicBlock("loopHeader");
+            var loopFooterBB = function.AppendBasicBlock("loopFooter");
             var afterLoopBB = function.AppendBasicBlock("afterLoop");
 
             _builder.BuildBr(loopBodyBB);
             _builder.PositionAtEnd(loopBodyBB);
-            Visit(expression.DoBody);
+            Visit(expression.Body);
 
             _builder.BuildBr(loopFooterBB);
             _builder.PositionAtEnd(loopFooterBB);
@@ -571,19 +577,23 @@ namespace Compiling.Backends
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            Visit(expression.Expression);
-            //var function = _builder.InsertBlock.Parent;
-            //var returnBB = function.AppendBasicBlock("return");
-            //_builder.PositionAtEnd(_builder.InsertBlock.Parent.);
+            var currentFunc = _builder.InsertBlock.Parent;
 
-            //if (_valueStack.Count > 0)
-            //{
-            //    _builder.BuildRet(_valueStack.Pop());
-            //}
-            //else
-            //{
-            //    _builder.BuildRetVoid();
-            //}
+            Visit(expression.ReturnExpr);
+
+            var bb = currentFunc.AppendBasicBlock("test");
+            _builder.PositionAtEnd(bb);
+            _builder.BuildBr(bb);
+            if (_valueStack.Count > 0)
+            {
+                _builder.BuildRet(_valueStack.Pop());
+
+            }
+            else
+            {
+                _builder.BuildRetVoid();
+            }
+            //_builder.BuildBr(_builder.InsertBlock.Parent.LastBasicBlock);
 
         }
 

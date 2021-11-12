@@ -5,7 +5,9 @@ using LLVMSharp.Interop;
 using Parsing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
+using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace Compiling
 {
@@ -28,8 +30,9 @@ namespace Compiling
             var (module, builder, executionEngine, passManager, ctx) = SetupLLVM();
 
             // below are all compilation steps..
-            var visitor = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
-            Run(text, visitor);// todo: replace with LLVM bytecode generator.
+            var typeChecker = new TypeChecker();
+            var codeGenerator = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
+            Run(text, typeChecker, codeGenerator);// todo: replace with LLVM bytecode generator.
             var sw = new Stopwatch();
             sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
@@ -119,7 +122,7 @@ namespace Compiling
             passManager.AddBasicAliasAnalysisPass();
 
             // Promote allocations to registers.
-            passManager.AddPromoteMemoryToRegisterPass();            
+            passManager.AddPromoteMemoryToRegisterPass();
 
             // Do simple "peephole" optimizations and bit-twiddling optzns.
             passManager.AddInstructionCombiningPass();
