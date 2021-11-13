@@ -23,7 +23,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Visit(expression.LeftHandSide);
             Visit(expression.RightHandSide);
-            Console.WriteLine($"Visiting {expression.GetType()} of TokenType {expression.Token?.ToStringToken()} resulting in {expression.LeftHandSide.Token?.ToStringValue()} {expression.Token?.ToStringValue()} {expression.RightHandSide?.Token?.ToStringValue()}.");
+            Console.WriteLine($"Visiting {expression.GetType()} of TokenType {expression.Token?.TokenType} resulting in {expression.LeftHandSide} {expression.RightHandSide}.");
         }
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)

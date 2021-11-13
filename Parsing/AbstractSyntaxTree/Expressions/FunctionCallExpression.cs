@@ -10,7 +10,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             Arguments = methodArguments;
         }
 
-        public string FunctionName => Token.Name;
+        public string FunctionName { get => Token.Name; set => Token.Name = value; }
         public ExpressionBase[] Arguments { get; }
     }
 }

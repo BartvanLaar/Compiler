@@ -12,7 +12,7 @@ namespace Compiling.Backends
             public TypeCheckValue(Token valueToken, Token typeToken)
             {
                 ValueToken = valueToken;
-                TypeToken = typeToken; 
+                TypeToken = typeToken;
             }
             public Token ValueToken { get; }
             public Token TypeToken { get; }
@@ -175,9 +175,10 @@ namespace Compiling.Backends
             }
             //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
             // the logic can be copied over.. i think...
-            var funcName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
+            //todo add logic for userdefined types.
+            expression.FunctionName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
 
-            var hasFunc = _functions.TryGetValue(funcName, out var funcExpr);
+            var hasFunc = _functions.TryGetValue(expression.FunctionName, out var funcExpr);
             if (!hasFunc)
             {
                 var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Name} {x.ValueToken.Name}"));
@@ -185,7 +186,7 @@ namespace Compiling.Backends
             }
 
             Debug.Assert(funcExpr != null); // stupid assert as hasFunc is checked above...
-            _valueStack.Push(new TypeCheckValue(expression.Token, funcExpr.ReturnTypeToken));            
+            _valueStack.Push(new TypeCheckValue(expression.Token, funcExpr.ReturnTypeToken));
         }
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
@@ -252,7 +253,7 @@ namespace Compiling.Backends
             var isTypeInferred = lhsType.TypeIndicator is TypeIndicator.Inferred || rhsType.TypeIndicator is TypeIndicator.Inferred;
             if (lhsType.TypeIndicator == rhsType.TypeIndicator)
             {
-                if(isTypeInferred) // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
+                if (isTypeInferred) // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
                 {
                     throw new Exception("Unable to infer type, both lhs and rhs are type inferred.");
                 }
@@ -261,7 +262,7 @@ namespace Compiling.Backends
             }
 
             var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo)[] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
-            
+
             if (!isTypeInferred && !supportedTypesOrdered.Any(t => t.TypeIndicator == lhsType.TypeIndicator || t.TypeIndicator == rhsType.TypeIndicator))
             {
                 return; // can only fix these types, so if lhs and rhs are not both of the above typeIndicator then return.
@@ -328,14 +329,32 @@ namespace Compiling.Backends
         {
             //todo: code below doesnt really work for user defined types as the name can have the same starting value....?
             var name = baseName;
-          
+
             foreach (var token in typeTokens)
             {
-                name += $"<{token.Name}>";
+                var typeName = token.TokenType is TokenType.Identifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
+                name += $"<{typeName}>";
             }
 
             return name;
         }
 
+        private static string ConvertTypeIndicatorToString(TypeIndicator typeIndicator)
+        {
+            return typeIndicator switch
+            {
+                TypeIndicator.Float => "float",
+                TypeIndicator.Double => "double",
+                TypeIndicator.Boolean => "bool",
+                TypeIndicator.Integer => "int",
+                TypeIndicator.Character => "char",
+                TypeIndicator.String => "string",
+                TypeIndicator.Inferred => throw new NotImplementedException(),
+                TypeIndicator.DateTime => throw new NotImplementedException(),
+                TypeIndicator.Void => throw new NotImplementedException(),
+                TypeIndicator.None => throw new NotImplementedException(),
+                _ => throw new NotImplementedException($"Exhaustive use of {nameof(ConvertTypeIndicatorToString)}."),
+            };
+        }
     }
 }

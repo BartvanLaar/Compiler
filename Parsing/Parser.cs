@@ -169,7 +169,7 @@ namespace Parsing
             {
                 TypeIndicator.None => throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value."),
                 TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this"),
-                //case TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
+                //TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
                 TypeIndicator.Float => ParseValueExpressionInternal(),
                 TypeIndicator.Double => ParseValueExpressionInternal(),
                 TypeIndicator.Boolean => ParseValueExpressionInternal(),
@@ -211,6 +211,7 @@ namespace Parsing
         private ExpressionBase ParseValueExpressionInternal()
         {
             var tok = ConsumeToken();
+
             return new ValueExpression(tok, tok);
         }
 
