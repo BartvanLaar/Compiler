@@ -201,11 +201,11 @@ namespace Lexing
             private const int ADDITIVE = SHIFT_PRECEDENCE + 1;
             private const int SHIFT_PRECEDENCE = RELATIONAL_TEST + 1;
             private const int RELATIONAL_TEST = EQUALITY_TEST + 1;
-            private const int EQUALITY_TEST = LOGICAL_AND + 1;
-            private const int LOGICAL_AND = LOGICAL_XOR + 1;
-            private const int LOGICAL_XOR = LOGICAL_OR + 1;
-            private const int LOGICAL_OR = CONDITIONAL_AND + 1;
-            private const int CONDITIONAL_AND = CONDITIONAL_OR + 1;
+            private const int EQUALITY_TEST = Bitwise_AND + 1;
+            private const int Bitwise_AND = Bitwise_OR + 1;
+            private const int Bitwise_OR = CONDITIONAL_AND + 1;
+            private const int CONDITIONAL_AND = CONDITIONAL_XOR + 1;
+            private const int CONDITIONAL_XOR = CONDITIONAL_OR + 1;
             private const int CONDITIONAL_OR = NULLABLE_COALESCE + 1;
             private const int NULLABLE_COALESCE = CONDITIONAL_OPERATOR + 1;
             private const int CONDITIONAL_OPERATOR = ASSIGNMENT_DECLARATION + 1;
@@ -237,11 +237,11 @@ namespace Lexing
                 [TokenType.NotEquivalent] = EQUALITY_TEST,
                 [TokenType.NotEquals] = EQUALITY_TEST,
 
-                [TokenType.LogicalAnd] = LOGICAL_AND,
-                [TokenType.LogicalXOr] = LOGICAL_XOR,
-                [TokenType.LogicalOr] = LOGICAL_OR,
+                [TokenType.BitwiseAnd] = Bitwise_AND,                
+                [TokenType.BitwiseOr] = Bitwise_OR,
 
                 [TokenType.ConditionalAnd] = CONDITIONAL_AND,
+                [TokenType.ConditionalXOr] = CONDITIONAL_XOR,
                 [TokenType.ConditionalOr] = CONDITIONAL_OR,
 
                 [TokenType.NullableCoalesce] = NULLABLE_COALESCE,

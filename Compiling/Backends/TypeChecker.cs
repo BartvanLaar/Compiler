@@ -20,133 +20,105 @@ namespace Compiling.Backends
         public void VisitBinaryExpression(BinaryExpression expression)
         {
             Visit(expression.LeftHandSide);
-            var lhsValue = Convert.ToDouble(_valueStack.Pop());
+            var lhsValue = _valueStack.Pop();
             Visit(expression.RightHandSide);
-            var rhsValue = Convert.ToDouble(_valueStack.Pop());
+            _valueStack.TryPop(out var rhsValue);
+
+            if (rhsValue == null)
+            {
+                return; // input = output
+            }
 
             switch (expression.NodeExpressionType)
             {
                 case ExpressionType.Add:
-                    {
-                        throw new NotImplementedException();
-                        break;
-                    }
                 case ExpressionType.Subtract:
-                    {
-                        throw new NotImplementedException();
-                        break;
-                    }
                 case ExpressionType.Multiply:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
                 case ExpressionType.Divide:
+                case ExpressionType.GreaterThan:
+                case ExpressionType.GreaterThanEqual:
+                case ExpressionType.LessThan:
+                case ExpressionType.LessThanEqual:
                     {
-                        throw new NotImplementedException();
+                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        {
+                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+                        }
 
-                        break;
+                        return;
                     }
                 case ExpressionType.Assignment:
                     {
-                        throw new NotImplementedException();
-
-                        break;
+                        //todo: refactor and infer type before calling this method...
+                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        {
+                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+                        }
+                        return;
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.Equals:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
                 case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
-                        throw new NotImplementedException();
+                        //todo: refactor and infer type before calling this method...
+                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        {
+                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+                        }
 
-                        break;
+                        return;
                     }
+                case ExpressionType.Equals:
                 case ExpressionType.NotEquals:
                     {
+                        //todo: refactor and infer type before calling this method...
+                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        {
+                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+                        }
 
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.GreaterThan:
-                    {
-                        throw new NotImplementedException();
-
-
-                        break;
-                    }
-                case ExpressionType.GreaterThanEqual:
-                    {
-                        throw new NotImplementedException();
-
-
-                        break;
-                    }
-                case ExpressionType.LessThan:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.LessThanEqual:
-                    {
-                        throw new NotImplementedException();
-
-
-                        break;
-                    }
-                case ExpressionType.LogicalOr:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.LogicalXOr:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.LogicalAnd:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.ConditionalOr:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
-                case ExpressionType.ConditionalAnd:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
+                        return;
                     }
                 case ExpressionType.BitShiftLeft:
-                    {
-                        throw new NotImplementedException();
-
-                        break;
-                    }
                 case ExpressionType.BitShiftRight:
+                case ExpressionType.BitwiseOr:
+                case ExpressionType.BitwiseAnd:
                     {
-                        throw new NotImplementedException();
-                        break;
+
+                        if (lhsValue.TypeIndicator != TypeIndicator.Integer)
+                        {
+                            throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
+                        }
+
+                        if (rhsValue.TypeIndicator != TypeIndicator.Integer)
+                        {
+                            throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
+                        }
+
+                        return;
                     }
+                case ExpressionType.ConditionalOr:
+                case ExpressionType.ConditionalXOr:
+                case ExpressionType.ConditionalAnd:
+                    {
+
+                        if (lhsValue.TypeIndicator != TypeIndicator.Boolean)
+                        {
+                            throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
+
+                        }
+
+                        if (rhsValue.TypeIndicator != TypeIndicator.Boolean)
+                        {
+                            throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
+                        }
+
+                        return;
+                    }
+
                 default:
                     throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
             }
@@ -188,12 +160,15 @@ namespace Compiling.Backends
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
-            throw new NotImplementedException();
+
+
+           throw new NotImplementedException();         
         }
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            // visit body first, cause defining a function is more important than the prototype..
+            //todo: make sure the arguments will be known before visting the body....
+
             Visit(expression.Body);
             var typeTokens = expression.Arguments.Select(x => x.TypeToken);
             expression.FunctionName = CreateMangledName(expression.FunctionName, typeTokens);
@@ -208,8 +183,9 @@ namespace Compiling.Backends
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
         {
-            Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
+            Visit(expression.IfCondition);
+            Visit(expression.IfBody);
+            Visit(expression.ElseBody);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
@@ -230,7 +206,7 @@ namespace Compiling.Backends
             Debug.Assert(returnExprToken is not null);
             Debug.Assert(expression.Token is not null);
             expression.Token.TypeIndicator = expression.FunctionReturnTypeIndicator;
-            FixTypes(expression.Token, returnExprToken);
+            FixNumericalTypesAndValuesIfRequired(expression.Token, returnExprToken);
             if (expression.FunctionReturnTypeIndicator != returnExprToken.TypeIndicator)
             {
                 throw new Exception($"Function with return type '{expression.FunctionReturnTypeIndicator}' can't return a value of type '{returnExprToken.TypeIndicator}'");
@@ -239,35 +215,40 @@ namespace Compiling.Backends
             return;
         }
 
-        private void FixTypes(Token lhs, Token rhs)// todo:rename
+        private static void FixNumericalTypesAndValuesIfRequired(Token lhs, Token rhs)// todo:rename
         {
-            Debug.Assert(lhs.TypeIndicator is not TypeIndicator.None && rhs.TypeIndicator is not TypeIndicator.None, $"{nameof(FixTypes)} does not support inferring types (yet)");// todo: handle type inference.
-
+            //todo: refactor and infer type before calling this method...
+            var isTypeInferred = lhs.TypeIndicator is TypeIndicator.Inferred || rhs.TypeIndicator is TypeIndicator.Inferred;
             if (lhs.TypeIndicator == rhs.TypeIndicator)
             {
+                if(isTypeInferred) // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
+                {
+                    throw new Exception("Unable to infer type, both lhs and rhs are type inferred.");
+                }
+
                 return;
             }
 
-            var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo) [] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
-
-            if (!supportedTypesOrdered.Any(t => t.TypeIndicator == lhs.TypeIndicator || t.TypeIndicator == rhs.TypeIndicator))
+            var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo)[] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
+            
+            if (!isTypeInferred && !supportedTypesOrdered.Any(t => t.TypeIndicator == lhs.TypeIndicator || t.TypeIndicator == rhs.TypeIndicator))
             {
                 return; // can only fix these types, so if lhs and rhs are not both of the above typeIndicator then return.
             }
 
-            foreach (var typeData in supportedTypesOrdered)
+            foreach (var typeData in supportedTypesOrdered)// don't filter list as its ordered..
             {
                 if (lhs.TypeIndicator == typeData.TypeIndicator || rhs.TypeIndicator == typeData.TypeIndicator)
                 {
                     lhs.TypeIndicator = typeData.TypeIndicator;
                     rhs.TypeIndicator = typeData.TypeIndicator;
-                    
-                    if(lhs.TokenType is TokenType.Value)
+
+                    if (lhs.TokenType is TokenType.Value)
                     {
                         lhs.Value = Convert.ChangeType(lhs.Value, typeData.TypeInfo);
                     }
-                    
-                    if(rhs.TokenType is TokenType.Value)
+
+                    if (rhs.TokenType is TokenType.Value)
                     {
                         rhs.Value = Convert.ChangeType(rhs.Value, typeData.TypeInfo);
                     }
@@ -281,7 +262,17 @@ namespace Compiling.Backends
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
-            throw new NotImplementedException();
+            var lhsValue = expression.DeclarationTypeToken;
+            Visit(expression.ValueExpression);
+            var rhsValue = _valueStack.Pop();
+
+            FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+            if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+            {
+                throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+            }
+
+            return;
         }
 
         public void VisitValueExpression(ValueExpression expression)

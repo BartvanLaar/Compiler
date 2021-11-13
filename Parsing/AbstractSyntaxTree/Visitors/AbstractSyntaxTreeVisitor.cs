@@ -25,9 +25,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             switch (expression.NodeExpressionType)
             {
                 // These are all handled by binary operator expressions.
-                case ExpressionType.LogicalAnd:
+                case ExpressionType.BitwiseAnd:
                 case ExpressionType.ConditionalAnd:
-                case ExpressionType.LogicalOr:
+                case ExpressionType.BitwiseOr:
                 case ExpressionType.ConditionalOr:
                     visitor.VisitBinaryExpression((BinaryExpression)expression);
                     break;

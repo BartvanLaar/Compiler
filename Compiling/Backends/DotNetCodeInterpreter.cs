@@ -90,17 +90,13 @@ namespace Compiling.Backends
                         _valueStack.Push(lhsValue <= rhsValue);
                         break;
                     }
-                case ExpressionType.LogicalOr:
+                case ExpressionType.BitwiseOr:
                     {
                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.LogicalXOr:
-                    {
-                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool)));
-                        break;
-                    }
-                case ExpressionType.LogicalAnd:
+              
+                case ExpressionType.BitwiseAnd:
                     {
                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
@@ -108,6 +104,11 @@ namespace Compiling.Backends
                 case ExpressionType.ConditionalOr:
                     {
                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        break;
+                    }
+                case ExpressionType.ConditionalXOr:
+                    {
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.ConditionalAnd:

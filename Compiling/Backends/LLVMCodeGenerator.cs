@@ -241,7 +241,11 @@ namespace Compiling.Backends
             var lhsValue = _valueStack.Pop();
 
             Visit(expression.RightHandSide);
-            var rhsValue = _valueStack.Pop();
+            var hasRhsValue = _valueStack.TryPop(out var rhsValue);
+            if (!hasRhsValue)
+            {
+                return;
+            }
 
             var lhsAndRhsBothIntegers = rhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind;
 
@@ -412,22 +416,22 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.LogicalOr:
+                case ExpressionType.BitwiseOr:
                     {
                         _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.LogicalXOr:
-                    {
-                        _valueStack.Push(_builder.BuildXor(lhsValue, rhsValue));
-                        break;
-                    }
-                case ExpressionType.LogicalAnd:
+                case ExpressionType.BitwiseAnd:
                     {
                         _valueStack.Push(_builder.BuildAnd(lhsValue, rhsValue));
                         break;
                     }
                 case ExpressionType.ConditionalOr:
+                    {
+                        _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
+                        break;
+                    }
+                case ExpressionType.ConditionalXOr:
                     {
                         _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;

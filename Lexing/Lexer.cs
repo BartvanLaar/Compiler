@@ -229,10 +229,10 @@ namespace Lexing
 
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.LogicalOr:
+                case TokenType.BitwiseOr:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.LogicalOr)
+                        if (singleCharTok?.TokenType == TokenType.BitwiseOr)
                         {
                             token.TokenType = TokenType.ConditionalOr;
                             token.Value = LexerConstants.OR_ELSE;
@@ -241,10 +241,10 @@ namespace Lexing
                         }
                         return (token, cursor, lineCount, columnCount);
                     }
-                case TokenType.LogicalAnd:
+                case TokenType.BitwiseAnd:
                     {
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
-                        if (singleCharTok?.TokenType == TokenType.LogicalAnd)
+                        if (singleCharTok?.TokenType == TokenType.BitwiseAnd)
                         {
                             token.TokenType = TokenType.ConditionalAnd;
                             token.Value = LexerConstants.AND_ALSO;
@@ -547,8 +547,8 @@ namespace Lexing
                 LexerConstants.GREATER_THAN_SIGN => new Token(TokenType.GreaterThan, lineCount, columnCount) { Value = LexerConstants.GREATER_THAN_SIGN },
                 LexerConstants.LESS_THAN_SIGN => new Token(TokenType.LessThan, lineCount, columnCount) { Value = LexerConstants.LESS_THAN_SIGN },
                 LexerConstants.DOUBLE_QOUTE => new Token(TokenType.Value, lineCount, columnCount) { Value = LexerConstants.DOUBLE_QOUTE, TypeIndicator = TypeIndicator.String },
-                LexerConstants.AND => new Token(TokenType.LogicalAnd, lineCount, columnCount) { Value = LexerConstants.AND },
-                LexerConstants.OR => new Token(TokenType.LogicalOr, lineCount, columnCount) { Value = LexerConstants.OR },
+                LexerConstants.AND => new Token(TokenType.BitwiseAnd, lineCount, columnCount) { Value = LexerConstants.AND },
+                LexerConstants.OR => new Token(TokenType.BitwiseOr, lineCount, columnCount) { Value = LexerConstants.OR },
                 _ => null,
             };
         }

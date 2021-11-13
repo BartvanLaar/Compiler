@@ -22,11 +22,11 @@
         LessThan,                   // <
         LessThanOrEqualTo,          // <=
 
-        LogicalAnd,                       // &
+        BitwiseAnd,                        // &
         ConditionalAnd,                    // &&
-        LogicalOr,                         // |
+        BitwiseOr,                         // |
         ConditionalOr,                     // ||
-        LogicalXOr,                        // ^
+        ConditionalXOr,                    // ^
 
         BitShiftLeft,               // <<
         BitShiftRight,              // >>>
