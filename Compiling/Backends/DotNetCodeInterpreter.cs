@@ -8,9 +8,10 @@ namespace Compiling.Backends
     {
         private readonly Stack<object?> _valueStack = new();
         private readonly Dictionary<string, object?> _namedValues = new();
+        private readonly Dictionary<string, ExpressionBase> _functions = new();
         public IEnumerable<object?> Results => _valueStack;
         public string Name => "Dot Net Interpreter / simulator";
-        public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);        
+        public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
@@ -23,22 +24,22 @@ namespace Compiling.Backends
             {
                 case ExpressionType.Add:
                     {
-                         _valueStack.Push(lhsValue + rhsValue);
+                        _valueStack.Push(lhsValue + rhsValue);
                         break;
                     }
                 case ExpressionType.Subtract:
                     {
-                         _valueStack.Push(lhsValue - rhsValue);
+                        _valueStack.Push(lhsValue - rhsValue);
                         break;
                     }
                 case ExpressionType.Multiply:
                     {
-                         _valueStack.Push(lhsValue * rhsValue);
+                        _valueStack.Push(lhsValue * rhsValue);
                         break;
                     }
                 case ExpressionType.Divide:
                     {
-                         _valueStack.Push(lhsValue / rhsValue);
+                        _valueStack.Push(lhsValue / rhsValue);
                         break;
                     }
                 case ExpressionType.Assignment:
@@ -51,77 +52,77 @@ namespace Compiling.Backends
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                     {
-                         _valueStack.Push(lhsValue == rhsValue);
+                        _valueStack.Push(lhsValue == rhsValue);
                         break;
                     }
                 case ExpressionType.Equals:
                     {
-                         _valueStack.Push(lhsValue == rhsValue);
+                        _valueStack.Push(lhsValue == rhsValue);
                         break;
                     }
                 case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
-                         _valueStack.Push(lhsValue != rhsValue);
+                        _valueStack.Push(lhsValue != rhsValue);
                         break;
                     }
                 case ExpressionType.NotEquals:
                     {
-                         _valueStack.Push(lhsValue != rhsValue);
+                        _valueStack.Push(lhsValue != rhsValue);
                         break;
                     }
                 case ExpressionType.GreaterThan:
                     {
-                         _valueStack.Push(lhsValue > rhsValue);
+                        _valueStack.Push(lhsValue > rhsValue);
                         break;
                     }
                 case ExpressionType.GreaterThanEqual:
                     {
-                         _valueStack.Push(lhsValue >= rhsValue);
+                        _valueStack.Push(lhsValue >= rhsValue);
                         break;
                     }
                 case ExpressionType.LessThan:
                     {
-                         _valueStack.Push(lhsValue < rhsValue);
+                        _valueStack.Push(lhsValue < rhsValue);
                         break;
                     }
                 case ExpressionType.LessThanEqual:
                     {
-                         _valueStack.Push(lhsValue <= rhsValue);
+                        _valueStack.Push(lhsValue <= rhsValue);
                         break;
                     }
                 case ExpressionType.LogicalOr:
                     {
-                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) | (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.LogicalXOr:
                     {
-                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) ^ (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.LogicalAnd:
                     {
-                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) & (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.ConditionalOr:
                     {
-                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) || (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.ConditionalAnd:
                     {
-                         _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool)));
+                        _valueStack.Push((bool)Convert.ChangeType(lhsValue, typeof(bool)) && (bool)Convert.ChangeType(rhsValue, typeof(bool)));
                         break;
                     }
                 case ExpressionType.BitShiftLeft:
                     {
-                         _valueStack.Push((int)lhsValue << (int)rhsValue);
+                        _valueStack.Push((int)lhsValue << (int)rhsValue);
                         break;
                     }
                 case ExpressionType.BitShiftRight:
                     {
-                         _valueStack.Push((int)lhsValue >> (int)rhsValue);
+                        _valueStack.Push((int)lhsValue >> (int)rhsValue);
                         break;
                     }
                 default:
@@ -189,7 +190,7 @@ namespace Compiling.Backends
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
-            Visit(expression.Body);
+            _functions.Add(expression.FunctionName, expression);
         }
 
         public void VisitWhileStatementExpression(WhileStatementExpression expression)
