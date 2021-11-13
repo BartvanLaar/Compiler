@@ -192,8 +192,18 @@ namespace Compiling.Backends
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
         {
             //todo: make sure the arguments will be known before visting the body....
+            foreach (var arg in expression.Arguments)
+            {
+                var val = new TypeCheckValue(arg.ValueToken, arg.TypeToken);
+                _namedValues.Add(arg.ValueToken.Name, val);
+            }
 
             Visit(expression.Body);
+
+            foreach (var arg in expression.Arguments)
+            {
+                _namedValues.Remove(arg.ValueToken.Name);
+            }
             //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
             expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
             _functions.Add(expression.FunctionName, expression);
