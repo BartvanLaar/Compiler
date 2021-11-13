@@ -22,7 +22,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             LogValue(expression);
         }
-        public void VisitFloatExpression(FloatExpression expression)
+        public void VisitFloatExpression(ValueExpression expression)
         {
             LogValue(expression);
         }

@@ -172,7 +172,7 @@ namespace Compiling.Backends
             Visit(expression.Condition);
         }
 
-        public void VisitFloatExpression(FloatExpression expression)
+        public void VisitFloatExpression(ValueExpression expression)
         {
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(expression.Token);
@@ -221,20 +221,52 @@ namespace Compiling.Backends
             {
                 if (hasReturnExpressionResultToken)
                 {
-                    // throw error...
+                    throw new Exception("void return func can't return a value"); // todo create custom exception for type error..
                 }
 
                 return;
             }
-            
+
             Debug.Assert(returnExprToken is not null);
-            
+            Debug.Assert(expression.Token is not null);
+            expression.Token.TypeIndicator = expression.FunctionReturnTypeIndicator;
+            FixTypes(expression.Token, returnExprToken);
             if (expression.FunctionReturnTypeIndicator != returnExprToken.TypeIndicator)
             {
-                // throw error;
+                throw new Exception($"Function with return type '{expression.FunctionReturnTypeIndicator}' can't return a value of type '{returnExprToken.TypeIndicator}'");
             }
 
             return;
+        }
+
+        private void FixTypes(Token lhs, Token rhs)// todo:rename
+        {
+            Debug.Assert(lhs.TypeIndicator is not TypeIndicator.None && rhs.TypeIndicator is not TypeIndicator.None, $"{nameof(FixTypes)} does not support inferring types (yet)");// todo: handle type inference.
+
+            if (lhs.TypeIndicator == rhs.TypeIndicator)
+            {
+                return;
+            }
+
+            var supportedTypesOrdered = new[] { TypeIndicator.Double, TypeIndicator.Float, TypeIndicator.Integer };
+
+            if (!supportedTypesOrdered.Contains(lhs.TypeIndicator) || !supportedTypesOrdered.Contains(rhs.TypeIndicator))
+            {
+                return; // can only fix these types, so if lhs and rhs are not both of the above typeIndicator then return.
+            }
+
+            foreach (var type in supportedTypesOrdered)
+            {
+                if (lhs.TypeIndicator == type || rhs.TypeIndicator == type)
+                {
+                    lhs.TypeIndicator = type;
+                    rhs.TypeIndicator = type;
+                    return;
+                }
+            }
+
+
+
         }
 
         public void VisitStringExpression(StringExpression expression)

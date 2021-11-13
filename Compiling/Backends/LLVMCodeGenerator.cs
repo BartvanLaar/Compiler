@@ -73,7 +73,7 @@ namespace Compiling.Backends
             _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, expression.Value));
         }
 
-        public void VisitFloatExpression(FloatExpression expression)
+        public void VisitFloatExpression(ValueExpression expression)
         {
             _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, expression.Value));
         }
@@ -195,16 +195,6 @@ namespace Compiling.Backends
                     throw;
                 }
             }
-
-            //if (expression.ReturnTypeToken.TypeIndicator is TypeIndicator.Void)
-            //{
-            //    _builder.BuildRetVoid();
-            //}
-            //else
-            //{
-            //    var retValue = _valueStack.Pop();
-            //    _builder.BuildRet(retValue);
-            //}
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _valueStack.Push(function);
@@ -577,13 +567,13 @@ namespace Compiling.Backends
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            var currentFunc = _builder.InsertBlock.Parent;
-
             Visit(expression.ReturnExpr);
+            //var currentFunc = _builder.InsertBlock.Parent;
 
-            var bb = currentFunc.AppendBasicBlock("test");
-            _builder.PositionAtEnd(bb);
-            _builder.BuildBr(bb);
+
+            //var bb = currentFunc.AppendBasicBlock("test");
+            //_builder.PositionAtEnd(bb);
+            //_builder.BuildBr(bb);
             if (_valueStack.Count > 0)
             {
                 _builder.BuildRet(_valueStack.Pop());

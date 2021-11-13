@@ -69,7 +69,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     visitor.VisitDoubleExpression((DoubleExpression)expression);
                     break;
                 case ExpressionType.Float:
-                    visitor.VisitFloatExpression((FloatExpression)expression);
+                    visitor.VisitFloatExpression((ValueExpression)expression);
                     break;
                 case ExpressionType.Integer:
                     visitor.VisitIntegerExpression((IntegerExpression)expression);

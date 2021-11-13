@@ -1,6 +1,9 @@
 ﻿using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Parsing
 {
@@ -382,7 +385,7 @@ namespace Parsing
 
             ConsumeToken();
 
-            var body = new List<ExpressionBase> { };
+            var body = new List<ExpressionBase>();
             while (PeekToken().TokenType is not TokenType.AccoladesClose)
             {
                 if (PeekToken().TokenType is TokenType.EndOfFile)
@@ -659,7 +662,7 @@ namespace Parsing
         private ExpressionBase ParseFloatExpression()
         {
             //todo: how to handle nullables?
-            var result = new FloatExpression(ConsumeToken());
+            var result = new ValueExpression(ConsumeToken());
 
             return result;
         }

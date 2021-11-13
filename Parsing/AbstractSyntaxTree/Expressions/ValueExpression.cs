@@ -3,14 +3,14 @@ using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public sealed class FloatExpression : ExpressionBase
+    public sealed class ValueExpression : ExpressionBase
     {
-        public FloatExpression(Token token) : base(token, ExpressionType.Float)
+        public ValueExpression(Token token) : base(token, ExpressionType.Float)
         {
             // todo: how to handle nullables?
             Debug.Assert(token.Value is not null);
-            Value = (float)token.Value;
+            //Value = (float)token.Value;
         }
-        public float Value { get; }
+        public object Value { get; }
     }
 }

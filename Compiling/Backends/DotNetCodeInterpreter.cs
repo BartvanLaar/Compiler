@@ -167,7 +167,7 @@ namespace Compiling.Backends
             _valueStack.Push(expression.Value);
         }
 
-        public void VisitFloatExpression(FloatExpression expression)
+        public void VisitFloatExpression(ValueExpression expression)
         {
             _valueStack.Push(expression.Value);
         }

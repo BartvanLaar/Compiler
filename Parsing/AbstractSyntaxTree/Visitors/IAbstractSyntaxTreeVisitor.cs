@@ -6,10 +6,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
     {
         public string Name { get; }
         void Visit(ExpressionBase expression);
+        void VisitValueExpression(ValueExpression expression);
         void VisitBooleanExpression(BooleanExpression expression);
         void VisitIntegerExpression(IntegerExpression expression);
         void VisitDoubleExpression(DoubleExpression expression);
-        void VisitFloatExpression(FloatExpression expression);
+        void VisitFloatExpression(ValueExpression expression);
         void VisitStringExpression(StringExpression expression);
         void VisitCharacterExpression(CharacterExpression expression);
         void VisitBinaryExpression(BinaryExpression expression);
