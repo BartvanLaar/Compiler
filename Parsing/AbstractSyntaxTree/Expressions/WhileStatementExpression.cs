@@ -1,8 +1,10 @@
-﻿namespace Parsing.AbstractSyntaxTree.Expressions
+﻿using Lexing;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class WhileStatementExpression : ExpressionBase
     {
-        public WhileStatementExpression(ExpressionBase whileCondition, BodyExpression doBody) : base(ExpressionType.WhileStatementExpression)
+        public WhileStatementExpression(Token whileToken, ExpressionBase whileCondition, BodyExpression doBody) : base(whileToken, ExpressionType.WhileStatementExpression)
         {
             Condition = whileCondition;
             Body = doBody;

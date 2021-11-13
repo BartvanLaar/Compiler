@@ -1,8 +1,10 @@
-﻿namespace Parsing.AbstractSyntaxTree.Expressions
+﻿using Lexing;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class ForStatementExpression : ExpressionBase
     {
-        public ForStatementExpression(VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(ExpressionType.ForStatementExpression)
+        public ForStatementExpression(Token forToken, VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(forToken, ExpressionType.ForStatementExpression)
         {
             VariableDeclaration = variableDeclaration;
             VariableName = variableDeclaration.Identifier;

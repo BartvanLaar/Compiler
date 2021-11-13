@@ -6,7 +6,7 @@
         public TypeIndicator TypeIndicator { get; set; }
         public int Line { get; init; }
         public int Column { get; init; }
-        public string Name { get; init; }
+        public string Name { get; set; }
         public object? Value { get; set; }        
         public string? ValueAsString => Value?.ToString();
         public Token(TokenType tokenType, int line, int column) : this(tokenType, tokenType.ToString(), line, column) { }

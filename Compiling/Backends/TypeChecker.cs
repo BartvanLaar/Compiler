@@ -1,18 +1,29 @@
 ﻿using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Compiling.Backends
 {
     internal class TypeChecker : IAbstractSyntaxTreeVisitor
     {
+        private class TypeCheckValue
+        {
+            public TypeCheckValue(Token valueToken, Token typeToken)
+            {
+                ValueToken = valueToken;
+                TypeToken = typeToken; 
+            }
+            public Token ValueToken { get; }
+            public Token TypeToken { get; }
+        }
 
+        //todo: refactor entire compiler so this stuff is passed to the relevant places.
+        // things like functions, userdefined types, public constants etc, should be found and registered before all other checks are done, to be able to call a function before its defined.
         private readonly Dictionary<string, FunctionDefinitionExpression> _functions = new();
-        private readonly Dictionary<string, Token> _namedValues = new();
-        private readonly Stack<Token> _valueStack = new();
+        private readonly Dictionary<string, TypeCheckValue> _namedValues = new();
+        private readonly Dictionary<string, Token> _userDefinedTypes = new();
+        private readonly Stack<TypeCheckValue> _valueStack = new();
         public string Name => "Type checker";
 
         public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
@@ -24,7 +35,7 @@ namespace Compiling.Backends
             Visit(expression.RightHandSide);
             _valueStack.TryPop(out var rhsValue);
 
-            if (rhsValue == null)
+            if (rhsValue?.ValueToken == null)
             {
                 return; // input = output
             }
@@ -41,46 +52,46 @@ namespace Compiling.Backends
                 case ExpressionType.LessThanEqual:
                     {
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
                         {
                             throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
                         }
 
-                        return;
+                        break;
                     }
                 case ExpressionType.Assignment:
                     {
                         //todo: refactor and infer type before calling this method...
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
                         {
                             throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
                         }
-                        return;
+                        break;
                     }
                 case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
                 case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
                         //todo: refactor and infer type before calling this method...
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
                         {
                             throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
                         }
 
-                        return;
+                        break;
                     }
                 case ExpressionType.Equals:
                 case ExpressionType.NotEquals:
                     {
                         //todo: refactor and infer type before calling this method...
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-                        if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
                         {
                             throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
                         }
 
-                        return;
+                        break;
                     }
                 case ExpressionType.BitShiftLeft:
                 case ExpressionType.BitShiftRight:
@@ -88,40 +99,42 @@ namespace Compiling.Backends
                 case ExpressionType.BitwiseAnd:
                     {
 
-                        if (lhsValue.TypeIndicator != TypeIndicator.Integer)
+                        if (lhsValue.TypeToken.TypeIndicator != TypeIndicator.Integer)
                         {
                             throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
                         }
 
-                        if (rhsValue.TypeIndicator != TypeIndicator.Integer)
+                        if (rhsValue.TypeToken.TypeIndicator != TypeIndicator.Integer)
                         {
                             throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
                         }
 
-                        return;
+                        break;
                     }
                 case ExpressionType.ConditionalOr:
                 case ExpressionType.ConditionalXOr:
                 case ExpressionType.ConditionalAnd:
                     {
 
-                        if (lhsValue.TypeIndicator != TypeIndicator.Boolean)
+                        if (lhsValue.TypeToken.TypeIndicator != TypeIndicator.Boolean)
                         {
                             throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
 
                         }
 
-                        if (rhsValue.TypeIndicator != TypeIndicator.Boolean)
+                        if (rhsValue.TypeToken.TypeIndicator != TypeIndicator.Boolean)
                         {
                             throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
                         }
 
-                        return;
+                        break;
                     }
 
                 default:
                     throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
             }
+
+            _valueStack.Push(lhsValue); // lhsValue should be sufficient for type checking as lhs and rhs sides of binary operations should be equal now..
         }
 
         public void VisitBodyExpression(BodyExpression expression)
@@ -144,12 +157,6 @@ namespace Compiling.Backends
             Visit(expression.Condition);
         }
 
-        public void VisitFloatExpression(ValueExpression expression)
-        {
-            Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
-        }
-
         public void VisitForStatementExpression(ForStatementExpression expression)
         {
             Visit(expression.VariableDeclaration);
@@ -160,9 +167,25 @@ namespace Compiling.Backends
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
+            var arguments = new List<TypeCheckValue>();
+            foreach (var arg in expression.Arguments)
+            {
+                Visit(arg);
+                arguments.Add(_valueStack.Pop());
+            }
+            //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
+            // the logic can be copied over.. i think...
+            var funcName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
 
+            var hasFunc = _functions.TryGetValue(funcName, out var funcExpr);
+            if (!hasFunc)
+            {
+                var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Name} {x.ValueToken.Name}"));
+                throw new Exception($"Function '{expression.FunctionName}' with argument types: ({argString}) does not exist.");// todo: improve message and make custom exception.
+            }
 
-           throw new NotImplementedException();         
+            Debug.Assert(funcExpr != null); // stupid assert as hasFunc is checked above...
+            _valueStack.Push(new TypeCheckValue(expression.Token, funcExpr.ReturnTypeToken));            
         }
 
         public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
@@ -170,15 +193,20 @@ namespace Compiling.Backends
             //todo: make sure the arguments will be known before visting the body....
 
             Visit(expression.Body);
-            var typeTokens = expression.Arguments.Select(x => x.TypeToken);
-            expression.FunctionName = CreateMangledName(expression.FunctionName, typeTokens);
+            //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
+            expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
             _functions.Add(expression.FunctionName, expression);
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
         {
             Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
+            if (!_namedValues.TryGetValue(expression.Identifier, out var res))
+            {
+                throw new ArgumentException($"Unknown variable name {expression.Identifier}");
+            }
+
+            _valueStack.Push(res);
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
@@ -191,7 +219,7 @@ namespace Compiling.Backends
         public void VisitReturnExpression(ReturnExpression expression)
         {
             Visit(expression.ReturnExpr);
-            var hasReturnExpressionResultToken = _valueStack.TryPop(out var returnExprToken);
+            var hasReturnExpressionResultToken = _valueStack.TryPop(out var returnExprStackValue);
 
             if (expression.FunctionReturnTypeIndicator is TypeIndicator.Void)
             {
@@ -203,23 +231,26 @@ namespace Compiling.Backends
                 return;
             }
 
-            Debug.Assert(returnExprToken is not null);
+            Debug.Assert(returnExprStackValue is not null);
             Debug.Assert(expression.Token is not null);
             expression.Token.TypeIndicator = expression.FunctionReturnTypeIndicator;
-            FixNumericalTypesAndValuesIfRequired(expression.Token, returnExprToken);
-            if (expression.FunctionReturnTypeIndicator != returnExprToken.TypeIndicator)
+            var lhsValue = new TypeCheckValue(expression.Token, expression.Token);
+            FixNumericalTypesAndValuesIfRequired(lhsValue, returnExprStackValue);
+            if (expression.FunctionReturnTypeIndicator != returnExprStackValue.TypeToken.TypeIndicator)
             {
-                throw new Exception($"Function with return type '{expression.FunctionReturnTypeIndicator}' can't return a value of type '{returnExprToken.TypeIndicator}'");
+                throw new Exception($"Function with return type '{expression.FunctionReturnTypeIndicator}' can't return a value of type '{returnExprStackValue.TypeToken.TypeIndicator}'");
             }
 
             return;
         }
 
-        private static void FixNumericalTypesAndValuesIfRequired(Token lhs, Token rhs)// todo:rename
+        private static void FixNumericalTypesAndValuesIfRequired(TypeCheckValue lhs, TypeCheckValue rhs)// todo:rename
         {
+            var lhsType = lhs.TypeToken;
+            var rhsType = rhs.TypeToken;
             //todo: refactor and infer type before calling this method...
-            var isTypeInferred = lhs.TypeIndicator is TypeIndicator.Inferred || rhs.TypeIndicator is TypeIndicator.Inferred;
-            if (lhs.TypeIndicator == rhs.TypeIndicator)
+            var isTypeInferred = lhsType.TypeIndicator is TypeIndicator.Inferred || rhsType.TypeIndicator is TypeIndicator.Inferred;
+            if (lhsType.TypeIndicator == rhsType.TypeIndicator)
             {
                 if(isTypeInferred) // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
                 {
@@ -231,48 +262,55 @@ namespace Compiling.Backends
 
             var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo)[] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
             
-            if (!isTypeInferred && !supportedTypesOrdered.Any(t => t.TypeIndicator == lhs.TypeIndicator || t.TypeIndicator == rhs.TypeIndicator))
+            if (!isTypeInferred && !supportedTypesOrdered.Any(t => t.TypeIndicator == lhsType.TypeIndicator || t.TypeIndicator == rhsType.TypeIndicator))
             {
                 return; // can only fix these types, so if lhs and rhs are not both of the above typeIndicator then return.
             }
 
             foreach (var typeData in supportedTypesOrdered)// don't filter list as its ordered..
             {
-                if (lhs.TypeIndicator == typeData.TypeIndicator || rhs.TypeIndicator == typeData.TypeIndicator)
+                if (lhsType.TypeIndicator == typeData.TypeIndicator || rhsType.TypeIndicator == typeData.TypeIndicator)
                 {
-                    lhs.TypeIndicator = typeData.TypeIndicator;
-                    rhs.TypeIndicator = typeData.TypeIndicator;
+                    lhsType.TypeIndicator = typeData.TypeIndicator;
+                    rhsType.TypeIndicator = typeData.TypeIndicator;
 
-                    if (lhs.TokenType is TokenType.Value)
+                    if (lhs.TypeToken.TokenType is TokenType.Value)
                     {
-                        lhs.Value = Convert.ChangeType(lhs.Value, typeData.TypeInfo);
+                        lhs.ValueToken.Value = Convert.ChangeType(lhs.ValueToken.Value, typeData.TypeInfo);
                     }
 
-                    if (rhs.TokenType is TokenType.Value)
+                    if (rhs.TypeToken.TokenType is TokenType.Value)
                     {
-                        rhs.Value = Convert.ChangeType(rhs.Value, typeData.TypeInfo);
+                        rhs.ValueToken.Value = Convert.ChangeType(rhs.ValueToken.Value, typeData.TypeInfo);
                     }
 
                     return;
                 }
             }
 
-            Debug.Assert(lhs.TypeIndicator == rhs.TypeIndicator);
+            Debug.Assert(lhs.TypeToken.TypeIndicator == rhs.TypeToken.TypeIndicator);
         }
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
         {
-            var lhsValue = expression.DeclarationTypeToken;
+            if (_namedValues.ContainsKey(expression.Identifier))
+            {
+                throw new ArgumentException($"Redeclaration of {expression.Identifier}! Scopes are not yet supported! Don't re-use variable names!");
+            }
+
             Visit(expression.ValueExpression);
             var rhsValue = _valueStack.Pop();
 
+            var lhsValue = new TypeCheckValue(expression.DeclarationTypeToken, expression.IdentifierToken);
             FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-            if (lhsValue.TypeIndicator != rhsValue.TypeIndicator)
+            if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
             {
                 throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
             }
 
-            return;
+            Debug.Assert(expression.Identifier is not null);
+
+            _namedValues.Add(expression.Identifier, rhsValue);
         }
 
         public void VisitValueExpression(ValueExpression expression)
@@ -283,16 +321,19 @@ namespace Compiling.Backends
                 throw new Exception($"Character can only have a length of one but was {expression.Token?.ValueAsString?.Length}"); // todo: Custom exception type.
             }
             Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
+            _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
 
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
         {
+            //todo: code below doesnt really work for user defined types as the name can have the same starting value....?
             var name = baseName;
+          
             foreach (var token in typeTokens)
             {
-                name += token.Name.First();
+                name += $"<{token.Name}>";
             }
+
             return name;
         }
 

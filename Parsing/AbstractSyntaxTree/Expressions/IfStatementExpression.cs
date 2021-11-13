@@ -1,8 +1,10 @@
-﻿namespace Parsing.AbstractSyntaxTree.Expressions
+﻿using Lexing;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class IfStatementExpression : ExpressionBase
     {
-        public IfStatementExpression(ExpressionBase ifCondition, BodyExpression ifBody, ExpressionBase? @else) : base(ExpressionType.IfStatementExpression)
+        public IfStatementExpression(Token ifToken, ExpressionBase ifCondition, BodyExpression ifBody, ExpressionBase? @else) : base(ifToken, ExpressionType.IfStatementExpression)
         {
             IfCondition = ifCondition;
             IfBody = ifBody;

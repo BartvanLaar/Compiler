@@ -1,10 +1,12 @@
-﻿namespace Parsing.AbstractSyntaxTree.Expressions
+﻿using Lexing;
+
+namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class DoWhileStatementExpression : ExpressionBase
     {
-        public DoWhileStatementExpression(ExpressionBase whileCondition, BodyExpression doBody) : base(ExpressionType.DoWhileStatementExpression)
+        public DoWhileStatementExpression(Token whileToken, ExpressionBase condition, BodyExpression doBody) : base(whileToken, ExpressionType.DoWhileStatementExpression)
         {
-            Condition = whileCondition;
+            Condition = condition;
             Body = doBody;
         }
 

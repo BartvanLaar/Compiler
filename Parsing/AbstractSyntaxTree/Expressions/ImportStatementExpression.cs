@@ -5,7 +5,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class ImportStatementExpression : ExpressionBase
     {
-        public ImportStatementExpression(string path, string? alias, string? filename) : base(ExpressionType.DontCare)
+        public ImportStatementExpression(Token importToken, string path, string? alias, string? filename) : base(importToken, ExpressionType.DontCare)
         {
             Path = path;
             Alias = alias;

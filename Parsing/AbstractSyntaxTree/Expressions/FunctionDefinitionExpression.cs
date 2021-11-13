@@ -5,9 +5,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
     public sealed class FunctionDefinitionExpression : ExpressionBase
     {
-        public FunctionDefinitionExpression(string name, Token identifierToken, FunctionDefinitionArgument[] arguments, Token returnTypeToken, BodyExpression? functionBody, bool isExtern, bool isExport) : base(identifierToken, ExpressionType.FunctionDefinition)
+        public FunctionDefinitionExpression(Token identifierToken, FunctionDefinitionArgument[] arguments, Token returnTypeToken, BodyExpression? functionBody, bool isExtern, bool isExport) : base(identifierToken, ExpressionType.FunctionDefinition)
         {
-            FunctionName = name;
             Arguments = arguments;
             ReturnTypeToken = returnTypeToken;
             Body = functionBody;
@@ -15,7 +14,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             IsExport = isExport;
         }
 
-        public string FunctionName { get; set; }
+        public string FunctionName { get => Token.Name; set => Token.Name = value; }
         public FunctionDefinitionArgument[] Arguments { get; }
         public Token ReturnTypeToken { get; }
         public BodyExpression? Body { get; }
@@ -23,7 +22,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public bool IsExport { get; }
     }
 
-    public struct FunctionDefinitionArgument
+    public class FunctionDefinitionArgument
     {
         public FunctionDefinitionArgument(Token typeToken, Token valueToken)
         {

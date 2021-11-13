@@ -38,7 +38,7 @@ namespace CLI
             //                return x;
             //            }";
             //var code = "func main() -> double { return 1337;}";
-            var code = "func SomeFunc() -> void {return;}";
+            var code = "func test(int someValue) -> int {return someValue;} func main() -> int {return test(42);}";
             //var code = "func main() -> int   {      var x =\"test\";      } return 5;";
             //var code = " func main() -> int                  {                                printf(\"%f\\n\", 5);                            if(true){return 420;} else {return 1337;}                        }";
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);

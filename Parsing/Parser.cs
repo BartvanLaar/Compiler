@@ -210,7 +210,8 @@ namespace Parsing
 
         private ExpressionBase ParseValueExpressionInternal()
         {
-            return new ValueExpression(ConsumeToken());
+            var tok = ConsumeToken();
+            return new ValueExpression(tok, tok);
         }
 
         private FunctionDefinitionExpression ParseFunctionDefinitionExpression()
@@ -225,7 +226,7 @@ namespace Parsing
 
             if (isExtern || isExport)
             {
-                ConsumeToken();   
+                ConsumeToken();
             }
 
             if (PeekToken().TokenType is not TokenType.FunctionDefinition)
@@ -234,14 +235,14 @@ namespace Parsing
             }
 
             ConsumeToken();
-   ;
+            ;
             if (PeekToken().TokenType is not TokenType.FunctionName)
             {
                 throw ParserError(PeekToken(), TokenType.FunctionName, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
-   
+
 
             if (PeekToken().TokenType is not TokenType.ParanthesesOpen)
             {
@@ -274,7 +275,7 @@ namespace Parsing
                 var typeIdentifier = PeekToken();
                 if (typeIdentifier.TypeIndicator is TypeIndicator.Inferred)
                 {
-                    throw ParseError(typeIdentifier, "Inferred types are not allowed in function definitions.");
+                    throw ParseError(typeIdentifier, $"Type identifiers that indicate an inferred value (e.g. {LexerConstants.Keywords.VARIABLE_TYPE_INFERRED_1}, {LexerConstants.Keywords.VARIABLE_TYPE_INFERRED_1}) are not allowed in a function definition header/prototype.");
                 }
                 ConsumeToken();
 
@@ -284,13 +285,13 @@ namespace Parsing
                     throw ParserError(currentPeek, TokenType.Identifier, "in func parameter body");
                 }
 
-                var variableName = ConsumeToken();
-
-                parameters.Add(new FunctionDefinitionArgument(typeIdentifier, variableName));
+                var variableToken = ConsumeToken();
+                // kind of ugly, but makes it cleaner for the rest of the program...
+                // type indicators are nothing more than an enum value anyway... (at least, for base types.. this is not the case for user defined types.)
+                variableToken.TypeIndicator = typeIdentifier.TypeIndicator;
+                parameters.Add(new FunctionDefinitionArgument(typeIdentifier, variableToken));
             }
 
-            var functionName = funcIdentifier.Name;
-  
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
                 throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "after func identifier");
@@ -305,7 +306,7 @@ namespace Parsing
 
             ConsumeToken(); // don't care about return type indicator
 
-            if(PeekToken().TokenType is not (TokenType.Type or TokenType.Identifier))
+            if (PeekToken().TokenType is not (TokenType.Type or TokenType.Identifier))
             {
                 throw ParseError(PeekToken(), "Type or Identifier", $"after return type indicator '{LexerConstants.RETURN_TYPE_INDICATOR}'");
             }
@@ -325,13 +326,13 @@ namespace Parsing
 
                 Debug.Assert(!isExport);
 
-                return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, null, true, false);
+                return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, null, true, false);
             }
 
 
             var body = ParseBodyExpression("function body");
 
-            return new FunctionDefinitionExpression(functionName, funcIdentifier, parameters.ToArray(), returnType, body, isExtern, isExport);
+            return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, body, isExtern, isExport);
         }
 
         private ExpressionBase? ParseDoWhileStatementExpression()
@@ -351,7 +352,7 @@ namespace Parsing
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
             }
-            return new DoWhileStatementExpression(condition, doBody);
+            return new DoWhileStatementExpression(whileTok, condition, doBody);
         }
 
         private WhileStatementExpression ParseWhileStatementExpression()
@@ -373,7 +374,7 @@ namespace Parsing
             //todo: Or should we disallow such weird scopes.
             var bodyExpr = ParseBodyExpression("after while statement body");
 
-            return new WhileStatementExpression(conditionalExpression, bodyExpr);
+            return new WhileStatementExpression(whileTok, conditionalExpression, bodyExpr);
         }
 
         private BodyExpression ParseBodyExpression(string bodyName)
@@ -425,7 +426,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.Else)
             {
-                return new IfStatementExpression(conditionalExpression, ifBody, null);
+                return new IfStatementExpression(ifToken, conditionalExpression, ifBody, null);
             }
 
             ConsumeToken();
@@ -441,7 +442,7 @@ namespace Parsing
                 elseExpression = ParseBodyExpression("else statement body");
             }
 
-            return new IfStatementExpression(conditionalExpression, ifBody, elseExpression);
+            return new IfStatementExpression(ifToken, conditionalExpression, ifBody, elseExpression);
         }
 
         private VariableDeclarationExpression? ParseVariableDeclaration()
@@ -562,7 +563,7 @@ namespace Parsing
             }
 
             ConsumeToken();
-            return new FunctionCallExpression(functionToken.Name, functionArguments.ToArray());
+            return new FunctionCallExpression(functionToken, functionArguments.ToArray());
         }
 
         private ExpressionBase ParseImportStatementExpression()
@@ -604,13 +605,13 @@ namespace Parsing
 
             ConsumeToken();
 
-            return new ImportStatementExpression(expr.Token.ValueAsString, alias?.ValueAsString, _file);
+            return new ImportStatementExpression(importTok, expr.Token.ValueAsString, alias?.ValueAsString, _file);
         }
 
         private ExpressionBase? ParseForLoopStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.For);
-            ConsumeToken();
+            var forToken = ConsumeToken();
 
             if (PeekToken().TokenType is not TokenType.ParanthesesOpen)
             {
@@ -650,15 +651,14 @@ namespace Parsing
                 throw ParseError(PeekToken(), "body of for loop", "after the 'for loop' header");
             }
 
-            return new ForStatementExpression(variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
+            return new ForStatementExpression(forToken, variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
 
         private ExpressionBase? ParseIdentifierExpression()
         {
             return new IdentifierExpression(ConsumeToken());
-
         }
-    
+
 
         private ParseException ParserError(TokenType expectedTokenType, string expectedInOrAt)
         {
