@@ -32,7 +32,7 @@ namespace Compiling.Backends
             //var type = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
             //var func = _module.AddFunction("printf", type);
             //func.Linkage = LLVMLinkage.LLVMDLLImportLinkage;
-            
+
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
 
@@ -58,41 +58,48 @@ namespace Compiling.Backends
             _valueAllocationPointers.Add(expression.Identifier, alloca);
         }
 
-        public void VisitBooleanExpression(BooleanExpression expression)
-        {
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)(expression.Value ? 1 : 0)));
-        }
 
-        public void VisitIntegerExpression(IntegerExpression expression)
+        public void VisitValueExpression(ValueExpression expression)
         {
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)expression.Value, true));
-        }
-
-        public void VisitDoubleExpression(DoubleExpression expression)
-        {
-            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, expression.Value));
-        }
-
-        public void VisitFloatExpression(ValueExpression expression)
-        {
-            _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, expression.Value));
-        }
-
-        public void VisitCharacterExpression(CharacterExpression expression)
-        {
-            //todo: shouldnt a character be converted to an int?
-            if (expression.Value?.Length > 1)
+            Debug.Assert(expression.Token is not null);
+            switch (expression.Token.TypeIndicator)
             {
-                throw new InvalidOperationException("Characters may only have a length of one");
+                case TypeIndicator.Boolean:
+                    {
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)((bool)expression.Value ? 1 : 0)));
+                        return;
+                    }
+                case TypeIndicator.Integer:
+                    {
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)Convert.ChangeType((int)expression.Value, typeof(ulong)), true));
+                        return;
+                    }
+
+                case TypeIndicator.Double:
+                    {
+                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, (double)expression.Value));
+                        return;
+                    }
+
+                case TypeIndicator.Float:
+                    {
+                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, (float)expression.Value));
+                        return;
+                    }
+
+                case TypeIndicator.Character:
+                    {
+                        Debug.Assert(expression.Value is not null);
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int16, (ulong)((string)expression.Value).First(), false));
+                        return;
+                    }
+                case TypeIndicator.String:
+                    {
+                        _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int16, 0), (string)expression.Value, (uint)((string)expression.Value).Length));
+                        return;
+                    }
+                default: throw new Exception($"Visitted value {expression.Value} of type {expression.Token.TypeIndicator} which is not supported by the VisitValueExpression!");
             }
-
-            Debug.Assert(expression.Value is not null);
-            _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int16, (ulong)expression.Value.First(), false));
-        }
-
-        public void VisitStringExpression(StringExpression expression)
-        {
-            _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8,0), expression.Value, (uint)expression.Value.Length));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -138,21 +145,21 @@ namespace Compiling.Backends
         {
             var argumentCount = (uint)expression.Arguments.Length;
             var arguments = new LLVMTypeRef[argumentCount];
-            var expressionName = expression.FunctionName;
+            var functionName = expression.FunctionName;
 
-            var function = _module.GetNamedFunction(expressionName);
+            var function = _module.GetNamedFunction(functionName);
             if (function.Handle != IntPtr.Zero)
             {
                 if (function.BasicBlocksCount != 0)
                 {
-                    throw new Exception($"Redefinition of function :'{expressionName}'");
+                    throw new Exception($"Redefinition of function :'{functionName}'");
                 }
 
                 if (function.ParamsCount != argumentCount)
                 {
                     // function overloading should be dealth with on language level -> mangling function names
                     // see https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/basic-constructs/functions.html#function-overloading
-                    Debug.Assert(false, $"Redefinition of function :'{expressionName}' with a different number of arguments.");
+                    Debug.Assert(false, $"Redefinition of function :'{functionName}' with a different number of arguments.");
                 }
 
             }
@@ -164,7 +171,7 @@ namespace Compiling.Backends
                     arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
                 }
                 var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
-                function = _module.AddFunction(expressionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
+                function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
                 function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             }
 
@@ -193,6 +200,18 @@ namespace Compiling.Backends
                 {
                     // should we remove the function if an error happens in the body?
                     throw;
+                }
+            }
+
+            if (_builder.InsertBlock.Terminator == NullValue)
+            {
+                if (expression.ReturnTypeToken.TypeIndicator == TypeIndicator.Void)
+                {
+                    _builder.BuildRetVoid();
+                }
+                else
+                {
+                    throw new Exception($"Func '{functionName}' does not return a value in all code paths.");
                 }
             }
 

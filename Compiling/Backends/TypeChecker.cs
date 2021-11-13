@@ -248,31 +248,35 @@ namespace Compiling.Backends
                 return;
             }
 
-            var supportedTypesOrdered = new[] { TypeIndicator.Double, TypeIndicator.Float, TypeIndicator.Integer };
+            var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo) [] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
 
-            if (!supportedTypesOrdered.Contains(lhs.TypeIndicator) || !supportedTypesOrdered.Contains(rhs.TypeIndicator))
+            if (!supportedTypesOrdered.Any(t => t.TypeIndicator == lhs.TypeIndicator || t.TypeIndicator == rhs.TypeIndicator))
             {
                 return; // can only fix these types, so if lhs and rhs are not both of the above typeIndicator then return.
             }
 
-            foreach (var type in supportedTypesOrdered)
+            foreach (var typeData in supportedTypesOrdered)
             {
-                if (lhs.TypeIndicator == type || rhs.TypeIndicator == type)
+                if (lhs.TypeIndicator == typeData.TypeIndicator || rhs.TypeIndicator == typeData.TypeIndicator)
                 {
-                    lhs.TypeIndicator = type;
-                    rhs.TypeIndicator = type;
+                    lhs.TypeIndicator = typeData.TypeIndicator;
+                    rhs.TypeIndicator = typeData.TypeIndicator;
+                    
+                    if(lhs.TokenType is TokenType.Value)
+                    {
+                        lhs.Value = Convert.ChangeType(lhs.Value, typeData.TypeInfo);
+                    }
+                    
+                    if(rhs.TokenType is TokenType.Value)
+                    {
+                        rhs.Value = Convert.ChangeType(rhs.Value, typeData.TypeInfo);
+                    }
+
                     return;
                 }
             }
 
-
-
-        }
-
-        public void VisitStringExpression(StringExpression expression)
-        {
-            Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
+            Debug.Assert(lhs.TypeIndicator == rhs.TypeIndicator);
         }
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
@@ -280,26 +284,13 @@ namespace Compiling.Backends
             throw new NotImplementedException();
         }
 
-        public void VisitBooleanExpression(BooleanExpression expression)
+        public void VisitValueExpression(ValueExpression expression)
         {
             Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
-        }
-
-        public void VisitIntegerExpression(IntegerExpression expression)
-        {
-            Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
-        }
-
-        public void VisitCharacterExpression(CharacterExpression expression)
-        {
-            Debug.Assert(expression?.Token is not null);
-            _valueStack.Push(expression.Token);
-        }
-
-        public void VisitDoubleExpression(DoubleExpression expression)
-        {
+            if (expression.Token.TypeIndicator is TypeIndicator.Character && expression.Token?.ValueAsString?.Length > 1)
+            {
+                throw new Exception($"Character can only have a length of one but was {expression.Token?.ValueAsString?.Length}"); // todo: Custom exception type.
+            }
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(expression.Token);
         }

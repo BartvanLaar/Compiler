@@ -65,23 +65,8 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.FunctionDefinition:
                     visitor.VisitFunctionDefinitionExpression((FunctionDefinitionExpression)expression);
                     break;
-                case ExpressionType.Double:
-                    visitor.VisitDoubleExpression((DoubleExpression)expression);
-                    break;
-                case ExpressionType.Float:
-                    visitor.VisitFloatExpression((ValueExpression)expression);
-                    break;
-                case ExpressionType.Integer:
-                    visitor.VisitIntegerExpression((IntegerExpression)expression);
-                    break;
-                case ExpressionType.BooleanValue:
-                    visitor.VisitBooleanExpression((BooleanExpression)expression);
-                    break;
-                case ExpressionType.String:
-                    visitor.VisitStringExpression((StringExpression)expression);
-                    break;
-                case ExpressionType.Character:
-                    visitor.VisitCharacterExpression((CharacterExpression)expression);
+                case ExpressionType.Value:
+                    visitor.VisitValueExpression((ValueExpression)expression);
                     break;
                 case ExpressionType.IfStatementExpression:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);

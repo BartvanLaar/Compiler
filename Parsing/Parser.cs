@@ -170,12 +170,12 @@ namespace Parsing
                 TypeIndicator.None => throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value."),
                 TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this"),
                 //case TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
-                TypeIndicator.Float => ParseFloatExpression(),
-                TypeIndicator.Double => ParseDoubleExpression(),
-                TypeIndicator.Boolean => ParseBooleanExpression(),
-                TypeIndicator.Integer => ParseIntegerExpression(),
-                TypeIndicator.Character => ParseCharacterExpression(),
-                TypeIndicator.String => ParseStringExpression(),
+                TypeIndicator.Float => ParseValueExpressionInternal(),
+                TypeIndicator.Double => ParseValueExpressionInternal(),
+                TypeIndicator.Boolean => ParseValueExpressionInternal(),
+                TypeIndicator.Integer => ParseValueExpressionInternal(),
+                TypeIndicator.Character => ParseValueExpressionInternal(),
+                TypeIndicator.String => ParseValueExpressionInternal(),
                 TypeIndicator.DateTime => throw new NotImplementedException(),
                 TypeIndicator.Void => throw new InvalidOperationException("Should not get here in case of void type."),
                 _ => throw new InvalidOperationException($"Encountered an unkown type indicator {peekedToken.TypeIndicator}."),
@@ -208,9 +208,9 @@ namespace Parsing
             return exp;
         }
 
-        private ExpressionBase ParseBooleanExpression()
+        private ExpressionBase ParseValueExpressionInternal()
         {
-            return new BooleanExpression(ConsumeToken());
+            return new ValueExpression(ConsumeToken());
         }
 
         private FunctionDefinitionExpression ParseFunctionDefinitionExpression()
@@ -252,7 +252,7 @@ namespace Parsing
 
             var parameters = new List<FunctionDefinitionArgument>();
 
-            while (PeekToken().TokenType is not TokenType.ParanthesesClose or TokenType.EndOfFile)
+            while (PeekToken().TokenType is not (TokenType.ParanthesesClose or TokenType.EndOfFile))
             {
                 var currentPeek = PeekToken();
 
@@ -305,9 +305,9 @@ namespace Parsing
 
             ConsumeToken(); // don't care about return type indicator
 
-            if(PeekToken().TokenType is not TokenType.Type or TokenType.Identifier)
+            if(PeekToken().TokenType is not (TokenType.Type or TokenType.Identifier))
             {
-                throw ParseError(PeekToken(), "Type", "after return type indicator");
+                throw ParseError(PeekToken(), "Type or Identifier", $"after return type indicator '{LexerConstants.RETURN_TYPE_INDICATOR}'");
             }
 
             var returnType = ConsumeToken();
@@ -658,46 +658,7 @@ namespace Parsing
             return new IdentifierExpression(ConsumeToken());
 
         }
-
-        private ExpressionBase ParseFloatExpression()
-        {
-            //todo: how to handle nullables?
-            var result = new ValueExpression(ConsumeToken());
-
-            return result;
-        }
-
-        private ExpressionBase ParseDoubleExpression()
-        {
-            //todo: how to handle nullables?
-            return new DoubleExpression(ConsumeToken());
-        }
-
-        private ExpressionBase ParseIntegerExpression()
-        {
-            //todo: how to handle nullables?
-            return new IntegerExpression(ConsumeToken());
-        }
-
-        private ExpressionBase ParseStringExpression()
-        {
-            //todo: how to handle nullables?
-            var result = new StringExpression(ConsumeToken());
-
-            return result;
-        }
-
-        private ExpressionBase ParseCharacterExpression()
-        {
-            //todo: fix.. This should be caught sooner, e.g. at type checking...
-            if (PeekToken().ValueAsString?.Length > 1)
-            {
-                ParseError(PeekToken(), "Character with length of 1", "Character initializer");
-            }
-
-            //todo: how to handle nullables?
-            return new CharacterExpression(ConsumeToken());
-        }
+    
 
         private ParseException ParserError(TokenType expectedTokenType, string expectedInOrAt)
         {

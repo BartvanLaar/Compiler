@@ -152,22 +152,7 @@ namespace Compiling.Backends
             _namedValues[nameLhs] = valueRhs;
         }
 
-        public void VisitBooleanExpression(BooleanExpression expression)
-        {
-            _valueStack.Push(expression.Value);
-        }
-
-        public void VisitCharacterExpression(CharacterExpression expression)
-        {
-            _valueStack.Push(expression.Value);
-        }
-
-        public void VisitDoubleExpression(DoubleExpression expression)
-        {
-            _valueStack.Push(expression.Value);
-        }
-
-        public void VisitFloatExpression(ValueExpression expression)
+        public void VisitValueExpression(ValueExpression expression)
         {
             _valueStack.Push(expression.Value);
         }
@@ -192,15 +177,6 @@ namespace Compiling.Backends
             Visit(expression.IfCondition);
             Visit(expression.IfBody);
             Visit(expression.ElseBody);
-        }
-
-        public void VisitIntegerExpression(IntegerExpression expression)
-        {
-            _valueStack.Push(expression.Value);
-        }
-        public void VisitStringExpression(StringExpression expression)
-        {
-            _valueStack.Push(expression.Value);
         }
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)

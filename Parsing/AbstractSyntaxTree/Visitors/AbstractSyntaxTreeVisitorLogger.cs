@@ -14,31 +14,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 Visit(expr);
             }
         }
-        public void VisitBooleanExpression(BooleanExpression expression)
+        public void VisitValueExpression(ValueExpression expression)
         {
             LogValue(expression);
         }
-        public void VisitDoubleExpression(DoubleExpression expression)
-        {
-            LogValue(expression);
-        }
-        public void VisitFloatExpression(ValueExpression expression)
-        {
-            LogValue(expression);
-        }
-        public void VisitIntegerExpression(IntegerExpression expression)
-        {
-            LogValue(expression);
-        }
-        public void VisitStringExpression(StringExpression expression)
-        {
-            LogValue(expression);
-        }
-        public void VisitCharacterExpression(CharacterExpression expression)
-        {
-            LogValue(expression);
-        }
-
+       
         public void VisitBinaryExpression(BinaryExpression expression)
         {
             Visit(expression.LeftHandSide);
