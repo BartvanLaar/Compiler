@@ -45,6 +45,7 @@ namespace Compiling.Backends
                 case ExpressionType.Add:
                 case ExpressionType.Subtract:
                 case ExpressionType.Multiply:
+                case ExpressionType.Modulo:
                 case ExpressionType.Divide:
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanEqual:

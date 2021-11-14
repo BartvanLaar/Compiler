@@ -159,8 +159,6 @@ namespace Lexing
             { Keywords.VOID, TokenType.Type },
             { Keywords.PARAMS, TokenType.Params },
 
-
-            { Keywords.NULL, TokenType.Null },
         };
 
         private static readonly IDictionary<string, TypeIndicator> _keywordToTypeIndicatorConversiontable = new Dictionary<string, TypeIndicator>()
@@ -207,6 +205,7 @@ namespace Lexing
             public bool IsCompoundAssignment { get; set; }
             public bool IsLeftAssociated { get; set; }
             public int Precedence { get; set; }
+            public TokenType DecompoundedToken { get; internal set; }
         }
 
         public static class OperatorPrecedence
@@ -296,9 +295,13 @@ namespace Lexing
         {
            
 
-            private static readonly HashSet<TokenType> CompountAssignmentTokenTypes = new() // perhaps tokentype should be flags?
+            private static readonly Dictionary<TokenType, TokenType> CompountAssignmentTokenTypes = new() // perhaps tokentype should be flags?
             {
-                TokenType.AddAssign, TokenType.SubtractAssign, TokenType.DivideAssign, TokenType.ModuloAssign, TokenType.MultiplyAssign
+                [TokenType.AddAssign] = TokenType.Add,
+                [TokenType.SubtractAssign] = TokenType.Subtract,
+                [TokenType.DivideAssign] = TokenType.Divide,
+                [TokenType.ModuloAssign] = TokenType.Modulo,
+                [TokenType.MultiplyAssign] = TokenType.Multiply,
             };
 
           
@@ -310,10 +313,11 @@ namespace Lexing
                 {
                     return null;
                 }
-
+                CompountAssignmentTokenTypes.TryGetValue(tokenType, out var decompoundedToken);
                 return new OperatorMetadata
                 {
-                    IsCompoundAssignment = CompountAssignmentTokenTypes.Contains(tokenType),
+                    DecompoundedToken = decompoundedToken,
+                    IsCompoundAssignment = CompountAssignmentTokenTypes.ContainsKey(tokenType),
                     IsLeftAssociated = IsLeftAssociated(tokenType),
                     Precedence = prec
                 };

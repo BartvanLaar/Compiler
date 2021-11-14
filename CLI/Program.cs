@@ -40,7 +40,7 @@ namespace CLI
 
             //                return x;
             //            }";
-            var code = "func main() -> int { var x = 1336; return x += 1;}";
+            var code = "func main() -> int { var x = 1337; return x %= 3;}";
             //var code = "func test(int someValue) -> int {return someValue;} func main() -> int {return test(42);}";
             //var code = "func main() -> int   {      var x =\"test\";      } return 5;";
             //var code = " func main() -> int                  {                                printf(\"%f\\n\", 5);                            if(true){return 420;} else {return 1337;}                        }";

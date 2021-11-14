@@ -14,6 +14,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase LeftHandSide { get; }
         public ExpressionBase? RightHandSide { get; }
 
+        // todo: put this code elsewhere...
         private static ExpressionType DetermineExpressionType(string? @operator)
         {
             //todo: why not use token type here instead? its basically the same...
@@ -28,8 +29,8 @@ namespace Parsing.AbstractSyntaxTree.Expressions
                 LexerConstants.TIMES_ASSIGN => ExpressionType.MultiplyAssign,
                 LexerConstants.DIVIDE => ExpressionType.Divide,
                 LexerConstants.DIVIDE_ASSIGN => ExpressionType.DivideAssign,
-                LexerConstants.MODULO => ExpressionType.DivideRest,
-                LexerConstants.MODULO_ASSIGN => ExpressionType.DivideRestAssign,
+                LexerConstants.MODULO => ExpressionType.Modulo,
+                LexerConstants.MODULO_ASSIGN => ExpressionType.ModuloAssign,
                 LexerConstants.GREATER_THAN_SIGN => ExpressionType.GreaterThan,
                 LexerConstants.GREATER_THAN_EQUAL_SIGN => ExpressionType.GreaterThanEqual,
                 LexerConstants.LESS_THAN_SIGN => ExpressionType.LessThan,

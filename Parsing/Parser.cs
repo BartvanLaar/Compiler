@@ -518,7 +518,9 @@ namespace Parsing
                 if (operatorMetadata.IsCompoundAssignment)
                 {
                     var tokCopy = new Token(operatorToken);
-                    tokCopy.TokenType = TokenType.Add; // todo refactor this so it can be bitshifted? or atleast retrieved from a dic?
+                    tokCopy.TokenType = operatorMetadata.DecompoundedToken;
+                    // below code is ugly... But the string values have to be updated cause binary expression determines the expressiontype...
+                    // @todo: @refactor so binary expression does not determine the expression type based on a string value...
                     var tempstr = ((string?)tokCopy.Value);
                     tokCopy.Value = tempstr?.First().ToString();
                     operatorToken.TokenType = TokenType.Assignment;

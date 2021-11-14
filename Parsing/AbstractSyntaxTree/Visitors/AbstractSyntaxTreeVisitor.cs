@@ -35,7 +35,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Subtract:
                 case ExpressionType.Multiply:
                 case ExpressionType.Divide:
-                case ExpressionType.DivideRest:
+                case ExpressionType.Modulo:
                     visitor.VisitBinaryExpression((BinaryExpression)expression);
                     break;
                 // These are all handled by binary operator expressions.

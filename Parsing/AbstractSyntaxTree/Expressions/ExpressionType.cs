@@ -17,7 +17,6 @@
         FunctionCall,
         Identifier,
         Double,
-        DivideRest,
         GreaterThan,
         Equivalent,
         Equals,
@@ -41,7 +40,6 @@
         BitwiseOr,
         BitwiseAnd,
         FunctionDefinition,
-        DivideRestAssign,
         VariableDeclaration,
         Return,
     }
