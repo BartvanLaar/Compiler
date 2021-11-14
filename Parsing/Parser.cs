@@ -58,7 +58,7 @@ namespace Parsing
         }
 
         // top level expressions should not reference a value or function call, this is handled by the default case.
-        private ExpressionBase? ParseTopLevelExpression(bool shouldThrowErrorOnMissingSemiColon = true) 
+        private ExpressionBase? ParseTopLevelExpression(bool shouldThrowErrorOnMissingSemiColon = true)
         {
             var peekedTokens = PeekTokens(2);
             switch (peekedTokens[0].TokenType)
@@ -99,7 +99,7 @@ namespace Parsing
                 //    {
                 //        return ParseFunctionCallExpression();
                 //    }
-                case TokenType.Type when (peekedTokens[1].TokenType is TokenType.Identifier):
+                case TokenType.Type when (peekedTokens[1].TokenType is TokenType.VariableIdentifier):
                     {
                         return ParseVariableDeclaration();
                     }
@@ -123,7 +123,7 @@ namespace Parsing
                         }
                         else
                         {
-                            ConsumeToken();
+                           ConsumeToken();
                         }
                         return expr;
                     }
@@ -157,8 +157,8 @@ namespace Parsing
                 //TokenType.AccoladesClose => null, // end of a (sub) expression
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
-                TokenType.FunctionName => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
-                TokenType.Identifier => ParseIdentifierExpression(),
+                TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
+                TokenType.VariableIdentifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
@@ -191,7 +191,7 @@ namespace Parsing
                 throw ParseError(PeekToken(), "return statements are only allowed within a function");
             }
 
-            return new ReturnExpression(ConsumeToken(), ParseTopLevelExpression(), _currentFunctionReturnType.Value);
+            return new ReturnExpression(ConsumeToken(), ParseExpression(), _currentFunctionReturnType.Value);
         }
 
         private ExpressionBase? ParseParantheseOpen()
@@ -239,9 +239,9 @@ namespace Parsing
 
             ConsumeToken();
             ;
-            if (PeekToken().TokenType is not TokenType.FunctionName)
+            if (PeekToken().TokenType is not TokenType.FunctionIdentifier)
             {
-                throw ParserError(PeekToken(), TokenType.FunctionName, "after func definition");
+                throw ParserError(PeekToken(), TokenType.FunctionIdentifier, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
@@ -283,9 +283,9 @@ namespace Parsing
                 ConsumeToken();
 
                 currentPeek = PeekToken();
-                if (currentPeek.TokenType is not TokenType.Identifier)
+                if (currentPeek.TokenType is not TokenType.VariableIdentifier)
                 {
-                    throw ParserError(currentPeek, TokenType.Identifier, "in func parameter body");
+                    throw ParserError(currentPeek, TokenType.VariableIdentifier, "in func parameter body");
                 }
 
                 var variableToken = ConsumeToken();
@@ -309,7 +309,7 @@ namespace Parsing
 
             ConsumeToken(); // don't care about return type indicator
 
-            if (PeekToken().TokenType is not (TokenType.Type or TokenType.Identifier))
+            if (PeekToken().TokenType is not (TokenType.Type or TokenType.VariableIdentifier))
             {
                 throw ParseError(PeekToken(), "Type or Identifier", $"after return type indicator '{LexerConstants.RETURN_TYPE_INDICATOR}'");
             }
@@ -333,7 +333,7 @@ namespace Parsing
             }
 
 
-            var body = ParseBodyExpression("function body");
+            var body = ParseBodyExpression(funcIdentifier, "function body");
 
             return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, body, isExtern, isExport);
         }
@@ -341,9 +341,9 @@ namespace Parsing
         private ExpressionBase? ParseDoWhileStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Do);
-            ConsumeToken();
+            var doToken = ConsumeToken();
 
-            var doBody = ParseBodyExpression("while statement");
+            var doBody = ParseBodyExpression(doToken, "while statement");
 
             if (PeekToken().TokenType is not TokenType.While)
             {
@@ -375,12 +375,12 @@ namespace Parsing
 
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
-            var bodyExpr = ParseBodyExpression("after while statement body");
+            var bodyExpr = ParseBodyExpression(whileTok, "after while statement body");
 
             return new WhileStatementExpression(whileTok, conditionalExpression, bodyExpr);
         }
 
-        private BodyExpression ParseBodyExpression(string bodyName)
+        private BodyExpression ParseBodyExpression(Token parentToken, string bodyName)
         {
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
@@ -410,7 +410,7 @@ namespace Parsing
 
             Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
             ConsumeToken();
-            return new BodyExpression(body);
+            return new BodyExpression(parentToken, body);
         }
 
         private IfStatementExpression ParseIfStatementExpression()
@@ -425,14 +425,14 @@ namespace Parsing
 
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
-            var ifBody = ParseBodyExpression("if statement");
+            var ifBody = ParseBodyExpression(ifToken, "if statement");
 
             if (PeekToken().TokenType is not TokenType.Else)
             {
                 return new IfStatementExpression(ifToken, conditionalExpression, ifBody, null);
             }
 
-            ConsumeToken();
+            var elseTok = ConsumeToken();
 
             var isIfStatementNext = PeekToken().TokenType is TokenType.If; // encountered else if..
             ExpressionBase? elseExpression;
@@ -442,7 +442,7 @@ namespace Parsing
             }
             else
             {
-                elseExpression = ParseBodyExpression("else statement body");
+                elseExpression = ParseBodyExpression(elseTok, "else statement body");
             }
 
             return new IfStatementExpression(ifToken, conditionalExpression, ifBody, elseExpression);
@@ -454,9 +454,9 @@ namespace Parsing
 
             var leftHandSideTok = PeekToken();
 
-            if (PeekToken().TokenType is not TokenType.Identifier)
+            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
             {
-                throw ParserError(leftHandSideTok, TokenType.Identifier, "before assignment of variable");
+                throw ParserError(leftHandSideTok, TokenType.VariableIdentifier, "before assignment of variable");
             }
 
             var leftHandSideIdentifierExpression = ConsumeToken(); // variable name...
@@ -493,18 +493,39 @@ namespace Parsing
             while (true)
             {
                 // Peek instead of consume to determine precedence
-                var isBinaryOperator = LexerConstants.OperatorPrecedence.Get(PeekToken(), out var binaryOperatorPrecedence);
-                if (!isBinaryOperator || binaryOperatorPrecedence < minTokenPrecedence)
+                var operatorMetadata = LexerConstants.GetOperatorMetadata(PeekToken());
+                var isBinaryOperator = operatorMetadata != null;
+                if (!isBinaryOperator)
+                {
+                    break;
+                }
+                Debug.Assert(operatorMetadata is not null);
+
+                var binaryOperatorPrecedence = operatorMetadata.Precedence;
+
+                if (binaryOperatorPrecedence < minTokenPrecedence)
                 {
                     break;
                 }
 
-                Debug.Assert(isBinaryOperator);
                 var operatorToken = ConsumeToken();
 
-                var nextMinOperatorPrecedence = LexerConstants.OperatorPrecedence.IsLeftAssociated(operatorToken) ? binaryOperatorPrecedence + 1 : binaryOperatorPrecedence;
+                var nextMinOperatorPrecedence = operatorMetadata.IsLeftAssociated ? binaryOperatorPrecedence + 1 : binaryOperatorPrecedence;
 
                 var rhs = ParseExpression(nextMinOperatorPrecedence);
+
+
+                if (operatorMetadata.IsCompoundAssignment)
+                {
+                    var tokCopy = new Token(operatorToken);
+                    tokCopy.TokenType = TokenType.Add; // todo refactor this so it can be bitshifted? or atleast retrieved from a dic?
+                    var tempstr = ((string?)tokCopy.Value);
+                    tokCopy.Value = tempstr?.First().ToString();
+                    operatorToken.TokenType = TokenType.Assignment;
+                    operatorToken.Value = tempstr?.Last().ToString();
+
+                    rhs = new BinaryExpression(tokCopy, lhs, rhs);
+                }
 
                 lhs = new BinaryExpression(operatorToken, lhs, rhs);
             }
@@ -514,7 +535,7 @@ namespace Parsing
 
         private FunctionCallExpression ParseFunctionCallExpression()
         {
-            if (PeekToken().TokenType != TokenType.FunctionName)
+            if (PeekToken().TokenType != TokenType.FunctionIdentifier)
             {
                 // Expected a function name...
                 throw ParseError(PeekToken(), "a function name", "function call");
@@ -543,7 +564,7 @@ namespace Parsing
                     ConsumeToken();
                 }
 
-                if (PeekToken().TokenType is TokenType.FunctionName)
+                if (PeekToken().TokenType is TokenType.FunctionIdentifier)
                 {
                     var funcCallExpr = ParseFunctionCallExpression();
                     Debug.Assert(funcCallExpr != null, "func call expression can't be null when the previous token is a function name!");
@@ -584,9 +605,9 @@ namespace Parsing
             {
                 ConsumeToken();
 
-                if (PeekToken().TokenType is not TokenType.Identifier)
+                if (PeekToken().TokenType is not TokenType.VariableIdentifier)
                 {
-                    throw ParserError(expr.Token, TokenType.Identifier, "after specifying 'as' when creating an alias for an import.");
+                    throw ParserError(expr.Token, TokenType.VariableIdentifier, "after specifying 'as' when creating an alias for an import.");
                 }
                 alias = ConsumeToken();
             }
@@ -648,7 +669,7 @@ namespace Parsing
 
             ConsumeToken();
 
-            var forBody = ParseBodyExpression("for statement");
+            var forBody = ParseBodyExpression(forToken, "for statement");
             if (forBody is null)
             {
                 throw ParseError(PeekToken(), "body of for loop", "after the 'for loop' header");

@@ -255,9 +255,11 @@ namespace Compiling.Backends
                     {
                         //todo: refactor the code so all assignments end here.. e.g. += -= *=, etc...?
                         Debug.Assert(_valueAllocationPointers.ContainsKey(((IdentifierExpression)expression.LeftHandSide).Identifier));
+                        // assert will fail in case of e.g. 50 += 5;
+                        // this is ok though as thats not allowed and should be handled by type checking... But isn't for now..
                         var alloca = _valueAllocationPointers[((IdentifierExpression)expression.LeftHandSide).Identifier];
                         _builder.BuildStore(rhsValue, alloca);
-                        break;
+                        break;                        
                     }
                 case ExpressionType.Add:
                     {
@@ -590,14 +592,18 @@ namespace Compiling.Backends
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
+            
             Visit(expression.ReturnExpr);
-            //var currentFunc = _builder.InsertBlock.Parent;
-
+            // kind of ugly.. But if it's an assignment expression, we need to visit the identExpr to put the result back on the stack.
+            if(expression.ReturnExpr is BinaryExpression binExpr && binExpr.LeftHandSide is IdentifierExpression identExpr)
+            {
+                Visit(identExpr);
+            }
 
             //var bb = currentFunc.AppendBasicBlock("test");
             //_builder.PositionAtEnd(bb);
-            //_builder.BuildBr(bb);
-            if (_valueStack.Count > 0)
+            //_builder.BuildBr(bb);            
+            if (_valueStack.Any())
             {
                 _builder.BuildRet(_valueStack.Pop());
 

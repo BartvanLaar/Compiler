@@ -2,14 +2,13 @@
 {
     public enum TokenType
     {
-        Error,
-        EndOfFile,
-        Type,
-        Value,
+        EndOfFile,                  // EOF
+        Type,                       // type token
+        Value,                      // value token
         AccoladesOpen,              // {
         AccoladesClose,             // }
-        BracketOpen,               // [
-        BracketClose,              // ]
+        BracketOpen,                // [
+        BracketClose,               // ]
         ParanthesesOpen,            // (
         ParanthesesClose,           // )
         Assignment,                 // =
@@ -22,11 +21,11 @@
         LessThan,                   // <
         LessThanOrEqualTo,          // <=
 
-        BitwiseAnd,                        // &
-        ConditionalAnd,                    // &&
-        BitwiseOr,                         // |
-        ConditionalOr,                     // ||
-        ConditionalXOr,                    // ^
+        BitwiseAnd,                 // &
+        ConditionalAnd,             // &&
+        BitwiseOr,                  // |
+        ConditionalOr,              // ||
+        ConditionalXOr,             // ^
 
         BitShiftLeft,               // <<
         BitShiftRight,              // >>>
@@ -38,11 +37,11 @@
         For,                        // For
         ForEach,                    // Foreach
         In,                         // Foreach x in [x,x,x]
-        Continue,
-        Break,
+        Continue,                   // continue
+        Break,                      // break
 
-        FunctionName,
-        Identifier,
+        VariableIdentifier,         // identifier of a variable
+        FunctionIdentifier,         // identifier of a function
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
@@ -75,9 +74,6 @@
         Extend,                     // extend
         Extern,                     // extern
 
-        //True,                       // should this be tokentype.Keyword and then their own enum? or just only strings? Now its kind of double administration
-        //False,
-        Null,
         Params,
         Is,
         Not,

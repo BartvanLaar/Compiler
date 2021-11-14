@@ -195,21 +195,35 @@ namespace Lexing
             return _predefinedKeywords.TryGetValue(keyword, out tokenType);
         }
 
+
+        public static OperatorMetadata? GetOperatorMetadata(Token token) => GetOperatorMetadata(token.TokenType);
+        public static OperatorMetadata? GetOperatorMetadata(TokenType tokenType)
+        {
+            return OperatorMetadataFactory.Create(tokenType);
+        }
+
+        public class OperatorMetadata
+        {
+            public bool IsCompoundAssignment { get; set; }
+            public bool IsLeftAssociated { get; set; }
+            public int Precedence { get; set; }
+        }
+
         public static class OperatorPrecedence
         {
-            private const int MULTIPLICATIVE = ADDITIVE + 1;
-            private const int ADDITIVE = SHIFT_PRECEDENCE + 1;
-            private const int SHIFT_PRECEDENCE = RELATIONAL_TEST + 1;
-            private const int RELATIONAL_TEST = EQUALITY_TEST + 1;
-            private const int EQUALITY_TEST = Bitwise_AND + 1;
-            private const int Bitwise_AND = Bitwise_OR + 1;
-            private const int Bitwise_OR = CONDITIONAL_AND + 1;
-            private const int CONDITIONAL_AND = CONDITIONAL_XOR + 1;
-            private const int CONDITIONAL_XOR = CONDITIONAL_OR + 1;
-            private const int CONDITIONAL_OR = NULLABLE_COALESCE + 1;
-            private const int NULLABLE_COALESCE = CONDITIONAL_OPERATOR + 1;
-            private const int CONDITIONAL_OPERATOR = ASSIGNMENT_DECLARATION + 1;
-            private const int ASSIGNMENT_DECLARATION = DEFAULT_OPERATOR_PRECEDENCE + 1;
+            internal const int MULTIPLICATIVE = ADDITIVE + 1;
+            internal const int ADDITIVE = SHIFT_PRECEDENCE + 1;
+            internal const int SHIFT_PRECEDENCE = RELATIONAL_TEST + 1;
+            internal const int RELATIONAL_TEST = EQUALITY_TEST + 1;
+            internal const int EQUALITY_TEST = Bitwise_AND + 1;
+            internal const int Bitwise_AND = Bitwise_OR + 1;
+            internal const int Bitwise_OR = CONDITIONAL_AND + 1;
+            internal const int CONDITIONAL_AND = CONDITIONAL_XOR + 1;
+            internal const int CONDITIONAL_XOR = CONDITIONAL_OR + 1;
+            internal const int CONDITIONAL_OR = NULLABLE_COALESCE + 1;
+            internal const int NULLABLE_COALESCE = CONDITIONAL_OPERATOR + 1;
+            internal const int CONDITIONAL_OPERATOR = ASSIGNMENT_DECLARATION + 1;
+            internal const int ASSIGNMENT_DECLARATION = DEFAULT_OPERATOR_PRECEDENCE + 1;
             public const int DEFAULT_OPERATOR_PRECEDENCE = 0;
 
             private static readonly IReadOnlyDictionary<TokenType, int> _precendences = new Dictionary<TokenType, int>
@@ -237,7 +251,7 @@ namespace Lexing
                 [TokenType.NotEquivalent] = EQUALITY_TEST,
                 [TokenType.NotEquals] = EQUALITY_TEST,
 
-                [TokenType.BitwiseAnd] = Bitwise_AND,                
+                [TokenType.BitwiseAnd] = Bitwise_AND,
                 [TokenType.BitwiseOr] = Bitwise_OR,
 
                 [TokenType.ConditionalAnd] = CONDITIONAL_AND,
@@ -264,41 +278,9 @@ namespace Lexing
                 [TokenType.BitShiftRightAssign] = ASSIGNMENT_DECLARATION,
                 //[TokenType.Lambda] = ASSIGNMENT_DECLARATION, //todo: support lambdas?
 
-
             };
 
-            public static bool IsLeftAssociated(Token token)
-            {
-                return IsLeftAssociated(token.TokenType);
-            }
-
-            public static bool IsLeftAssociated(TokenType tokenType)
-            {
-                //return tokenType is not TokenType.Power;
-                //todo: refactor for readability and speed...
-                // but cant be based on precedence as that is nasty and error prone..
-                return tokenType is not (TokenType.NullableCoalesce or TokenType.NullableCoalesceAssign or TokenType.TerniaryOperatorTrue or TokenType.TerniaryOperatorFalse or
-                    TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign or TokenType.ModuloAssign or TokenType.BitShiftLeftAssign or TokenType.BitShiftRightAssign
-                    or TokenType.LogicalAndAssign or TokenType.LogicalOrAssign or TokenType.LogicalXOrAssign);
-            }
-
-            public static int Get(Token token)
-            {
-                return Get(token.TokenType);
-            }
-
-            public static int Get(TokenType tokenType)
-            {
-                Get(tokenType, out var precedence);
-                return precedence;
-            }
-
-            public static bool Get(Token token, out int precedence)
-            {
-                return Get(token.TokenType, out precedence);
-            }
-
-            public static bool Get(TokenType tokenType, out int precedence)
+            internal static bool Get(TokenType tokenType, out int precedence)
             {
                 var hasPrec = _precendences.TryGetValue(tokenType, out precedence);
                 if (!hasPrec)
@@ -308,6 +290,45 @@ namespace Lexing
 
                 return hasPrec;
             }
+        }
+
+        private static class OperatorMetadataFactory
+        {
+           
+
+            private static readonly HashSet<TokenType> CompountAssignmentTokenTypes = new() // perhaps tokentype should be flags?
+            {
+                TokenType.AddAssign, TokenType.SubtractAssign, TokenType.DivideAssign, TokenType.ModuloAssign, TokenType.MultiplyAssign
+            };
+
+          
+
+            public static OperatorMetadata? Create(TokenType tokenType)
+            {
+                var isOperator = OperatorPrecedence.Get(tokenType, out var prec);
+                if (!isOperator)
+                {
+                    return null;
+                }
+
+                return new OperatorMetadata
+                {
+                    IsCompoundAssignment = CompountAssignmentTokenTypes.Contains(tokenType),
+                    IsLeftAssociated = IsLeftAssociated(tokenType),
+                    Precedence = prec
+                };
+            }
+
+            private static bool IsLeftAssociated(TokenType tokenType)
+            {
+                //return tokenType is not TokenType.Power;
+                //todo: refactor for readability and speed...
+                // but cant be based on precedence as that is nasty and error prone..
+                return tokenType is not (TokenType.NullableCoalesce or TokenType.NullableCoalesceAssign or TokenType.TerniaryOperatorTrue or TokenType.TerniaryOperatorFalse or
+                    TokenType.Assignment or TokenType.AddAssign or TokenType.SubtractAssign or TokenType.MultiplyAssign or TokenType.DivideAssign or TokenType.ModuloAssign or TokenType.BitShiftLeftAssign or TokenType.BitShiftRightAssign
+                    or TokenType.LogicalAndAssign or TokenType.LogicalOrAssign or TokenType.LogicalXOrAssign);
+            }
+
         }
 
 

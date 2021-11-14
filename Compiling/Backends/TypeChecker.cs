@@ -342,7 +342,7 @@ namespace Compiling.Backends
 
             foreach (var token in typeTokens)
             {
-                var typeName = token.TokenType is TokenType.Identifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
+                var typeName = token.TokenType is TokenType.VariableIdentifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
                 name += $"<{typeName}>";
             }
 

@@ -11,6 +11,16 @@
             Name = name;
         }
 
+        public Token(Token token)
+        {
+            TokenType = token.TokenType;
+            TypeIndicator = token.TypeIndicator;
+            Line = token.Line;
+            Column = token.Column;
+            Name = token.Name;
+            Value = token.Value;
+        }
+
         public TokenType TokenType { get; set; }
         public TypeIndicator TypeIndicator { get; set; }
         public int Line { get; init; }

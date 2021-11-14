@@ -8,11 +8,14 @@ namespace CLI
 
     public class Program
     {
-
+        public static int Test()
+        {
+            var x = 5;
+            return x = x + 1;
+        }
         public static void Main(params string[] args)
         {
-            //Console.WriteLine("Press to start.");
-            //Console.ReadKey();
+           Console.WriteLine(Test());
             CleanUpPrevRun();
 
             //var code = "2.0 + 5.0 / 5.0;";
@@ -37,7 +40,7 @@ namespace CLI
 
             //                return x;
             //            }";
-            var code = "func main() -> double { return 1336+=1;}";
+            var code = "func main() -> int { var x = 1336; return x += 1;}";
             //var code = "func test(int someValue) -> int {return someValue;} func main() -> int {return test(42);}";
             //var code = "func main() -> int   {      var x =\"test\";      } return 5;";
             //var code = " func main() -> int                  {                                printf(\"%f\\n\", 5);                            if(true){return 420;} else {return 1337;}                        }";
