@@ -34,6 +34,7 @@ namespace Compiling.Tests
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsVar"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsAuto"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnLocalVariableAsInt"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
+                yield return new object[] { FN("IntMainFuncNoParamsDefinitionReturnExpression"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncParamsDefinition"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncStoreFuncCallResIn2VarAndReturn"), new TestFile() { IsExecutable = true, ExitCode = 84 } };
                 yield return new object[] { FN("IfFalseElseIfFalseElseTest"), new TestFile() { IsExecutable = true, ExitCode = 42 } };

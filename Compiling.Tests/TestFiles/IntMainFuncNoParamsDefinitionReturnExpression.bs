@@ -1,0 +1,4 @@
+﻿func main() -> int {
+    var x = 41;
+    return x += 1;
+}

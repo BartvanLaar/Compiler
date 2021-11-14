@@ -3,9 +3,7 @@ using LLVMSharp.Interop;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Compiling.Backends
 {
@@ -22,6 +20,7 @@ namespace Compiling.Backends
         private delegate double D_FUNCTION_PTR(); // temp?
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
+
         //LLVM.LoadLibraryPermanently() // should i use this to load a c lib for printing to consoles?
         public LLVMCodeGenerator(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
         {
@@ -203,7 +202,6 @@ namespace Compiling.Backends
 
             _valueAllocationPointers.Clear();
 
-
             if (_builder.InsertBlock.Terminator == NullValue)
             {
                 if (expression.ReturnTypeToken.TypeIndicator == TypeIndicator.Void)
@@ -215,10 +213,9 @@ namespace Compiling.Backends
                     throw new Exception($"Func '{functionName}' does not return a value in all code paths.");
                 }
             }
-
+            _valueStack.Clear();
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
             _passManager.RunFunctionPassManager(function);
-            _valueStack.Push(function);
         }
 
         private static LLVMTypeRef GetReturnType(TypeIndicator typeIndicator)
@@ -469,26 +466,26 @@ namespace Compiling.Backends
             Visit(expression.IfCondition);
             var condv = _valueStack.Pop();
             var parentFuncBlock = _builder.InsertBlock.Parent;
-            var ifBodyBB = parentFuncBlock.AppendBasicBlock("ifBody");
+            var headerBB = parentFuncBlock.AppendBasicBlock("headerBB");
+            var ifBodyBB = parentFuncBlock.AppendBasicBlock("if");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
-            var mergeBB = parentFuncBlock.AppendBasicBlock("ifcontext");
+            var mergeBB = parentFuncBlock.AppendBasicBlock("afterIf");
+
+            _builder.BuildBr(headerBB);
+            _builder.PositionAtEnd(headerBB);
 
             _builder.BuildCondBr(condv, ifBodyBB, elseBB);
-
 
             // set insertion point to ifBody basic block before visiting...
             _builder.PositionAtEnd(ifBodyBB);
             Visit(expression.IfBody);
-
             _builder.BuildBr(mergeBB);
 
             // set insertion point to elseBody basic block before visiting
             _builder.PositionAtEnd(elseBB);
             Visit(expression.ElseBody);
-
             _builder.BuildBr(mergeBB);
 
-            // emit the merge of if and else
             _builder.PositionAtEnd(mergeBB);
         }
 
@@ -595,14 +592,13 @@ namespace Compiling.Backends
         {
             Visit(expression.ReturnExpr);
             // kind of ugly.. But if it's an assignment expression, we need to visit the identExpr to put the result back on the stack.
-            if (expression.ReturnExpr is BinaryExpression binExpr && binExpr.LeftHandSide is IdentifierExpression identExpr)
+            // Perhaps the code below is hiding a bug? Investigate further... ~BvL, 14-11-2021
+            if (expression.ReturnExpr?.Token.TokenType is TokenType.Assignment)
             {
-                Visit(identExpr);
+                Debug.Assert(expression.ReturnExpr is BinaryExpression bexp && bexp.LeftHandSide is IdentifierExpression);
+                Visit(((BinaryExpression)expression.ReturnExpr).LeftHandSide);
             }
 
-            //var bb = currentFunc.AppendBasicBlock("test");
-            //_builder.PositionAtEnd(bb);
-            //_builder.BuildBr(bb);            
             if (_valueStack.Any())
             {
                 _builder.BuildRet(_valueStack.Pop());
@@ -611,7 +607,6 @@ namespace Compiling.Backends
             {
                 _builder.BuildRetVoid();
             }
-            //_builder.BuildBr(_builder.InsertBlock.Parent.LastBasicBlock);
 
         }
 

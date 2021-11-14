@@ -10,13 +10,12 @@ namespace CLI
     {
         public static void Main(params string[] args)
         {
-            CleanUpPrevRun();
+            CleanUpPrevRun(); 
 
-            var code = @"func test(int returnValue) -> int {return returnValue;}
-
+            var code = @"
+func DoTest(int test) -> int {if(test > 42){return 333;} else {return 666;}}
                         func main() -> int {
-                            var x = test(42);
-                            return x;
+                                DoTest(43);
                         }";
 
 
