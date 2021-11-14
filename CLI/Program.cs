@@ -10,14 +10,16 @@ namespace CLI
     {
         public static void Main(params string[] args)
         {
-            CleanUpPrevRun(); 
+            CleanUpPrevRun();
 
-            var code = @"
-func DoTest(int test) -> int {if(test > 42){return 333;} else {return 666;}}
-                        func main() -> int {
-                                DoTest(43);
-                        }";
+            //var code = @"
+            //                func main() -> int {            
+            //                    if(true) {} else if(false) {} else{}     
+            //                    return 42;
+            //                }
+            //          ";
 
+            var code = @"func main() -> int {var x = 5; if(true){x = 42;} return 42;}";
 
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
 

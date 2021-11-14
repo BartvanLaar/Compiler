@@ -110,114 +110,6 @@ namespace Compiling.Backends
             _valueStack.Push(_builder.BuildLoad(alloca));
         }
 
-        public void VisitFunctionCallExpression(FunctionCallExpression expression)
-        {
-            var function = _module.GetNamedFunction(expression.FunctionName);
-
-            if (function.Handle == IntPtr.Zero)
-            {
-                throw new Exception($"Unknown function referenced: {expression.FunctionName}");
-            }
-
-            var argumentCount = expression.Arguments.Length;
-            if (function.ParamsCount != argumentCount)
-            {
-                throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
-            }
-            var argumentValues = new List<LLVMValueRef>();
-
-            for (var i = 0; i < expression.Arguments.Length; i++)
-            {
-                Visit(expression.Arguments[i]);
-                argumentValues.Add(_valueStack.Pop());
-            }
-
-            var call = _builder.BuildCall(function, argumentValues.ToArray(), $"callTemp");
-            _valueStack.Push(call);
-        }
-
-        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
-        {
-            var argumentCount = (uint)expression.Arguments.Length;
-            var arguments = new LLVMTypeRef[argumentCount];
-            var functionName = expression.FunctionName;
-
-            var function = _module.GetNamedFunction(functionName);
-            if (function.Handle != IntPtr.Zero)
-            {
-                if (function.BasicBlocksCount != 0)
-                {
-                    throw new Exception($"Redefinition of function :'{functionName}'");
-                }
-
-                if (function.ParamsCount != argumentCount)
-                {
-                    // function overloading should be dealth with on language level -> mangling function names
-                    // see https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/basic-constructs/functions.html#function-overloading
-                    Debug.Assert(false, $"Redefinition of function :'{functionName}' with a different number of arguments.");
-                }
-
-                Debug.Assert(false, "Should not get here I think as a function always has a body declared when its not extern");
-            }
-            else
-            {
-                for (int i = 0; i < argumentCount; ++i)
-                {
-                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
-                }
-                var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
-                function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
-                function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-            }
-
-            var entryBB = function.AppendBasicBlock("entry");
-            _builder.PositionAtEnd(entryBB);
-            _valueAllocationPointers.Clear();
-
-            for (int i = 0; i < argumentCount; ++i)
-            {
-                Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
-                var argumentName = expression.Arguments[i].ValueToken.Name;// todo: is this right?
-
-                LLVMValueRef param = function.GetParam((uint)i);
-                param.Name = argumentName;
-                // is this requried for a func?
-                var alloca = CreateEntryBlockAlloca(param.TypeOf, param.Name);
-                _builder.BuildStore(param, alloca);
-                _valueAllocationPointers[argumentName] = alloca;
-            }
-
-            if (expression.Body is not null)
-            {
-                try
-                {
-                    Visit(expression.Body);
-                }
-                catch (Exception)
-                {
-                    // should we remove the function if an error happens in the body?
-                    throw;
-                }
-            }
-
-            _valueAllocationPointers.Clear();
-
-            if (_builder.InsertBlock.Terminator == NullValue)
-            {
-                if (expression.ReturnTypeToken.TypeIndicator == TypeIndicator.Void)
-                {
-                    _builder.BuildRetVoid();
-                }
-                else
-                {
-                    throw new Exception($"Func '{functionName}' does not return a value in all code paths.");
-                }
-            }
-            _valueStack.Clear();
-            function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-            _passManager.RunFunctionPassManager(function);
-        }
-
         private static LLVMTypeRef GetReturnType(TypeIndicator typeIndicator)
         {
             return typeIndicator switch
@@ -469,9 +361,8 @@ namespace Compiling.Backends
             var headerBB = parentFuncBlock.AppendBasicBlock("headerBB");
             var ifBodyBB = parentFuncBlock.AppendBasicBlock("if");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
-            var mergeBB = parentFuncBlock.AppendBasicBlock("afterIf");
 
-            _builder.BuildBr(headerBB);
+             _builder.BuildBr(headerBB);
             _builder.PositionAtEnd(headerBB);
 
             _builder.BuildCondBr(condv, ifBodyBB, elseBB);
@@ -479,27 +370,40 @@ namespace Compiling.Backends
             // set insertion point to ifBody basic block before visiting...
             _builder.PositionAtEnd(ifBodyBB);
             Visit(expression.IfBody);
-            _builder.BuildBr(mergeBB);
+            ifBodyBB = _builder.InsertBlock;
+            LLVMBasicBlockRef? mergeBB = null;
+            if (ifBodyBB.Terminator == NullValue)
+            {
+                mergeBB = parentFuncBlock.AppendBasicBlock("afterIf");
+                _builder.BuildBr(mergeBB.Value);
+            }
 
             // set insertion point to elseBody basic block before visiting
             _builder.PositionAtEnd(elseBB);
             Visit(expression.ElseBody);
-            _builder.BuildBr(mergeBB);
+            elseBB = _builder.InsertBlock;
+            if (elseBB.Terminator == NullValue)
+            {
+                mergeBB ??= parentFuncBlock.AppendBasicBlock("afterIf");
+                _builder.BuildBr(mergeBB.Value);
+            }
 
-            _builder.PositionAtEnd(mergeBB);
+            if (mergeBB != null)
+            {
+                _builder.PositionAtEnd(mergeBB.Value);
+            }
         }
 
         private LLVMValueRef CreateEntryBlockAlloca(LLVMTypeRef typeRef, string variableName)
         {
-            //var currentPos = _builder.InsertBlock;
+            var currentPos = _builder.InsertBlock;
 
-            //var function = _builder.InsertBlock.Parent.EntryBasicBlock;
+            var function = _builder.InsertBlock.Parent.EntryBasicBlock;
             //todo: make sure the alloca is added to the entry block of the function...? and make sure that this works
-            //_builder.PositionAtEnd(function);
-            //var alloca = _builder.BuildAlloca(typeRef, variableName);
-            //_builder.PositionAtEnd(currentPos);
-            //return alloca;
-            return _builder.BuildAlloca(typeRef, variableName);
+            _builder.PositionAtEnd(function);
+            var alloca = _builder.BuildAlloca(typeRef, variableName);
+            _builder.PositionAtEnd(currentPos);
+            return alloca;
         }
 
         public void VisitForStatementExpression(ForStatementExpression expression)
@@ -586,6 +490,114 @@ namespace Compiling.Backends
             var endCondition = _valueStack.Pop();
             _builder.BuildCondBr(endCondition, loopBodyBB, afterLoopBB);
             _builder.PositionAtEnd(afterLoopBB);
+        }
+
+        public void VisitFunctionCallExpression(FunctionCallExpression expression)
+        {
+            var function = _module.GetNamedFunction(expression.FunctionName);
+
+            if (function.Handle == IntPtr.Zero)
+            {
+                throw new Exception($"Unknown function referenced: {expression.FunctionName}");
+            }
+
+            var argumentCount = expression.Arguments.Length;
+            if (function.ParamsCount != argumentCount)
+            {
+                throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
+            }
+            var argumentValues = new List<LLVMValueRef>();
+
+            for (var i = 0; i < expression.Arguments.Length; i++)
+            {
+                Visit(expression.Arguments[i]);
+                argumentValues.Add(_valueStack.Pop());
+            }
+
+            var call = _builder.BuildCall(function, argumentValues.ToArray(), $"callTemp");
+            _valueStack.Push(call);
+        }
+
+        public void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression)
+        {
+            var argumentCount = (uint)expression.Arguments.Length;
+            var arguments = new LLVMTypeRef[argumentCount];
+            var functionName = expression.FunctionName;
+
+            var function = _module.GetNamedFunction(functionName);
+            if (function.Handle != IntPtr.Zero)
+            {
+                if (function.BasicBlocksCount != 0)
+                {
+                    throw new Exception($"Redefinition of function :'{functionName}'");
+                }
+
+                if (function.ParamsCount != argumentCount)
+                {
+                    // function overloading should be dealth with on language level -> mangling function names
+                    // see https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/basic-constructs/functions.html#function-overloading
+                    Debug.Assert(false, $"Redefinition of function :'{functionName}' with a different number of arguments.");
+                }
+
+                Debug.Assert(false, "Should not get here I think as a function always has a body declared when its not extern");
+            }
+            else
+            {
+                for (int i = 0; i < argumentCount; ++i)
+                {
+                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
+                }
+                var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
+                function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
+                function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+            }
+
+            var entryBB = function.AppendBasicBlock("entry");
+            _builder.PositionAtEnd(entryBB);
+            _valueAllocationPointers.Clear();
+
+            for (int i = 0; i < argumentCount; ++i)
+            {
+                Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
+                var argumentName = expression.Arguments[i].ValueToken.Name;// todo: is this right?
+
+                LLVMValueRef param = function.GetParam((uint)i);
+                param.Name = argumentName;
+                // is this requried for a func?
+                var alloca = CreateEntryBlockAlloca(param.TypeOf, param.Name);
+                _builder.BuildStore(param, alloca);
+                _valueAllocationPointers[argumentName] = alloca;
+            }
+
+            if (expression.Body is not null)
+            {
+                try
+                {
+                    Visit(expression.Body);
+                }
+                catch (Exception)
+                {
+                    // should we remove the function if an error happens in the body?
+                    throw;
+                }
+            }
+
+            _valueAllocationPointers.Clear();
+
+            if (_builder.InsertBlock.Terminator == NullValue)
+            {
+                if (expression.ReturnTypeToken.TypeIndicator == TypeIndicator.Void)
+                {
+                    _builder.BuildRetVoid();
+                }
+                else
+                {
+                    throw new Exception("Function does not return a value in all cases.");
+                }
+            }
+            _valueStack.Clear();
+            function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+            //_passManager.RunFunctionPassManager(function);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
