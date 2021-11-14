@@ -66,7 +66,7 @@ namespace Compiling.Backends
             {
                 case TypeIndicator.Boolean:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)((bool)expression.Value ? 1 : 0)));
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)((bool)expression.Value ? 1 : 0), false));
                         return;
                     }
                 case TypeIndicator.Integer:
@@ -113,31 +113,27 @@ namespace Compiling.Backends
 
         public void VisitFunctionCallExpression(FunctionCallExpression expression)
         {
-            var calleeFunction = _module.GetNamedFunction(expression.FunctionName);
+            var function = _module.GetNamedFunction(expression.FunctionName);
 
-            if (calleeFunction.Handle == IntPtr.Zero)
+            if (function.Handle == IntPtr.Zero)
             {
                 throw new Exception($"Unknown function referenced: {expression.FunctionName}");
             }
 
             var argumentCount = expression.Arguments.Length;
-            if (calleeFunction.ParamsCount != argumentCount)
+            if (function.ParamsCount != argumentCount)
             {
                 throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
             }
+            var argumentValues = new List<LLVMValueRef>();
 
-            foreach (var argument in expression.Arguments)
+            for (var i = 0; i < expression.Arguments.Length; i++)
             {
-                Visit(argument);
+                Visit(expression.Arguments[i]);
+                argumentValues.Add(_valueStack.Pop());
             }
 
-            var argumentValues = new LLVMValueRef[argumentCount];
-            for (int i = argumentCount - 1; i >= 0; i--) // shouldnt this be reverse?? last one on 
-            {
-                argumentValues[i] = _valueStack.Pop();
-            }
-
-            var call = _builder.BuildCall(calleeFunction, argumentValues);
+            var call = _builder.BuildCall(function, argumentValues.ToArray(), $"callTemp");
             _valueStack.Push(call);
         }
 
@@ -162,10 +158,10 @@ namespace Compiling.Backends
                     Debug.Assert(false, $"Redefinition of function :'{functionName}' with a different number of arguments.");
                 }
 
+                Debug.Assert(false, "Should not get here I think as a function always has a body declared when its not extern");
             }
             else
             {
-                //todo: support values other than doubles? We do have access to the tokens and their types... so why not?
                 for (int i = 0; i < argumentCount; ++i)
                 {
                     arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
@@ -175,6 +171,10 @@ namespace Compiling.Backends
                 function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             }
 
+            var entryBB = function.AppendBasicBlock("entry");
+            _builder.PositionAtEnd(entryBB);
+            _valueAllocationPointers.Clear();
+
             for (int i = 0; i < argumentCount; ++i)
             {
                 Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
@@ -182,14 +182,12 @@ namespace Compiling.Backends
 
                 LLVMValueRef param = function.GetParam((uint)i);
                 param.Name = argumentName;
-
-                _valueAllocationPointers[argumentName] = param;
+                // is this requried for a func?
+                var alloca = CreateEntryBlockAlloca(param.TypeOf, param.Name);
+                _builder.BuildStore(param, alloca);
+                _valueAllocationPointers[argumentName] = alloca;
             }
-            //todo: what does the below statement Do??? have copy pasted it above the verify and suddenly more tests became green.. but the statuscodes returned where not as i expected
-            var entryBB = function.AppendBasicBlock("entry");
-            _builder.PositionAtEnd(entryBB); // this in combination with specifying /entry:Main causes an .exe to be able to be build.
 
-            //todo: implement visit body and add it to the function? So actual code can be run
             if (expression.Body is not null)
             {
                 try
@@ -202,6 +200,9 @@ namespace Compiling.Backends
                     throw;
                 }
             }
+
+            _valueAllocationPointers.Clear();
+
 
             if (_builder.InsertBlock.Terminator == NullValue)
             {
@@ -216,6 +217,7 @@ namespace Compiling.Backends
             }
 
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+            _passManager.RunFunctionPassManager(function);
             _valueStack.Push(function);
         }
 
@@ -259,7 +261,7 @@ namespace Compiling.Backends
                         // this is ok though as thats not allowed and should be handled by type checking... But isn't for now..
                         var alloca = _valueAllocationPointers[((IdentifierExpression)expression.LeftHandSide).Identifier];
                         _builder.BuildStore(rhsValue, alloca);
-                        break;                        
+                        break;
                     }
                 case ExpressionType.Add:
                     {
@@ -543,7 +545,6 @@ namespace Compiling.Backends
         {
             // BodyExpression should probably have a function name attached and some more info of the parent e.g. token type?
             // if this body isn't valid then we should remove the function all together.. and throw an error.
-            // todo: do we need to do anything here?
             foreach (var expr in expression.Body)
             {
                 Visit(expr);
@@ -592,10 +593,9 @@ namespace Compiling.Backends
 
         public void VisitReturnExpression(ReturnExpression expression)
         {
-            
             Visit(expression.ReturnExpr);
             // kind of ugly.. But if it's an assignment expression, we need to visit the identExpr to put the result back on the stack.
-            if(expression.ReturnExpr is BinaryExpression binExpr && binExpr.LeftHandSide is IdentifierExpression identExpr)
+            if (expression.ReturnExpr is BinaryExpression binExpr && binExpr.LeftHandSide is IdentifierExpression identExpr)
             {
                 Visit(identExpr);
             }
@@ -606,7 +606,6 @@ namespace Compiling.Backends
             if (_valueStack.Any())
             {
                 _builder.BuildRet(_valueStack.Pop());
-
             }
             else
             {
