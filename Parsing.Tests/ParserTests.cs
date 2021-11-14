@@ -205,17 +205,9 @@ namespace Parsing.Tests
         [TestCase("SomeFunc(param1, param2);")]
         [TestCase("SomeFunc(param1,param2,param3);")]
         [TestCase("SomeFunc(param1, param2, param3);")]
-        [TestCase("SomeFunc(param1, param2, param3)")]
-        [TestCase("SomeFunc(param1,param2,param3)")]
-        [TestCase("SomeFunc(param1, param2)")]
-        [TestCase("SomeFunc(param1)")]
-        [TestCase("SomeFunc()")]
         [TestCase("SomeFunc(callFunc());")]
         [TestCase("SomeFunc(callFunc(),callFunc2());")]
         [TestCase("SomeFunc(callFunc(), callFunc2());")]
-        [TestCase("SomeFunc(callFunc(), callFunc2())")]
-        [TestCase("SomeFunc(callFunc(),callFunc2())")]
-        [TestCase("SomeFunc(callFunc())")]
         public void Parse_Function_Calls_No_Errors(string code)
         {
             var lexer = new Lexer(code);

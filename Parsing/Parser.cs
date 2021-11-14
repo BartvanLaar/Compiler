@@ -57,7 +57,8 @@ namespace Parsing
             return _expressions.ToArray();
         }
 
-        private ExpressionBase? ParseTopLevelExpression(bool shouldThrowErrorOnMissingSemiColon = true)
+        // top level expressions should not reference a value or function call, this is handled by the default case.
+        private ExpressionBase? ParseTopLevelExpression(bool shouldThrowErrorOnMissingSemiColon = true) 
         {
             var peekedTokens = PeekTokens(2);
             switch (peekedTokens[0].TokenType)
@@ -94,10 +95,10 @@ namespace Parsing
                         return ParseFunctionDefinitionExpression();
                     }
                 // if we get here, it apparently wasn't a function definition, so it should be a function call.
-                case TokenType.FunctionName:
-                    {
-                        return ParseFunctionCallExpression();
-                    }
+                //case TokenType.FunctionName:
+                //    {
+                //        return ParseFunctionCallExpression();
+                //    }
                 case TokenType.Type when (peekedTokens[1].TokenType is TokenType.Identifier):
                     {
                         return ParseVariableDeclaration();
@@ -143,6 +144,7 @@ namespace Parsing
             }
         }
 
+        // All parse primary should result in a value.
         private ExpressionBase? ParsePrimary()
         {
             var peekedTokens = PeekTokens(2);
@@ -155,7 +157,7 @@ namespace Parsing
                 //TokenType.AccoladesClose => null, // end of a (sub) expression
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
-                TokenType.FunctionName => ParseIdentifierExpression(), // kind of a hack, but a function name is also an identifier.
+                TokenType.FunctionName => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
