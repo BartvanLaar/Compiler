@@ -361,8 +361,8 @@ namespace Compiling.Backends
             var headerBB = parentFuncBlock.AppendBasicBlock("headerBB");
             var ifBodyBB = parentFuncBlock.AppendBasicBlock("if");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
-
-             _builder.BuildBr(headerBB);
+            
+            _builder.BuildBr(headerBB);
             _builder.PositionAtEnd(headerBB);
 
             _builder.BuildCondBr(condv, ifBodyBB, elseBB);
@@ -372,9 +372,11 @@ namespace Compiling.Backends
             Visit(expression.IfBody);
             ifBodyBB = _builder.InsertBlock;
             LLVMBasicBlockRef? mergeBB = null;
-            if (ifBodyBB.Terminator == NullValue)
+            var hasIfTerminator = ifBodyBB.Terminator != NullValue;
+            if (!hasIfTerminator)
             {
                 mergeBB = parentFuncBlock.AppendBasicBlock("afterIf");
+
                 _builder.BuildBr(mergeBB.Value);
             }
 
@@ -382,13 +384,14 @@ namespace Compiling.Backends
             _builder.PositionAtEnd(elseBB);
             Visit(expression.ElseBody);
             elseBB = _builder.InsertBlock;
-            if (elseBB.Terminator == NullValue)
+            var hasElseTerminator = elseBB.Terminator != NullValue;
+            if (!hasElseTerminator)
             {
                 mergeBB ??= parentFuncBlock.AppendBasicBlock("afterIf");
                 _builder.BuildBr(mergeBB.Value);
             }
 
-            if (mergeBB != null)
+            if (mergeBB.HasValue)
             {
                 _builder.PositionAtEnd(mergeBB.Value);
             }
@@ -597,7 +600,7 @@ namespace Compiling.Backends
             }
             _valueStack.Clear();
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-            //_passManager.RunFunctionPassManager(function);
+            _passManager.RunFunctionPassManager(function);
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
