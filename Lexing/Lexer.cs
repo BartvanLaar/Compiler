@@ -475,20 +475,13 @@ namespace Lexing
                             try
                             {
 
-                                if (singleCharTok is null)
-                                {
-                                    //todo: handle newlines?
-                                    result += _text[cursor];
-                                    continue;
-                                }
-
-                                if (singleCharTok.TokenType == TokenType.EndOfFile)
+                                if (singleCharTok?.TokenType is TokenType.EndOfFile)
                                 {
                                     // @todo @cleanup should probably throw an exception?
                                     break;
                                 }
 
-                                if (singleCharTok.TypeIndicator == TypeIndicator.String)
+                                if (singleCharTok?.TypeIndicator is TypeIndicator.String)
                                 {
                                     if (cursor + 1 < _text.Length && _text[cursor + 1].ToString() == LexerConstants.CHARACTER_INDICATOR)
                                     {
@@ -499,6 +492,8 @@ namespace Lexing
 
                                     break;
                                 }
+
+                                result += _text[cursor];
                             }
                             finally
                             {
