@@ -88,9 +88,11 @@ namespace Lexing
             public const string EXTEND = "extend";
             public const string EXTERN = "extern";
 
+            public const string STATIC = "static";
+            public const string CONST = "const";
+
             public const string PARAMS = "params";
             public const string CLASS = "class";
-            public const string STRUCT = "struct";
 
             public const string IF = "if";
             public const string ELSE = "else";

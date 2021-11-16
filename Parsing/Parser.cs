@@ -46,9 +46,17 @@ namespace Parsing
             {
                 var expr = ParseTopLevelExpression();
 
-                if (expr is ImportStatementExpression)
+                if (expr is ImportStatementExpression importExpr)
                 {
-                    //todo: parse imported file before continuing?
+                    // todo: parse imported file before continuing?
+                    // code below is ugly but works for now.. ~BvL, 16/11/2021
+                    var text = File.ReadAllText(importExpr.Path);
+                    var lexer = new Lexer(text);
+                    var parser = new Parser(lexer, Path.GetFileNameWithoutExtension(importExpr.Path));
+                    _expressions.AddRange(parser.Parse());
+                    //ConsumeExpression(null); // for now don't consume import statements...
+                    continue;
+                    
                 }
 
                 ConsumeExpression(expr);
@@ -94,11 +102,6 @@ namespace Parsing
                     {
                         return ParseFunctionDefinitionExpression();
                     }
-                // if we get here, it apparently wasn't a function definition, so it should be a function call.
-                //case TokenType.FunctionName:
-                //    {
-                //        return ParseFunctionCallExpression();
-                //    }
                 case TokenType.Type when (peekedTokens[1].TokenType is TokenType.VariableIdentifier):
                     {
                         return ParseVariableDeclaration();
@@ -621,12 +624,17 @@ namespace Parsing
 
             if (string.IsNullOrWhiteSpace(expr.Token.ValueAsString))
             {
-                throw ParseError(importTok, "Expected non empty string expression representing a file path after import statement.");
+                throw ParseError(expr.Token, "Expected non empty string expression representing a file path after import statement.");
+            }
+
+            if (_file == Path.GetFileNameWithoutExtension(expr.Token.ValueAsString))
+            {
+                throw ParseError(expr.Token, "File '{expr.Token.ValueAsString}' imports itself, which shouldn't be done!.");
             }
 
             if (!File.Exists(expr.Token.ValueAsString))
             {
-                throw ParseError(importTok, "File specified in import statement could not be found.");
+                throw ParseError(expr.Token, $"File specified in import statement '{expr.Token.ValueAsString}' could not be found.");
             }
 
             ConsumeToken();

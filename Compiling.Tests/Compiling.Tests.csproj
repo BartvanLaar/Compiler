@@ -41,6 +41,12 @@
     <None Update="TestFiles\IfTrueTest.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestFiles\ImportTest.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\ImportTestFile.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestFiles\IntMainFuncNoParamsDefinitionReturnExpression.bs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
