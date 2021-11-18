@@ -86,42 +86,29 @@ namespace Lexing
             }
 
             return (tokens, cursor, lineCounter, columnCounter);
-        }
+        }        
 
         private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int columnCount)
         {
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
+            (var symbolToken, cursor, lineCount, columnCount) = GetNextSymbolToken(cursor, lineCount, columnCount);
+            if(symbolToken is not null)
+            {
+                return (symbolToken, cursor, lineCount, columnCount);
+            }
+
+            (var numberToken, cursor, lineCount, columnCount) = GetNumberToken(cursor, lineCount, columnCount);
+            if (numberToken is not null)
+            {
+                return (numberToken, cursor, lineCount, columnCount);
+            }
+
+            // save start column count for retrieving identifier.
             var columnCountStart = columnCount;
-            var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
-            if (token is not null)
-            {
-                ++cursor;
-                ++columnCount;
-                (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token, cursor, lineCount, columnCount);
-                token = tokenExtended ?? token;
-                
-                // we don't (yet) care about comments or summaries.. so get rid of them
-                if (token.TokenType is (TokenType.Comment or TokenType.Summary))
-                {
-                    (cursor, lineCount, columnCount) = SkipTillNewLine(cursor, lineCount);
-
-                    return (token, cursor, lineCount, columnCount);
-                }
-
-                return (token, cursor, lineCount, columnCount);
-            }
-
-            (token, cursor, lineCount, columnCount) = GetNumberToken(cursor, lineCount, columnCount);
-            if (token is not null)
-            {
-                return (token, cursor, lineCount, columnCount);
-            }
-
             // Consume identifier...
             (var identifier, cursor, lineCount, columnCount) = GetIdentifier(cursor, lineCount, columnCount);
-
             if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType))
             {
                 var predefinedToken = new Token(tokenType, identifier, lineCount, columnCountStart) { Value = identifier };
@@ -138,7 +125,7 @@ namespace Lexing
             // but first eat all white spaces.
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
-            var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCountStart);
+            var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
             if (nextTok?.TokenType == TokenType.ParanthesesOpen)
             {
                 // We wont increase any counts.
@@ -218,6 +205,30 @@ namespace Lexing
 
             return (token, cursor, lineCount, columnCount);
         }
+
+        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNextSymbolToken(int cursor, int lineCount, int columnCount)
+        {
+            var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
+            if (token is not null)
+            {
+                ++cursor;
+                ++columnCount;
+                (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token, cursor, lineCount, columnCount);
+                token = tokenExtended ?? token;
+
+                // we don't (yet) care about comments or summaries.. so get rid of them
+                if (token.TokenType is (TokenType.Comment or TokenType.Summary))
+                {
+                    (cursor, lineCount, columnCount) = SkipTillNewLine(cursor, lineCount);
+
+                    return (token, cursor, lineCount, columnCount);
+                }
+
+                return (token, cursor, lineCount, columnCount);
+            }
+            return (null, cursor, lineCount, columnCount);
+        }
+
 
         private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetMultipleCharacterToken(Token token, int cursor, int lineCount, int columnCount)
         {
