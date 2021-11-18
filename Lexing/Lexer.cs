@@ -90,7 +90,6 @@ namespace Lexing
 
         private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int columnCount)
         {
-            // todo: should this language be case sensitive?
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
@@ -118,15 +117,8 @@ namespace Lexing
                 return (token, cursor, lineCount, columnCount);
             }
 
-            var identifier = string.Empty;
-            // todo: is there an easier way than using GetSingleCharToken every time..?
             // Consume identifier...
-            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
-            {
-                identifier += _text[cursor];
-                columnCount++;
-                cursor++;
-            }
+            (var identifier, cursor, lineCount, columnCount) = GetIdentifier(cursor, lineCount, columnCount);
 
             if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType))
             {
@@ -153,6 +145,20 @@ namespace Lexing
             }
 
             return (tok, cursor, lineCount, columnCount);
+        }
+
+        private (string Identifier, int Cursor, int LineCount, int ColumnCount) GetIdentifier(int cursor, int lineCount, int columnCount)
+        {
+            var identifier = string.Empty;
+            // todo: is there an easier way than using GetSingleCharToken every time..?
+            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
+            {
+                identifier += _text[cursor];
+                columnCount++;
+                cursor++;
+            }
+
+            return (identifier, cursor, lineCount, columnCount);
         }
 
         private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount)
@@ -211,7 +217,7 @@ namespace Lexing
         }
 
         private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetMultipleCharacterToken(Token token, int cursor, int lineCount, int columnCount)
-        {            
+        {
             switch (token.TokenType)
             {
                 case TokenType.BracketOpen:
@@ -244,7 +250,7 @@ namespace Lexing
                                 return (token, ++cursor, lineCount, ++columnCount);
                             }
                             return (token, cursor, lineCount, columnCount);
-                        }                  
+                        }
 
                         break;
                     }
@@ -281,7 +287,7 @@ namespace Lexing
 
                             cursor++;
                             columnCount++;
-                            
+
                             singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             if (singleCharTok?.TokenType == TokenType.Assignment)
                             {
