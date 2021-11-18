@@ -705,12 +705,11 @@ namespace Lexing.Tests
         public static TypeIndicator Lexer_Test_Native_Type_Params_Array(string code)
         {
             var lexer = new Lexer(code);
-            var toks = lexer.ConsumeTokens(5);
+            var toks = lexer.ConsumeTokens(4);
             Assert.AreEqual(TokenType.Params, toks[0].TokenType);
             Assert.AreEqual(TokenType.Type, toks[1].TokenType);
-            Assert.AreEqual(TokenType.BracketOpen, toks[2].TokenType);
-            Assert.AreEqual(TokenType.BracketClose, toks[3].TokenType);
-            Assert.AreEqual(TokenType.EndOfFile, toks[4].TokenType);
+            Assert.AreEqual(TokenType.Array, toks[2].TokenType);
+            Assert.AreEqual(TokenType.EndOfFile, toks[3].TokenType);
             return toks[1].TypeIndicator;
         }
 
@@ -736,8 +735,7 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.ArgumentSeparator, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Params, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Type, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.BracketOpen, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.BracketClose, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Array, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.VariableIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[counter++].TokenType);

@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lexing.Tests", "Lexing.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestHelpers.Tests", "TestHelpers.Tests\TestHelpers.Tests.csproj", "{CBC98C6B-DEC0-460C-9B5C-87802370C83F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exceptions", "Exceptions\Exceptions.csproj", "{FB82BA16-9620-4095-8621-AAF5EFD6B098}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBC98C6B-DEC0-460C-9B5C-87802370C83F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB82BA16-9620-4095-8621-AAF5EFD6B098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB82BA16-9620-4095-8621-AAF5EFD6B098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB82BA16-9620-4095-8621-AAF5EFD6B098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB82BA16-9620-4095-8621-AAF5EFD6B098}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

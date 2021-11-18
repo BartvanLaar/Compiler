@@ -28,13 +28,20 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
+
+            //var ptr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+            var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int64 }, true);
+
+            var function = _module.AddFunction("printf", funcType);
+            function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+            function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;
             //var type = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
             //var func = _module.AddFunction("printf", type);
             //func.Linkage = LLVMLinkage.LLVMDLLImportLinkage;
 
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
-
+            //_builder.BuildCall(function, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 32, true) }, $"callPrintFTemp");
             var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
             glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
         }
@@ -361,7 +368,7 @@ namespace Compiling.Backends
             var headerBB = parentFuncBlock.AppendBasicBlock("headerBB");
             var ifBodyBB = parentFuncBlock.AppendBasicBlock("if");
             var elseBB = parentFuncBlock.AppendBasicBlock("else");
-            
+
             _builder.BuildBr(headerBB);
             _builder.PositionAtEnd(headerBB);
 
@@ -517,7 +524,8 @@ namespace Compiling.Backends
                 argumentValues.Add(_valueStack.Pop());
             }
 
-            var call = _builder.BuildCall(function, argumentValues.ToArray(), $"callTemp");
+            var isVoidFunc = function.TypeOf.ReturnType.Kind == LLVMTypeKind.LLVMVoidTypeKind;
+            var call = _builder.BuildCall(function, argumentValues.ToArray() , isVoidFunc ? string.Empty:$"callTemp");
             _valueStack.Push(call);
         }
 

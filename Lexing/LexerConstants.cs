@@ -93,6 +93,8 @@ namespace Lexing
 
             public const string PARAMS = "params";
             public const string CLASS = "class";
+            public const string ENUM = "enum";
+            public const string INTERFACE = "interface";
 
             public const string IF = "if";
             public const string ELSE = "else";
@@ -148,6 +150,12 @@ namespace Lexing
             { Keywords.EXPORT, TokenType.Export},
             { Keywords.EXTEND, TokenType.Extend },
             { Keywords.EXTERN, TokenType.Extern },
+
+            { Keywords.ENUM, TokenType.Enum },
+            { Keywords.CLASS, TokenType.Class },
+            { Keywords.INTERFACE, TokenType.Interface },
+            { Keywords.STATIC, TokenType.Static },
+            { Keywords.CONST, TokenType.Constant },
 
             //types ? todo: is this the right moment and place?
             { Keywords.DOUBLE, TokenType.Type },

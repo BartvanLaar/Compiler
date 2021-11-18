@@ -1,24 +1,22 @@
-﻿using Lexing;
-using System;
+﻿using System;
 
 namespace Parsing
 {
-    public class ParseException : Exception
+    public class SyntaxErrorException : Exception
     {
-        internal ParseException(Token token, string message, string filename) : this(new ErrorLocation(token, filename), message) { }
-        internal ParseException(ErrorLocation location, string message)
+        public SyntaxErrorException(int line, int column, string message, string filename) : this(new ErrorLocation(line, column, filename), message) { }
+        public SyntaxErrorException(ErrorLocation location, string message)
         {
             Location = location;
             Message = $"{Location} -> error: {message}";
         }
 
         public override string Message { get; }
-        public ErrorLocation Location { get; set; }
+        public ErrorLocation Location { get; }
     }
 
     public class ErrorLocation
     {
-        internal ErrorLocation(Token token, string filepath) : this(token.Line, token.Column, filepath) { }
         internal ErrorLocation(int line, int column, string filepath)
         {
             Line = line;

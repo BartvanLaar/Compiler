@@ -197,7 +197,7 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            Assert.Throws<ParseException>(() => parser.Parse());
+            Assert.Throws<SyntaxErrorException>(() => parser.Parse());
         }
 
         [TestCase("SomeFunc();")]
@@ -230,7 +230,7 @@ namespace Parsing.Tests
             {
                 parser.Parse();
             }
-            catch (ParseException ex)
+            catch (SyntaxErrorException ex)
             {
                 if(ex.Message.ToLower().Contains("could not be found"))
                 {
@@ -249,7 +249,7 @@ namespace Parsing.Tests
             var lexer = new Lexer(code);
             var parser = new Parser(lexer);
 
-            Assert.Throws<ParseException>(() => parser.Parse());
+            Assert.Throws<SyntaxErrorException>(() => parser.Parse());
         }
     }
 }

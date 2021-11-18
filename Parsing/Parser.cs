@@ -14,7 +14,7 @@ namespace Parsing
 
     public sealed class Parser : IParser
     {
-        private const string DIRECT_TEXT_INPUT = "Direct text input";
+        private const string DIRECT_TEXT_INPUT = "Direct input";
 
         private readonly ILexer _lexer;
         private readonly string _file;
@@ -694,33 +694,33 @@ namespace Parsing
         }
 
 
-        private ParseException ParserError(TokenType expectedTokenType, string expectedInOrAt)
+        private SyntaxErrorException ParserError(TokenType expectedTokenType, string expectedInOrAt)
         {
             return ParseError(PeekToken(), expectedTokenType.ToString(), expectedInOrAt);
         }
 
-        private ParseException ParserError(Token token, TokenType expectedTokenType, string expectedInOrAt)
+        private SyntaxErrorException ParserError(Token token, TokenType expectedTokenType, string expectedInOrAt)
         {
             return ParseError(token, expectedTokenType.ToString(), expectedInOrAt);
         }
 
-        private ParseException ParseError(Token token, string expectedCharacter, string exptectedInOrAt)
+        private SyntaxErrorException ParseError(Token token, string expectedCharacter, string exptectedInOrAt)
         {
             return ParseError(token, $"Expected '{expectedCharacter}' {exptectedInOrAt}");
         }
 
-        private ParseException ParserError(string message)
+        private SyntaxErrorException ParserError(string message)
         {
             return ParseError(PeekToken(), message);
         }
 
-        private ParseException ParseError(Token token, string message)
+        private SyntaxErrorException ParseError(Token token, string message)
         {
             if (!message.EndsWith("!") && !message.EndsWith("."))
             {
                 message += ".";
             }
-            return new ParseException(token, message, _file);
+            return new SyntaxErrorException(token.Line, token.Column, message, _file);
         }
 
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);

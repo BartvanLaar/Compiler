@@ -182,7 +182,7 @@ namespace Compiling.Backends
             var hasFunc = _functions.TryGetValue(expression.FunctionName, out var funcExpr);
             if (!hasFunc)
             {
-                var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Name} {x.ValueToken.Name}"));
+                var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Value} {x.ValueToken.Name}"));
                 throw new Exception($"Function '{expression.FunctionName}' with argument types: ({argString}) does not exist.");// todo: improve message and make custom exception.
             }
 

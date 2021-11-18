@@ -21,7 +21,7 @@ namespace CLI
 
             var code = @"func main() -> int {var x = 5; if(true){x = 42;} return 42;}";
 
-            Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
+            Driver.RunLLVM(code, isExecutable: true, useClangCompiler: true);
 
             //todo: add support for order independent code? required 2 separate parse phases
             if (File.Exists("output.exe"))

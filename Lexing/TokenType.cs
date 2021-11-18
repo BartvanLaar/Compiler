@@ -85,5 +85,11 @@
         BitShiftLeftAssign,
         BitShiftRightAssign,
         As,
+        Constant,
+        Static,
+        Interface,
+        Class,
+        Enum,
+        Array,
     }
 }
