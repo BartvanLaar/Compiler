@@ -97,17 +97,19 @@ namespace Lexing
             var token = GetSingleCharacterToken(cursor, lineCount, columnCount);
             if (token is not null)
             {
-                cursor++;
-                columnCount++;
+                ++cursor;
+                ++columnCount;
                 (var tokenExtended, cursor, lineCount, columnCount) = GetMultipleCharacterToken(token, cursor, lineCount, columnCount);
-
+                token = tokenExtended ?? token;
+                
                 // we don't (yet) care about comments or summaries.. so get rid of them
-                if (tokenExtended?.TokenType is (TokenType.Comment or TokenType.Summary))
+                if (token.TokenType is (TokenType.Comment or TokenType.Summary))
                 {
                     (cursor, lineCount, columnCount) = SkipTillNewLine(cursor, lineCount);
+
+                    return (token, cursor, lineCount, columnCount);
                 }
 
-                token = tokenExtended ?? token;
                 return (token, cursor, lineCount, columnCount);
             }
 
@@ -142,6 +144,7 @@ namespace Lexing
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
                 tok.TokenType = TokenType.FunctionIdentifier;
+                return (tok, cursor, lineCount, columnCount);
             }
 
             return (tok, cursor, lineCount, columnCount);
@@ -154,8 +157,8 @@ namespace Lexing
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
             {
                 identifier += _text[cursor];
-                columnCount++;
-                cursor++;
+                ++columnCount;
+                ++cursor;
             }
 
             return (identifier, cursor, lineCount, columnCount);
@@ -179,8 +182,8 @@ namespace Lexing
             while (cursor < _text.Length && isValidCharacter(_text[cursor]))
             {
                 result += _text[cursor];
-                cursor++;
-                columnCount++;
+                ++cursor;
+                ++columnCount;
             }
 
             TypeIndicator typeIndicator;
@@ -239,8 +242,8 @@ namespace Lexing
                             token.TokenType = TokenType.Equivalent;
                             token.Value = LexerConstants.EQUIVALENT_SIGN;
 
-                            cursor++;
-                            columnCount++;
+                            ++cursor;
+                            ++columnCount;
 
                             singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             if (singleCharTok?.TokenType == TokenType.Assignment)
@@ -285,8 +288,8 @@ namespace Lexing
                             token.TokenType = TokenType.NotEquivalent;
                             token.Value = LexerConstants.NOT_EQUIVALENT_SIGN;
 
-                            cursor++;
-                            columnCount++;
+                            ++cursor;
+                            ++columnCount;
 
                             singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             if (singleCharTok?.TokenType == TokenType.Assignment)
@@ -468,16 +471,16 @@ namespace Lexing
                         {
                             token.TokenType = TokenType.Comment;
                             token.Value = LexerConstants.COMMENT_INDICATOR;
-                            cursor++;
-                            columnCount++;
+                            ++cursor;
+                            ++columnCount;
 
                             singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             if (singleCharTok?.TokenType == TokenType.Divide)
                             {
                                 token.TokenType = TokenType.Summary;
                                 token.Value = LexerConstants.SUMMARY_INDICATOR;
-                                cursor++;
-                                columnCount++;
+                                ++cursor;
+                                ++columnCount;
                             }
                             return (token, cursor, lineCount, columnCount);
 
@@ -505,8 +508,8 @@ namespace Lexing
                                     if (cursor + 1 < _text.Length && _text[cursor + 1].ToString() == LexerConstants.CHARACTER_INDICATOR)
                                     {
                                         token.TypeIndicator = TypeIndicator.Character;
-                                        cursor++;
-                                        columnCount++;
+                                        ++cursor;
+                                        ++columnCount;
                                     }
 
                                     break;
@@ -516,8 +519,8 @@ namespace Lexing
                             }
                             finally
                             {
-                                cursor++;
-                                columnCount++;
+                                ++cursor;
+                                ++columnCount;
                                 singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                             }
                         }
@@ -571,7 +574,7 @@ namespace Lexing
         {
             while (cursor < _text.Length && _text[cursor] != '\n')
             {
-                cursor++;
+                ++cursor;
             }
 
             return (cursor, lineCount + 1, 0);
@@ -584,14 +587,14 @@ namespace Lexing
                 if (_text[cursor] == '\n')
                 {
                     columnCount = 1;
-                    lineCount++;
+                    ++lineCount;
                 }
                 else
                 {
-                    columnCount++;
+                    ++columnCount;
                 }
 
-                cursor++;
+                ++cursor;
             }
 
             return (cursor, lineCount, columnCount);
