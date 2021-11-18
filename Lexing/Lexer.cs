@@ -118,27 +118,28 @@ namespace Lexing
                 return (token, cursor, lineCount, columnCount);
             }
 
-            var res = string.Empty;
+            var identifier = string.Empty;
             // todo: is there an easier way than using GetSingleCharToken every time..?
+            // Consume identifier...
             while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
             {
-                res += _text[cursor];
+                identifier += _text[cursor];
                 columnCount++;
                 cursor++;
             }
 
-            if (LexerConstants.IsPredefinedKeyword(res, out var tokenType))
+            if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType))
             {
-                var predefinedToken = new Token(tokenType, res, lineCount, columnCountStart) { Value = res };
-                predefinedToken.TypeIndicator = LexerConstants.ConvertKeywordToTypeIndicator(res);
-                if (res is LexerConstants.Keywords.TRUE or LexerConstants.Keywords.FALSE)
+                var predefinedToken = new Token(tokenType, identifier, lineCount, columnCountStart) { Value = identifier };
+                predefinedToken.TypeIndicator = LexerConstants.ConvertKeywordToTypeIndicator(identifier);
+                if (identifier is LexerConstants.Keywords.TRUE or LexerConstants.Keywords.FALSE)
                 {
-                    predefinedToken.Value = res is LexerConstants.Keywords.TRUE;
+                    predefinedToken.Value = identifier is LexerConstants.Keywords.TRUE;
                 }
 
                 return (predefinedToken, cursor, lineCount, columnCount);
             }
-            var tok = new Token(TokenType.VariableIdentifier, res, lineCount, columnCountStart) { Value = res };
+            var tok = new Token(TokenType.VariableIdentifier, identifier, lineCount, columnCountStart) { Value = identifier };
             // kind of a hack, but check if next single char tok is a parantheseOpen, indicating a function call or definition
             // but first eat all white spaces.
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
@@ -146,7 +147,8 @@ namespace Lexing
             var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCountStart);
             if (nextTok?.TokenType == TokenType.ParanthesesOpen)
             {
-                // We wont increase any counts. This will lead to duplicate detection of a single character.. being (... But for now, we will take that performance 'hit'.
+                // We wont increase any counts.
+                // as this token is important to the parser for detecting func args and syntax check.                                
                 tok.TokenType = TokenType.FunctionIdentifier;
             }
 
@@ -209,8 +211,7 @@ namespace Lexing
         }
 
         private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetMultipleCharacterToken(Token token, int cursor, int lineCount, int columnCount)
-        {
-            //@incomplete
+        {            
             switch (token.TokenType)
             {
                 case TokenType.BracketOpen:
