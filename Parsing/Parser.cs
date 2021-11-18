@@ -147,8 +147,7 @@ namespace Parsing
             }
         }
 
-        // All parse primary should result in a value.
-        private ExpressionBase? ParsePrimary()
+        private ExpressionBase? ParseExpressionResultingInValue()
         {
             var peekedTokens = PeekTokens(2);
             var currentTokenType = peekedTokens[0].TokenType;
@@ -160,9 +159,11 @@ namespace Parsing
                 //TokenType.AccoladesClose => null, // end of a (sub) expression
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
-                TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
+                TokenType.FunctionCall => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
+                TokenType.Add => ParseValueExpression(), // e.g. var x = +1;
+                TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -213,10 +214,21 @@ namespace Parsing
             return exp;
         }
 
+        private ExpressionBase ParseNegativeValueExpression()
+        {
+            var subtractTok = ConsumeToken();
+            var expr = ParseExpressionResultingInValue();
+            if(expr == null)
+            {
+                throw ParseError(subtractTok, "an expression after a subtract '-' symbol.");
+            }
+
+            return new NegativeValueExpression(subtractTok, expr);
+        }
+
         private ExpressionBase ParseValueExpressionInternal()
         {
             var tok = ConsumeToken();
-
             return new ValueExpression(tok, tok);
         }
 
@@ -242,9 +254,9 @@ namespace Parsing
 
             ConsumeToken();
             ;
-            if (PeekToken().TokenType is not TokenType.FunctionIdentifier)
+            if (PeekToken().TokenType is not TokenType.FunctionCall)
             {
-                throw ParserError(PeekToken(), TokenType.FunctionIdentifier, "after func definition");
+                throw ParserError(PeekToken(), TokenType.FunctionCall, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
@@ -486,7 +498,7 @@ namespace Parsing
 
         private ExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
-            var lhs = ParsePrimary();
+            var lhs = ParseExpressionResultingInValue();
 
             if (lhs == null)
             {
@@ -540,7 +552,7 @@ namespace Parsing
 
         private FunctionCallExpression ParseFunctionCallExpression()
         {
-            if (PeekToken().TokenType != TokenType.FunctionIdentifier)
+            if (PeekToken().TokenType != TokenType.FunctionCall)
             {
                 // Expected a function name...
                 throw ParseError(PeekToken(), "a function name", "function call");
@@ -569,7 +581,7 @@ namespace Parsing
                     ConsumeToken();
                 }
 
-                if (PeekToken().TokenType is TokenType.FunctionIdentifier)
+                if (PeekToken().TokenType is TokenType.FunctionCall)
                 {
                     var funcCallExpr = ParseFunctionCallExpression();
                     Debug.Assert(funcCallExpr != null, "func call expression can't be null when the previous token is a function name!");

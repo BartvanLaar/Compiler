@@ -17,6 +17,7 @@ namespace Parsing.Tests
         [TestCase("var x = 10*(10-(5-2));", 1)]
         [TestCase("var x = (10*(10-(5-2)));", 1)]
         [TestCase("(10-1)*5;", 1)]
+        [TestCase("var x = -5;", 1)]
         public void General_Code_Test_Throw_No_Error(string code, int expectedAmountOfTrees, int expectedAmountOfErrors = 0)
         {
             var lexer = new Lexer(code);

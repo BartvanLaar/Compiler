@@ -336,6 +336,12 @@ namespace Compiling.Backends
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
 
+        public void VisitNegativeValueExpression(NegativeValueExpression expression)
+        {
+            // typechecking does not (for now) care about negative values...
+            Visit(expression.ValueExpression);
+        }
+
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
         {
             //todo: code below doesnt really work for user defined types as the name can have the same starting value....?
@@ -367,5 +373,6 @@ namespace Compiling.Backends
                 _ => throw new NotImplementedException($"Exhaustive use of {nameof(ConvertTypeIndicatorToString)}."),
             };
         }
+
     }
 }

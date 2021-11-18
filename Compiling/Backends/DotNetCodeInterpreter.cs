@@ -212,5 +212,12 @@ namespace Compiling.Backends
             Visit(expression.ReturnExpr);
         }
 
+        public void VisitNegativeValueExpression(NegativeValueExpression expression)
+        {
+            Visit(expression);
+            var value = _valueStack.Pop();
+            Debug.Assert(value != null);
+            _valueStack.Push(-(double)Convert.ChangeType(value, typeof(double)));
+        }
     }
 }

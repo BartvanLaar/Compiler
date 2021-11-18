@@ -36,8 +36,8 @@ namespace Lexing
             return TraverseTokens(1, true).First();
         }
 
-        public Token PeekToken()
         //TODO: should we cache peek results?
+        public Token PeekToken()
         {
             return TraverseTokens(1, false).First();
         }
@@ -47,8 +47,8 @@ namespace Lexing
             return TraverseTokens(amount, true);
         }
 
-        public Token[] PeekTokens(int amount)
         //TODO: should we cache peek results?
+        public Token[] PeekTokens(int amount)
         {
             return TraverseTokens(amount, false);
         }
@@ -86,7 +86,7 @@ namespace Lexing
             }
 
             return (tokens, cursor, lineCounter, columnCounter);
-        }        
+        }
 
         private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int columnCount)
         {
@@ -94,7 +94,7 @@ namespace Lexing
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
             (var symbolToken, cursor, lineCount, columnCount) = GetNextSymbolToken(cursor, lineCount, columnCount);
-            if(symbolToken is not null)
+            if (symbolToken is not null)
             {
                 return (symbolToken, cursor, lineCount, columnCount);
             }
@@ -130,7 +130,7 @@ namespace Lexing
             {
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
-                tok.TokenType = TokenType.FunctionIdentifier;
+                tok.TokenType = TokenType.FunctionCall;
                 return (tok, cursor, lineCount, columnCount);
             }
 
@@ -151,7 +151,7 @@ namespace Lexing
             return (identifier, cursor, lineCount, columnCount);
         }
 
-        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount)
+        private (Token? Token, int Cursor, int LineCount, int ColumnCount) GetNumberToken(int cursor, int lineCount, int columnCount, bool isNegative = false)
         {
             if (cursor >= _text.Length || !char.IsDigit(_text[cursor]))
             {
@@ -162,7 +162,7 @@ namespace Lexing
             var isHexadecimal = cursor + 1 < _text.Length && IsHexIndicator(_text[cursor], _text[cursor + 1]);
             Func<char, bool> isValidCharacter = isHexadecimal
                 ? c => char.IsLetterOrDigit(c)
-                : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || global::Lexing.Lexer.IsNumberIndicator(c);
+                : c => char.IsDigit(c) || IsDecimalSeparator(c) || IsNumberIndentation(c) || IsNumberIndicator(c);
 
             var originalColumnCount = columnCount;
             var result = string.Empty;

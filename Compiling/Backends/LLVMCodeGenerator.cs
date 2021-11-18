@@ -633,5 +633,13 @@ namespace Compiling.Backends
 
         }
 
+        public void VisitNegativeValueExpression(NegativeValueExpression expression)
+        {
+            Visit(expression.ValueExpression); // how do i turn this value negative? IsNegative should be part of every expression as it counts for e.g. function calls, identifiers, etc....
+            var res = _valueStack.Pop();
+            //todo: fix!
+            _valueStack.Push(res);
+
+        }
     }
 }

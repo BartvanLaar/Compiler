@@ -18,5 +18,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitWhileStatementExpression(WhileStatementExpression expression);
         void VisitBodyExpression(BodyExpression expression);
         void VisitDoWhileStatementExpression(DoWhileStatementExpression expression);
+        void VisitNegativeValueExpression(NegativeValueExpression expression);
     }
 }
