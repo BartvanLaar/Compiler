@@ -214,7 +214,7 @@ namespace Compiling.Backends
 
         public void VisitNegativeValueExpression(NegativeValueExpression expression)
         {
-            Visit(expression);
+            Visit(expression.ValueExpression);
             var value = _valueStack.Pop();
             Debug.Assert(value != null);
             _valueStack.Push(-(double)Convert.ChangeType(value, typeof(double)));

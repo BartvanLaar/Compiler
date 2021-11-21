@@ -185,6 +185,8 @@ namespace Lexing.Tests
             text = "-1";
             lexer = new Lexer(text);
             toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.Subtract, toks[counter].TokenType);
+            counter++;
             Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
             Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
 
@@ -206,6 +208,7 @@ namespace Lexing.Tests
 
             Assert.AreEqual(TokenType.VariableIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.SubtractSubtract, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Subtract, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Subtract, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
             Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
@@ -243,6 +246,8 @@ namespace Lexing.Tests
             text = "+1";
             lexer = new Lexer(text);
             toks = lexer.ConsumeTokens(10);
+            Assert.AreEqual(TokenType.Add, toks[counter].TokenType);
+            counter++;
             Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
             Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
 
@@ -264,6 +269,7 @@ namespace Lexing.Tests
 
             Assert.AreEqual(TokenType.VariableIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.AddAdd, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Add, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Add, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Value, toks[counter].TokenType);
             Assert.AreEqual(TypeIndicator.Integer, toks[counter].TypeIndicator);
