@@ -83,13 +83,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Visit(expression.ReturnExpr);
             Log(expression);
-        }
-
-        public void VisitNegativeValueExpression(NegativeValueExpression expression)
-        {
-            Log(expression);
-        }
-
+        }    
         private static void LogValue(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}' with token: '{baseExp?.Token}'.");

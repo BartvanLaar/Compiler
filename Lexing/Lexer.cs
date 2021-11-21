@@ -198,7 +198,7 @@ namespace Lexing
 
             switch (token.TypeIndicator)
             {
-                case TypeIndicator.Integer: token.Value = int.Parse(result); break;
+                case TypeIndicator.Integer: token.Value = long.Parse(result); break;
                 case TypeIndicator.Double: token.Value = double.Parse(result); break;
                 case TypeIndicator.Float: token.Value = float.Parse(result); break;
             }

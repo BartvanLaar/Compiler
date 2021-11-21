@@ -2,7 +2,6 @@
 using LLVMSharp.Interop;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
-using System;
 using System.Diagnostics;
 
 namespace Compiling.Backends
@@ -17,7 +16,6 @@ namespace Compiling.Backends
         private readonly LLVMExecutionEngineRef _executionEngine;
         private readonly LLVMPassManagerRef _passManager;
         private readonly Dictionary<string, LLVMValueRef> _valueAllocationPointers = new();
-        private delegate double D_FUNCTION_PTR(); // temp?
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
 
@@ -72,27 +70,27 @@ namespace Compiling.Backends
             {
                 case TypeIndicator.Boolean:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, (ulong)((bool)expression.Value ? 1 : 0), false));
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, ((bool)expression.Value ? 1ul : 0ul), false));
                         return;
                     }
                 case TypeIndicator.Integer:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)Convert.ChangeType((int)expression.Value, typeof(ulong)), true));
+                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)Convert.ChangeType((long)expression.Value, typeof(ulong)), true));
                         return;
                     }
-
                 case TypeIndicator.Double:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, (double)expression.Value));
+                        var value = expression.IsNegative ? -(double)expression.Value: (double)expression.Value;
+                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, value));
                         return;
                     }
-
                 case TypeIndicator.Float:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, (float)expression.Value));
+                        var value = expression.IsNegative ? -(float)expression.Value : (float)expression.Value;
+
+                        _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Float, value));
                         return;
                     }
-
                 case TypeIndicator.Character:
                     {
                         Debug.Assert(expression.Value is not null);
@@ -630,15 +628,6 @@ namespace Compiling.Backends
             {
                 _builder.BuildRetVoid();
             }
-
-        }
-
-        public void VisitNegativeValueExpression(NegativeValueExpression expression)
-        {
-            Visit(expression.ValueExpression); // how do i turn this value negative? IsNegative should be part of every expression as it counts for e.g. function calls, identifiers, etc....
-            var res = _valueStack.Pop();
-            //todo: fix!
-            _valueStack.Push(res);
 
         }
     }

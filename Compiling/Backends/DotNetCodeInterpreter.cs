@@ -6,7 +6,7 @@ namespace Compiling.Backends
 {
     internal class DotNetCodeInterpreter : IAbstractSyntaxTreeVisitor
     {
-        private readonly Stack<(object Value, Type? TypeInfo)> _valueStack = new();
+        private readonly Stack<(object? Value, Type? TypeInfo)> _valueStack = new();
         private readonly Dictionary<string, object?> _namedValues = new();
         private readonly Dictionary<string, ExpressionBase> _functions = new();
         public IEnumerable<object?> Results => _valueStack.Select(x => x.Value);
@@ -17,10 +17,16 @@ namespace Compiling.Backends
         {
             Visit(expression.LeftHandSide);
             var lhs = _valueStack.Pop();
+            Debug.Assert(lhs.Value != null);
+            Debug.Assert(lhs.TypeInfo != null);
             dynamic lhsValue = Convert.ChangeType(lhs.Value, lhs.TypeInfo);
+            lhsValue = expression.LeftHandSide.IsNegative ? -lhsValue : lhsValue;
             Visit(expression.RightHandSide);
             var rhs = _valueStack.Pop();
+            Debug.Assert(rhs.Value != null);
+            Debug.Assert(rhs.TypeInfo != null);
             dynamic rhsValue = Convert.ChangeType(rhs.Value, rhs.TypeInfo);
+            rhsValue = expression.RightHandSide?.IsNegative == true ? -rhsValue : rhsValue;
 
             switch (expression.NodeExpressionType)
             {
@@ -97,7 +103,7 @@ namespace Compiling.Backends
                         _valueStack.Push((lhsValue | rhsValue, typeof(int)));
                         break;
                     }
-              
+
                 case ExpressionType.BitwiseAnd:
                     {
                         _valueStack.Push((lhsValue & rhsValue, typeof(int)));
@@ -173,7 +179,7 @@ namespace Compiling.Backends
             {
                 throw new ArgumentException($"Unknown variable name {expression.Identifier}");
             }
-            _valueStack.Push((value, value.GetType()));
+            _valueStack.Push((value, value?.GetType()));
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)
@@ -212,16 +218,6 @@ namespace Compiling.Backends
         {
             //todo: how do returns even work?
             Visit(expression.ReturnExpr);
-        }
-
-        public void VisitNegativeValueExpression(NegativeValueExpression expression)
-        {
-            Visit(expression.ValueExpression);
-            var value = _valueStack.Pop();
-            Debug.Assert(value.Value != null);
-            Debug.Assert(value.TypeInfo != null);
-            dynamic val = Convert.ChangeType(value.Value, value.TypeInfo);
-            _valueStack.Push((-val, value.TypeInfo));
         }
     }
 }

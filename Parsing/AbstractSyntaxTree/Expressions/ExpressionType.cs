@@ -40,7 +40,6 @@
         FunctionDefinition,
         VariableDeclaration,
         Return,
-        NegativeValue,
     }
 
 }

@@ -2,7 +2,7 @@
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public sealed class FunctionCallExpression : ExpressionBase
+    public sealed class FunctionCallExpression : ValueExpressionBase
     {
         public FunctionCallExpression(Token identifierToken, ExpressionBase[] methodArguments) : base(identifierToken, ExpressionType.FunctionCall)
         {

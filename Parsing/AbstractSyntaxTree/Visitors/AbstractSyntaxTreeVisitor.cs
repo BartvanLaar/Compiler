@@ -68,9 +68,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Value:
                     visitor.VisitValueExpression((ValueExpression)expression);
                     break;
-                case ExpressionType.NegativeValue:
-                    visitor.VisitNegativeValueExpression((NegativeValueExpression)expression);
-                    break;
                 case ExpressionType.IfStatementExpression:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);
                     break;

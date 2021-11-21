@@ -3,16 +3,16 @@ using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    public sealed class BinaryExpression : ExpressionBase
+    public sealed class BinaryExpression : ValueExpressionBase
     {
-        public BinaryExpression(Token token, ExpressionBase leftHandSide, ExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.ValueAsString))
+        public BinaryExpression(Token token, ValueExpressionBase leftHandSide, ValueExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.ValueAsString))
         {
             LeftHandSide = leftHandSide;
             RightHandSide = rightHandSide;
         }
 
-        public ExpressionBase LeftHandSide { get; }
-        public ExpressionBase? RightHandSide { get; }
+        public ValueExpressionBase LeftHandSide { get; }
+        public ValueExpressionBase? RightHandSide { get; }
 
         // todo: put this code elsewhere...
         private static ExpressionType DetermineExpressionType(string? @operator)

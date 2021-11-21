@@ -56,7 +56,7 @@ namespace Parsing
                     _expressions.AddRange(parser.Parse());
                     //ConsumeExpression(null); // for now don't consume import statements...
                     continue;
-                    
+
                 }
 
                 ConsumeExpression(expr);
@@ -126,7 +126,7 @@ namespace Parsing
                         }
                         else
                         {
-                           ConsumeToken();
+                            ConsumeToken();
                         }
                         return expr;
                     }
@@ -147,7 +147,7 @@ namespace Parsing
             }
         }
 
-        private ExpressionBase? ParseExpressionResultingInValue()
+        private ValueExpressionBase? ParseExpressionResultingInValue()
         {
             var peekedTokens = PeekTokens(2);
             var currentTokenType = peekedTokens[0].TokenType;
@@ -158,17 +158,17 @@ namespace Parsing
                 TokenType.EndOfFile => null,
                 //TokenType.AccoladesClose => null, // end of a (sub) expression
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
-                TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 TokenType.FunctionCall => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
                 TokenType.Add => ParseValueExpression(), // e.g. var x = +1;
                 TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
+                TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
 
-        private ExpressionBase? ParseValueExpression()
+        private ValueExpressionBase? ParseValueExpression()
         {
             var peekedToken = PeekToken();
             return peekedToken.TypeIndicator switch
@@ -198,12 +198,21 @@ namespace Parsing
             return new ReturnExpression(ConsumeToken(), ParseExpression(), _currentFunctionReturnType.Value);
         }
 
-        private ExpressionBase? ParseParantheseOpen()
+        private ValueExpressionBase? ParseParantheseOpen()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesOpen);
             var paranOpenToken = ConsumeToken();
 
             var exp = ParseExpression();
+            if (exp == null)
+            {
+                throw ParseError(paranOpenToken, "Parantheses should contain an expression");
+            }
+            if (exp is not ValueExpressionBase vExp)
+            {
+                throw ParseError(exp.Token, "expression between parentheses should evaluate to a result");
+            }
+
             var peekedToken = PeekToken();
             if (peekedToken.TokenType is not TokenType.ParanthesesClose)
             {
@@ -211,22 +220,25 @@ namespace Parsing
             }
 
             ConsumeToken();
-            return exp;
+
+            return vExp;
         }
 
-        private ExpressionBase ParseNegativeValueExpression()
+        private ValueExpressionBase ParseNegativeValueExpression()
         {
             var subtractTok = ConsumeToken();
             var expr = ParseExpressionResultingInValue();
-            if(expr == null)
+            if (expr == null)
             {
                 throw ParseError(subtractTok, "an expression after a subtract '-' symbol.");
             }
 
-            return new NegativeValueExpression(subtractTok, expr);
+            expr.IsNegative = true;
+
+            return expr;
         }
 
-        private ExpressionBase ParseValueExpressionInternal()
+        private ValueExpressionBase ParseValueExpressionInternal()
         {
             var tok = ConsumeToken();
             return new ValueExpression(tok, tok);
@@ -496,9 +508,9 @@ namespace Parsing
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
 
-        private ExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
+        private ValueExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
-            var lhs = ParseExpressionResultingInValue();
+            ValueExpressionBase? lhs = ParseExpressionResultingInValue();
 
             if (lhs == null)
             {
@@ -700,7 +712,7 @@ namespace Parsing
             return new ForStatementExpression(forToken, variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
 
-        private ExpressionBase? ParseIdentifierExpression()
+        private ValueExpressionBase? ParseIdentifierExpression()
         {
             return new IdentifierExpression(ConsumeToken());
         }

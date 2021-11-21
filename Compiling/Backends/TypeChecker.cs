@@ -272,7 +272,7 @@ namespace Compiling.Backends
                 return;
             }
 
-            var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo)[] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(int)) };
+            var supportedTypesOrdered = new (TypeIndicator TypeIndicator, Type TypeInfo)[] { (TypeIndicator.Double, typeof(double)), (TypeIndicator.Float, typeof(float)), (TypeIndicator.Integer, typeof(long)) };
 
             if (!isTypeInferred && !supportedTypesOrdered.Any(t => t.TypeIndicator == lhsType.TypeIndicator || t.TypeIndicator == rhsType.TypeIndicator))
             {
@@ -334,12 +334,6 @@ namespace Compiling.Backends
             }
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
-        }
-
-        public void VisitNegativeValueExpression(NegativeValueExpression expression)
-        {
-            // typechecking does not (for now) care about negative values...
-            Visit(expression.ValueExpression);
         }
 
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
