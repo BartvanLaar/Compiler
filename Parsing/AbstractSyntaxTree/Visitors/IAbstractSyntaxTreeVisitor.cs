@@ -5,6 +5,8 @@ namespace Parsing.AbstractSyntaxTree.Visitors
     public interface IAbstractSyntaxTreeVisitor
     {
         public string Name { get; }
+
+        void Initialize(IReadOnlyDictionary<string, IScope> scopes);
         void Visit(ExpressionBase expression);
         void VisitValueExpression(ValueExpression expression);
         void VisitBinaryExpression(BinaryExpression expression);

@@ -1,4 +1,5 @@
-﻿using Lexing;
+﻿using Exceptions;
+using Lexing;
 using NUnit.Framework;
 using System.Linq;
 using TestHelpers.Tests;

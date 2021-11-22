@@ -9,6 +9,8 @@ namespace Compiling.Backends
         private readonly Stack<(object? Value, Type? TypeInfo)> _valueStack = new();
         private readonly Dictionary<string, object?> _namedValues = new();
         private readonly Dictionary<string, ExpressionBase> _functions = new();
+        private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
+
         public IEnumerable<object?> Results => _valueStack.Select(x => x.Value);
         public string Name => "Dot Net Interpreter / simulator";
         public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
@@ -218,6 +220,11 @@ namespace Compiling.Backends
         {
             //todo: how do returns even work?
             Visit(expression.ReturnExpr);
+        }
+
+        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        {
+            _scopes = scopes;
         }
     }
 }

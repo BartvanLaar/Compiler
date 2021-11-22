@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Parsing
+namespace Exceptions
 {
     public class SyntaxErrorException : Exception
     {

@@ -18,6 +18,7 @@ namespace Compiling.Backends
         private readonly Dictionary<string, LLVMValueRef> _valueAllocationPointers = new();
 
         private readonly Stack<LLVMValueRef> _valueStack = new();
+        private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
 
         //LLVM.LoadLibraryPermanently() // should i use this to load a c lib for printing to consoles?
         public LLVMCodeGenerator(LLVMModuleRef module, LLVMBuilderRef builder, LLVMExecutionEngineRef executionEngine, LLVMPassManagerRef passManager)
@@ -636,6 +637,11 @@ namespace Compiling.Backends
                 _builder.BuildRetVoid();
             }
 
+        }
+
+        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        {
+            _scopes = scopes;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Compiling
             // below are all compilation steps..
             var typeChecker = new TypeChecker();
             var codeGenerator = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
-            Run(text, typeChecker,  codeGenerator);// todo: replace with LLVM bytecode generator.
+            Run(text, typeChecker, codeGenerator);// todo: replace with LLVM bytecode generator.
             var sw = new Stopwatch();
             sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
@@ -76,13 +76,19 @@ namespace Compiling
             IParser parser = new Parser(lexer);
             ExpressionBase[] abstractSyntaxTrees = parser.Parse();
             stopwatch.Stop();
-            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds");
+            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds.");
+            stopwatch.Restart();
+            var crawler = new ASTCrawler();
+            AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, crawler);
+            stopwatch.Stop();
+            Console.WriteLine($"Crawling AST for scopes, functions, variables, constants, etc. took {stopwatch.ElapsedMilliseconds} milliseconds.");
 
             // For now one file is enough to support.
             // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
             foreach (var visitor in visitors)
             {
                 stopwatch.Restart();
+                visitor.Initialize(crawler.Scopes);
                 AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
                 stopwatch.Stop();
                 Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.ElapsedMilliseconds} milliseconds.");

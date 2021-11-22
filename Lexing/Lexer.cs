@@ -1,5 +1,5 @@
 ﻿
-using Parsing;
+using Exceptions;
 
 namespace Lexing
 {
@@ -510,7 +510,6 @@ namespace Lexing
 
                                 if (singleCharTok?.TokenType is TokenType.EndOfFile)
                                 {
-                                    // @todo @cleanup should probably throw an exception?
                                     throw new SyntaxErrorException(lineCount, cursor, "Unexpected end of file after string indicator.", _filename);
                                 }
 

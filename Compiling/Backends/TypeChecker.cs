@@ -24,9 +24,16 @@ namespace Compiling.Backends
         private readonly Dictionary<string, TypeCheckValue> _namedValues = new();
         private readonly Dictionary<string, Token> _userDefinedTypes = new();
         private readonly Stack<TypeCheckValue> _valueStack = new();
+        private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
+
         public string Name => "Type checker";
 
         public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
+
+        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        {
+            _scopes = scopes;
+        }
 
         public void VisitBinaryExpression(BinaryExpression expression)
         {
@@ -206,7 +213,7 @@ namespace Compiling.Backends
                 _namedValues.Remove(arg.ValueToken.Name);
             }
             //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
-            expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
+            //expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
             _functions.Add(expression.FunctionName, expression);
         }
 
@@ -346,6 +353,7 @@ namespace Compiling.Backends
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
 
+        // DUPLICATE CODE: A COPY exists in the crawler!!
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
         {
             //todo: code below doesnt really work for user defined types as the name can have the same starting value....?

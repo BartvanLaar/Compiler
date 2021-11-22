@@ -1,4 +1,5 @@
-﻿using Lexing;
+﻿using Exceptions;
+using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using System;
 using System.Collections.Generic;

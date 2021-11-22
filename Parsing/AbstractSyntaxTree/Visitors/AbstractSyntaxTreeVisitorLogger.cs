@@ -93,5 +93,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
+
+        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        {
+            
+        }
     }
 }
