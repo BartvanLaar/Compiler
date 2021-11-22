@@ -9,7 +9,7 @@ namespace Compiling.Backends
     internal class LLVMCodeGenerator : IAbstractSyntaxTreeVisitor
     {
         private static readonly LLVMValueRef NullValue = new(IntPtr.Zero);
-
+        private static readonly LLVMValueRef ZeroValue = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0ul, true);
         private readonly LLVMModuleRef _module;
 
         private readonly LLVMBuilderRef _builder;
@@ -75,12 +75,19 @@ namespace Compiling.Backends
                     }
                 case TypeIndicator.Integer:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)Convert.ChangeType((long)expression.Value, typeof(ulong)), true));
+                        var val = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)Convert.ChangeType(expression.Value, typeof(ulong)), true);
+                        if (expression.IsNegative) // hacky but works... and is probably optimized out anyway...
+                        {
+                            var sub = _builder.BuildSub(ZeroValue, val); // BuildNSWSub? should we handle overflows?
+                            _valueStack.Push(sub);
+                            return;
+                        }
+                        _valueStack.Push(val);
                         return;
                     }
                 case TypeIndicator.Double:
                     {
-                        var value = expression.IsNegative ? -(double)expression.Value: (double)expression.Value;
+                        var value = expression.IsNegative ? -(double)expression.Value : (double)expression.Value;
                         _valueStack.Push(LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, value));
                         return;
                     }
@@ -523,7 +530,7 @@ namespace Compiling.Backends
             }
 
             var isVoidFunc = function.TypeOf.ReturnType.Kind == LLVMTypeKind.LLVMVoidTypeKind;
-            var call = _builder.BuildCall(function, argumentValues.ToArray() , isVoidFunc ? string.Empty:$"callTemp");
+            var call = _builder.BuildCall(function, argumentValues.ToArray(), isVoidFunc ? string.Empty : $"callTemp");
             _valueStack.Push(call);
         }
 

@@ -116,19 +116,7 @@ namespace Parsing
                     }
                 default:
                     {
-                        var expr = ParseExpression();
-                        if (PeekToken().TokenType is not TokenType.EndOfStatement)
-                        {
-                            if (shouldThrowErrorOnMissingSemiColon)
-                            {
-                                throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, "after expression statement");
-                            }
-                        }
-                        else
-                        {
-                            ConsumeToken();
-                        }
-                        return expr;
+                        return ParseExpression();
                     }
             }
 
@@ -203,7 +191,7 @@ namespace Parsing
             Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesOpen);
             var paranOpenToken = ConsumeToken();
 
-            var exp = ParseExpression();
+            var exp = ParseExpression(false);
             if (exp == null)
             {
                 throw ParseError(paranOpenToken, "Parantheses should contain an expression");
@@ -377,7 +365,7 @@ namespace Parsing
                 throw ParseError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
             }
             var whileTok = ConsumeToken();
-            var condition = ParseTopLevelExpression(false);
+            var condition = ParseExpression(false);
             if (condition == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
@@ -389,7 +377,7 @@ namespace Parsing
         {
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
-            var conditionalExpression = ParseTopLevelExpression(false);
+            var conditionalExpression = ParseExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
@@ -444,7 +432,7 @@ namespace Parsing
         {
             var ifToken = ConsumeToken();
             Debug.Assert(ifToken.TokenType == TokenType.If);
-            var conditionalExpression = ParseTopLevelExpression(false);
+            var conditionalExpression = ParseExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParseError(ifToken, "Expected an expression but got none.");
@@ -499,16 +487,32 @@ namespace Parsing
             }
 
             var assignmentTok = ConsumeToken();
-            var valueExpression = ParseTopLevelExpression();
+            var valueExpression = ParseExpression();
             if (valueExpression == null)
             {
                 throw ParseError(assignmentTok, "value expression", "after assignment of variable");
             }
-
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideIdentifierExpression, assignmentTok, valueExpression);
         }
 
-        private ValueExpressionBase? ParseExpression(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
+        private ValueExpressionBase? ParseExpression(bool throwErrorOnMissingSemicolon = true)
+        {
+            var expr = ParseExpressionInternal();
+
+            if (PeekToken().TokenType is not TokenType.EndOfStatement)
+            {
+                if (throwErrorOnMissingSemicolon)
+                {
+                    throw ParseError(PeekToken(), LexerConstants.END_OF_STATEMENT, "after expression statement");
+                }
+            }
+            else
+            {
+                ConsumeToken(); // consume semicolon
+            }
+            return expr;
+        }
+        private ValueExpressionBase? ParseExpressionInternal(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
             ValueExpressionBase? lhs = ParseExpressionResultingInValue();
 
@@ -539,19 +543,12 @@ namespace Parsing
 
                 var nextMinOperatorPrecedence = operatorMetadata.IsLeftAssociated ? binaryOperatorPrecedence + 1 : binaryOperatorPrecedence;
 
-                var rhs = ParseExpression(nextMinOperatorPrecedence);
-
+                var rhs = ParseExpressionInternal(nextMinOperatorPrecedence);
 
                 if (operatorMetadata.IsCompoundAssignment)
                 {
-                    var tokCopy = new Token(operatorToken);
-                    tokCopy.TokenType = operatorMetadata.DecompoundedToken;
-                    // below code is ugly... But the string values have to be updated cause binary expression determines the expressiontype...
-                    // @todo: @refactor so binary expression does not determine the expression type based on a string value...
-                    var tempstr = ((string?)tokCopy.Value);
-                    tokCopy.Value = tempstr?.First().ToString();
+                    var tokCopy = new Token(operatorToken) { TokenType = operatorMetadata.DecompoundedToken };
                     operatorToken.TokenType = TokenType.Assignment;
-                    operatorToken.Value = tempstr?.Last().ToString();
 
                     rhs = new BinaryExpression(tokCopy, lhs, rhs);
                 }
@@ -593,14 +590,7 @@ namespace Parsing
                     ConsumeToken();
                 }
 
-                if (PeekToken().TokenType is TokenType.FunctionCall)
-                {
-                    var funcCallExpr = ParseFunctionCallExpression();
-                    Debug.Assert(funcCallExpr != null, "func call expression can't be null when the previous token is a function name!");
-                    functionArguments.Add(funcCallExpr);
-                    continue;
-                }
-                var argumentExpression = ParseExpression();
+                var argumentExpression = ParseExpression(false);
 
                 if (argumentExpression == null)
                 {
@@ -623,7 +613,13 @@ namespace Parsing
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
-            var expr = ParseExpression();
+
+            if(PeekToken().TokenType is not TokenType.Value || PeekToken().TypeIndicator is not TypeIndicator.String)
+            {
+                throw ParseError(importTok, "string expression representing a file path", "after import statement");
+            }
+
+            var expr = ParseValueExpression();
             if (expr == null || expr.Token is null || expr.Token.TypeIndicator is not TypeIndicator.String)
             {
                 throw ParseError(importTok, "string expression representing a file path", "after import statement");
@@ -684,13 +680,13 @@ namespace Parsing
                 throw ParseError(PeekToken(), "variable declaration", "inside, but at the start of, the 'for loop' header");
             }
 
-            var conditionExpr = ParseTopLevelExpression();
+            var conditionExpr = ParseExpression();
             if (conditionExpr is null)
             {
                 throw ParseError(PeekToken(), "conditional expression", "inside, but in the center of, the 'for loop' header");
             }
 
-            var variableIncreaseExpression = ParseTopLevelExpression(false);
+            var variableIncreaseExpression = ParseExpression(false);
             if (variableIncreaseExpression is null)
             {
                 throw ParseError(PeekToken(), "variable modifier expression", "inside, but at the end of, the 'for loop' header");

@@ -341,7 +341,7 @@ namespace Lexing
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.LessThanOrEqualTo;
+                            token.TokenType = TokenType.LessThanEqual;
                             token.Value = LexerConstants.LESS_THAN_EQUAL_SIGN;
                             return (token, ++cursor, lineCount, ++columnCount);
                         }
@@ -359,7 +359,7 @@ namespace Lexing
                         var singleCharTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
                         if (singleCharTok?.TokenType == TokenType.Assignment)
                         {
-                            token.TokenType = TokenType.GreaterThanOrEqualTo;
+                            token.TokenType = TokenType.GreaterThanEqual;
                             token.Value = LexerConstants.GREATER_THAN_EQUAL_SIGN;
                             return (token, ++cursor, lineCount, ++columnCount);
 

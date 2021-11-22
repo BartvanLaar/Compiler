@@ -17,9 +17,9 @@
         Equals,                     // ===
         NotEquals,                  // !==
         GreaterThan,                // >
-        GreaterThanOrEqualTo,       // >=
+        GreaterThanEqual,       // >=
         LessThan,                   // <
-        LessThanOrEqualTo,          // <=
+        LessThanEqual,          // <=
 
         BitwiseAnd,                 // &
         ConditionalAnd,             // &&

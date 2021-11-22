@@ -19,7 +19,7 @@ namespace CLI
             //                }
             //          ";
 
-            var code = @"func main() -> int {var x = 9223372036854775807; return x; }";
+            var code = @"func main() -> double {double x = -5 + 47; return x; }";
 
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: true);
 

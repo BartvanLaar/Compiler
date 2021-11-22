@@ -251,9 +251,9 @@ namespace Lexing
                 [TokenType.BitShiftRight] = SHIFT_PRECEDENCE,
 
                 [TokenType.LessThan] = RELATIONAL_TEST,
-                [TokenType.LessThanOrEqualTo] = RELATIONAL_TEST,
+                [TokenType.LessThanEqual] = RELATIONAL_TEST,
                 [TokenType.GreaterThan] = RELATIONAL_TEST,
-                [TokenType.GreaterThanOrEqualTo] = RELATIONAL_TEST,
+                [TokenType.GreaterThanEqual] = RELATIONAL_TEST,
 
                 [TokenType.Equivalent] = EQUALITY_TEST,
                 [TokenType.Equals] = EQUALITY_TEST,

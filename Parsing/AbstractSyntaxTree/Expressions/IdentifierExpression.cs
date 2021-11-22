@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class IdentifierExpression : ValueExpressionBase
     {
-        public IdentifierExpression(Token token) : base(token, ExpressionType.Identifier)
+        public IdentifierExpression(Token token) : base(token, token, ExpressionType.Identifier)
         {
             Identifier = token.Name;
         }

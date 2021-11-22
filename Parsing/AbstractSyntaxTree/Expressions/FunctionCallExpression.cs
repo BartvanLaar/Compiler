@@ -3,8 +3,8 @@
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class FunctionCallExpression : ValueExpressionBase
-    {
-        public FunctionCallExpression(Token identifierToken, ExpressionBase[] methodArguments) : base(identifierToken, ExpressionType.FunctionCall)
+    {                                                                                                                   // ugly why do i pass a identifierToken?
+        public FunctionCallExpression(Token identifierToken, ExpressionBase[] methodArguments) : base(identifierToken, identifierToken , ExpressionType.FunctionCall)
         {
 
             Arguments = methodArguments;

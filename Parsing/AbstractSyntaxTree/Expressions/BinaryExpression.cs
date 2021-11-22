@@ -5,7 +5,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class BinaryExpression : ValueExpressionBase
     {
-        public BinaryExpression(Token token, ValueExpressionBase leftHandSide, ValueExpressionBase? rightHandSide) : base(token, DetermineExpressionType(token.ValueAsString))
+        public BinaryExpression(Token token, ValueExpressionBase leftHandSide, ValueExpressionBase? rightHandSide) : base(token, leftHandSide.Token, DetermineExpressionType(token.TokenType))
         {
             LeftHandSide = leftHandSide;
             RightHandSide = rightHandSide;
@@ -15,39 +15,37 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ValueExpressionBase? RightHandSide { get; }
 
         // todo: put this code elsewhere...
-        private static ExpressionType DetermineExpressionType(string? @operator)
+        private static ExpressionType DetermineExpressionType(TokenType tokenType)
         {
-            //todo: why not use token type here instead? its basically the same...
-            Debug.Assert(@operator != null);
-            return @operator switch
+            return tokenType switch
             {
-                LexerConstants.PLUS => ExpressionType.Add,
-                LexerConstants.PLUS_ASSIGN => ExpressionType.AddAssign,
-                LexerConstants.MINUS => ExpressionType.Subtract,
-                LexerConstants.MINUS_ASSIGN => ExpressionType.SubtractAssign,
-                LexerConstants.TIMES => ExpressionType.Multiply,
-                LexerConstants.TIMES_ASSIGN => ExpressionType.MultiplyAssign,
-                LexerConstants.DIVIDE => ExpressionType.Divide,
-                LexerConstants.DIVIDE_ASSIGN => ExpressionType.DivideAssign,
-                LexerConstants.MODULO => ExpressionType.Modulo,
-                LexerConstants.MODULO_ASSIGN => ExpressionType.ModuloAssign,
-                LexerConstants.GREATER_THAN_SIGN => ExpressionType.GreaterThan,
-                LexerConstants.GREATER_THAN_EQUAL_SIGN => ExpressionType.GreaterThanEqual,
-                LexerConstants.LESS_THAN_SIGN => ExpressionType.LessThan,
-                LexerConstants.LESS_THAN_EQUAL_SIGN => ExpressionType.LessThanEqual,
-                LexerConstants.EQUIVALENT_SIGN => ExpressionType.Equivalent,
-                LexerConstants.EQUALS_SIGN => ExpressionType.Equals,
-                LexerConstants.NOT_EQUIVALENT_SIGN => ExpressionType.NotEquivalent,
-                LexerConstants.NOT_EQUALS_SIGN => ExpressionType.NotEquals,
-                LexerConstants.OR => ExpressionType.BitwiseOr,
-                LexerConstants.OR_ELSE => ExpressionType.ConditionalOr,
-                LexerConstants.AND => ExpressionType.BitwiseAnd,
-                LexerConstants.AND_ALSO => ExpressionType.ConditionalAnd,
-                LexerConstants.XOr => ExpressionType.ConditionalXOr,
-                LexerConstants.BIT_SHIFT_LEFT => ExpressionType.BitShiftLeft,
-                LexerConstants.BIT_SHIFT_RIGHT => ExpressionType.BitShiftRight,
-                LexerConstants.ASSIGN_OPERATOR => ExpressionType.Assignment,
-                _ => throw new ArgumentException($"Operator {@operator} is not supported."),
+                TokenType.Add => ExpressionType.Add,
+                TokenType.AddAssign => ExpressionType.AddAssign,
+                TokenType.Subtract => ExpressionType.Subtract,
+                TokenType.SubtractAssign => ExpressionType.SubtractAssign,
+                TokenType.Multiply => ExpressionType.Multiply,
+                TokenType.MultiplyAssign => ExpressionType.MultiplyAssign,
+                TokenType.Divide => ExpressionType.Divide,
+                TokenType.DivideAssign => ExpressionType.DivideAssign,
+                TokenType.Modulo => ExpressionType.Modulo,
+                TokenType.ModuloAssign => ExpressionType.ModuloAssign,
+                TokenType.GreaterThan => ExpressionType.GreaterThan,
+                TokenType.GreaterThanEqual => ExpressionType.GreaterThanEqual,
+                TokenType.LessThan => ExpressionType.LessThan,
+                TokenType.LessThanEqual => ExpressionType.LessThanEqual,
+                TokenType.Equivalent => ExpressionType.Equivalent,
+                TokenType.Equals => ExpressionType.Equals,
+                TokenType.NotEquivalent => ExpressionType.NotEquivalent,
+                TokenType.NotEquals => ExpressionType.NotEquals,
+                TokenType.BitwiseOr => ExpressionType.BitwiseOr,
+                TokenType.ConditionalOr => ExpressionType.ConditionalOr,
+                TokenType.BitwiseAnd => ExpressionType.BitwiseAnd,
+                TokenType.ConditionalAnd => ExpressionType.ConditionalAnd,
+                TokenType.ConditionalXOr => ExpressionType.ConditionalXOr,
+                TokenType.BitShiftLeft => ExpressionType.BitShiftLeft,
+                TokenType.BitShiftRight => ExpressionType.BitShiftRight,
+                TokenType.Assignment => ExpressionType.Assignment,
+                _ => throw new ArgumentException($"Token with type '{tokenType}' is not supported."),
             };
         }
 

@@ -186,7 +186,8 @@ namespace Compiling.Backends
                 throw new Exception($"Function '{expression.FunctionName}' with argument types: ({argString}) does not exist.");// todo: improve message and make custom exception.
             }
 
-            Debug.Assert(funcExpr != null); // stupid assert as hasFunc is checked above...
+            Debug.Assert(funcExpr != null); // stupid assert as hasFunc is checked above
+            expression.TypeToken = funcExpr.ReturnTypeToken; // ugly?                                            
             _valueStack.Push(new TypeCheckValue(expression.Token, funcExpr.ReturnTypeToken));
         }
 
@@ -285,6 +286,8 @@ namespace Compiling.Backends
                 {
                     lhsType.TypeIndicator = typeData.TypeIndicator;
                     rhsType.TypeIndicator = typeData.TypeIndicator;
+                    lhs.ValueToken.TypeIndicator = typeData.TypeIndicator;
+                    rhs.ValueToken.TypeIndicator = typeData.TypeIndicator;
 
                     if (lhs.TypeToken.TokenType is TokenType.Value)
                     {
@@ -300,7 +303,7 @@ namespace Compiling.Backends
                 }
             }
 
-            Debug.Assert(lhs.TypeToken.TypeIndicator == rhs.TypeToken.TypeIndicator);
+            //Debug.Assert(lhs.TypeToken.TypeIndicator == rhs.TypeToken.TypeIndicator);
         }
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
@@ -310,15 +313,25 @@ namespace Compiling.Backends
                 throw new ArgumentException($"Redeclaration of {expression.Identifier}! Scopes are not yet supported! Don't re-use variable names!");
             }
 
-            Visit(expression.ValueExpression);
-            var rhsValue = _valueStack.Pop();
 
-            var lhsValue = new TypeCheckValue(expression.DeclarationTypeToken, expression.IdentifierToken);
+            //var rhsValue = _valueStack.Pop();
+
+            var lhsValue = new TypeCheckValue(expression.IdentifierToken, expression.DeclarationTypeToken);
+            var rhsValue = new TypeCheckValue(expression.ValueExpression.TypeToken, expression.ValueExpression.TypeToken);
             FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+            Visit(expression.ValueExpression);
+
+            // kind of hacky, but visiting the expression above can cause the lhs and rhs to change...
+            // we abuse this for function calls as visiting a function call will expose its return type...
+            lhsValue = new TypeCheckValue(expression.IdentifierToken, expression.DeclarationTypeToken);
+            rhsValue = new TypeCheckValue(expression.ValueExpression.TypeToken, expression.ValueExpression.TypeToken);
+            FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+
             if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
             {
                 throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
             }
+
 
             Debug.Assert(expression.Identifier is not null);
 
