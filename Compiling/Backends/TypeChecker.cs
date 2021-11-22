@@ -353,7 +353,7 @@ namespace Compiling.Backends
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
 
-        // DUPLICATE CODE: A COPY exists in the crawler!!
+        //todo: cleanup! DUPLICATE CODE: A COPY exists in the crawler!!
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
         {
             //todo: code below doesnt really work for user defined types as the name can have the same starting value....?
