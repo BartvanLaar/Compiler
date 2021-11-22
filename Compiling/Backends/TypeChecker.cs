@@ -99,7 +99,6 @@ namespace Compiling.Backends
                 case ExpressionType.BitwiseOr:
                 case ExpressionType.BitwiseAnd:
                     {
-
                         if (lhsValue.TypeToken.TypeIndicator != TypeIndicator.Integer)
                         {
                             throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
@@ -301,9 +300,7 @@ namespace Compiling.Backends
 
                     return;
                 }
-            }
-
-            //Debug.Assert(lhs.TypeToken.TypeIndicator == rhs.TypeToken.TypeIndicator);
+            }          
         }
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
