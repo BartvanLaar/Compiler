@@ -74,34 +74,34 @@ namespace Parsing.Tests
             Assert.AreEqual(expectedAmountOfErrors, errors.Length);
         }
 
-        //[TestCase("x--")]
-        //[TestCase("x--;")]
-        //[TestCase("x++")]
-        //[TestCase("x++;")]
-        //public void General_Code_Test_Throw_No_Error_MinusMinus_And_PlusPlus(string code)
-        //{
-        //    var lexer = new Lexer(code);
-        //    var parser = new Parser(lexer);
+        [TestCase("x--;")]
+        [TestCase("x++;")]
+        [TestCase("--x;")]
+        [TestCase("++x;")]
+        public void General_Code_Test_Throw_No_Error_MinusMinus_And_PlusPlus(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
 
-        //    var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-        //    Assert.AreEqual(1, ast.Count);
-        //    Assert.IsEmpty(errors);
-        //}
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            Assert.AreEqual(1, ast.Length);
+            Assert.IsEmpty(errors);
+        }
 
-        //[TestCase("5++")]
-        //[TestCase("5++;")]
-        //[TestCase("5--")]
-        //[TestCase("5--;")]
-        //public void General_Code_Test_Throw_1_Error_MinusMinus_And_PlusPlus(string code)
-        //{
-        //    var lexer = new Lexer(code);
-        //    var parser = new Parser(lexer);
+        [TestCase("5--;")]
+        [TestCase("5++;")]
+        [TestCase("--5;")]
+        [TestCase("++5;")]
+        public void General_Code_Test_Throw_1_Error_MinusMinus_And_PlusPlus(string code)
+        {
+            var lexer = new Lexer(code);
+            var parser = new Parser(lexer);
 
-        //    var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
+            var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-        //    Assert.AreEqual(1, ast.Count);
-        //    Assert.AreEqual(1, errors.Count());
-        //}
+            Assert.AreEqual(1, ast.Length);
+            Assert.AreEqual(1, errors.Count());
+        }
 
 
         [TestCase("x + 5;")]
