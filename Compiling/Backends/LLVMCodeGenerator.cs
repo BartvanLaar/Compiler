@@ -38,7 +38,6 @@ namespace Compiling.Backends
             var function = _module.AddFunction("printf", funcType);
             function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;
-
         }
 
         public string Name => "LLVM backend";
@@ -58,7 +57,6 @@ namespace Compiling.Backends
             _builder.BuildStore(rhsValue, alloca);
             _valueAllocationPointers.Add(expression.Identifier, alloca);
         }
-
 
         public void VisitValueExpression(ValueExpression expression)
         {
@@ -358,8 +356,6 @@ namespace Compiling.Backends
                         throw new ArgumentException($"Invalid binary operator: '{expression.Token.TokenType}'.");
                     }
             }
-
-
         }
 
         public void VisitIfStatementExpression(IfStatementExpression expression)

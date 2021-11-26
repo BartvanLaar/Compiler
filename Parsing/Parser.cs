@@ -46,15 +46,11 @@ namespace Parsing
 
                 if (expr is ImportStatementExpression importExpr)
                 {
-                    // todo: parse imported file before continuing?
                     // code below is ugly but works for now.. ~BvL, 16/11/2021
                     var text = File.ReadAllText(importExpr.Path);
                     var lexer = new Lexer(text);
                     var parser = new Parser(lexer, Path.GetFileNameWithoutExtension(importExpr.Path));
                     _expressions.AddRange(parser.Parse());
-                    //ConsumeExpression(null); // for now don't consume import statements...
-                    continue;
-
                 }
 
                 ConsumeExpression(expr);
@@ -73,11 +69,12 @@ namespace Parsing
                     {
                         return null;
                     }
+#if DEBUG
                 case TokenType.EndOfStatement:
                     {
-                        // consumed by ConsumeExpression in main Parse loop.
-                        return null;
+                        throw new InvalidOperationException($"Dear developer, did you mean to call '{nameof(ParseExpression)}' or '{nameof(ParseExpressionResultingInValue)}'?");
                     }
+#endif
                 case TokenType.If:
                     {
                         return ParseIfStatementExpression();
@@ -128,24 +125,39 @@ namespace Parsing
 
         }
 
-        private ExpressionBase? ParseClassExpression()
+        private ClassExpression ParseClassExpression()
         {
-            throw new NotImplementedException();
-        }
+            Debug.Assert(PeekToken().TokenType is TokenType.Class);
+            var classToken = ConsumeToken();
 
-        private ExpressionBase? ParseNameSpaceExpression()
-        {
-            throw new NotImplementedException();
-            Debug.Assert(PeekToken().TokenType is TokenType.Namespace);
-            var namespaceToken = ConsumeToken();
-            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            var classBody = ParseBodyExpression(classToken, "class token");
+            var variableDeclarations = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.VariableDeclaration).Cast<VariableDeclarationExpression>().ToArray();
+            var functionDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.FunctionDefinition).Cast<FunctionDefinitionExpression>().ToArray();
+            var classDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.Class).Cast<ClassExpression>().ToArray();
+
+            var expectedTotalLength = variableDeclarations.Length + functionDefinitions.Length + classDefinitions.Length;
+            if (classBody.Body.Length != expectedTotalLength)
             {
-                throw ParseError(namespaceToken, "opening accolades", "namespace declaration");
+                throw ParseError(classToken, "variable, function or class definitions", "after class definition.");
             }
 
-            var expr = ParseTopLevelExpression();
-            //if(expr is not ClassExpression)
+            return new ClassExpression(variableDeclarations, functionDefinitions, classDefinitions, classToken);
+        }
 
+        private NamespaceExpression ParseNameSpaceExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.Namespace);
+            var namespaceToken = ConsumeToken();
+
+            var namespaceBody = ParseBodyExpression(namespaceToken, "namespace declaration");
+
+            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not ExpressionType.Class))
+            {
+                throw ParseError(namespaceToken, "only classes", "after namespace delcaration.");
+            }
+
+            var classes = namespaceBody?.Body?.Cast<ClassExpression>()?.ToArray() ?? Array.Empty<ClassExpression>();
+            return new NamespaceExpression(namespaceToken, classes);
         }
 
         private void ConsumeExpression(ExpressionBase? expression)
@@ -170,7 +182,6 @@ namespace Parsing
             {
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
-                //TokenType.AccoladesClose => null, // end of a (sub) expression
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.FunctionCall => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
@@ -189,7 +200,6 @@ namespace Parsing
             {
                 TypeIndicator.None => throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value."),
                 TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this"),
-                //TypeIndicator.UserDefined: throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support user defined types. The calling method should handle this");
                 TypeIndicator.Float => ParseValueExpressionInternal(),
                 TypeIndicator.Double => ParseValueExpressionInternal(),
                 TypeIndicator.Boolean => ParseValueExpressionInternal(),
@@ -538,9 +548,10 @@ namespace Parsing
             }
             return expr;
         }
+
         private ValueExpressionBase? ParseExpressionInternal(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
-            ValueExpressionBase? lhs = ParseExpressionResultingInValue();
+            var lhs = ParseExpressionResultingInValue();
 
             if (lhs == null)
             {
@@ -688,7 +699,7 @@ namespace Parsing
             return new ImportStatementExpression(importTok, expr.Token.ValueAsString, alias?.ValueAsString, _file);
         }
 
-        private ExpressionBase? ParseForLoopStatementExpression()
+        private ExpressionBase ParseForLoopStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.For);
             var forToken = ConsumeToken();
@@ -734,7 +745,7 @@ namespace Parsing
             return new ForStatementExpression(forToken, variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
 
-        private ValueExpressionBase? ParseIdentifierExpression()
+        private ValueExpressionBase ParseIdentifierExpression()
         {
             return new IdentifierExpression(ConsumeToken());
         }
