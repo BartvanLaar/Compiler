@@ -47,17 +47,17 @@ namespace Compiling.Backends
                 return; // input = output
             }
 
-            switch (expression.NodeExpressionType)
+            switch (expression.Token.TokenType)
             {
-                case ExpressionType.Add:
-                case ExpressionType.Subtract:
-                case ExpressionType.Multiply:
-                case ExpressionType.Modulo:
-                case ExpressionType.Divide:
-                case ExpressionType.GreaterThan:
-                case ExpressionType.GreaterThanEqual:
-                case ExpressionType.LessThan:
-                case ExpressionType.LessThanEqual:
+                case TokenType.Add:
+                case TokenType.Subtract:
+                case TokenType.Multiply:
+                case TokenType.Modulo:
+                case TokenType.Divide:
+                case TokenType.GreaterThan:
+                case TokenType.GreaterThanEqual:
+                case TokenType.LessThan:
+                case TokenType.LessThanEqual:
                     {
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
                         if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
@@ -67,7 +67,7 @@ namespace Compiling.Backends
 
                         break;
                     }
-                case ExpressionType.Assignment:
+                case TokenType.Assignment:
                     {
                         //todo: refactor and infer type before calling this method...
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
@@ -77,20 +77,8 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
-                case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
-                    {
-                        //todo: refactor and infer type before calling this method...
-                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
-                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
-                        {
-                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
-                        }
-
-                        break;
-                    }
-                case ExpressionType.Equals:
-                case ExpressionType.NotEquals:
+                case TokenType.Equivalent: //todo: actually make this do a type compare? 
+                case TokenType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
                         //todo: refactor and infer type before calling this method...
                         FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
@@ -101,44 +89,56 @@ namespace Compiling.Backends
 
                         break;
                     }
-                case ExpressionType.BitShiftLeft:
-                case ExpressionType.BitShiftRight:
-                case ExpressionType.BitwiseOr:
-                case ExpressionType.BitwiseAnd:
+                case TokenType.Equals:
+                case TokenType.NotEquals:
+                    {
+                        //todo: refactor and infer type before calling this method...
+                        FixNumericalTypesAndValuesIfRequired(lhsValue, rhsValue);
+                        if (lhsValue.TypeToken.TypeIndicator != rhsValue.TypeToken.TypeIndicator)
+                        {
+                            throw new Exception("rhs and lhs value are not of the same type.");// todo improve message.
+                        }
+
+                        break;
+                    }
+                case TokenType.BitShiftLeft:
+                case TokenType.BitShiftRight:
+                case TokenType.BitwiseOr:
+                case TokenType.BitwiseAnd:
                     {
                         if (lhsValue.TypeToken.TypeIndicator != TypeIndicator.Integer)
                         {
-                            throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
+                            throw new Exception($"lhs value of {expression.Token.TokenType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
                         }
 
                         if (rhsValue.TypeToken.TypeIndicator != TypeIndicator.Integer)
                         {
-                            throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
+                            throw new Exception($"rhs value of{expression.Token.TokenType} must evaluate to an {TypeIndicator.Integer}.");// todo improve message.
                         }
 
                         break;
                     }
-                case ExpressionType.ConditionalOr:
-                case ExpressionType.ConditionalXOr:
-                case ExpressionType.ConditionalAnd:
+                case TokenType.ConditionalOr:
+                case TokenType.ConditionalXOr:
+                case TokenType.ConditionalAnd:
                     {
 
                         if (lhsValue.TypeToken.TypeIndicator != TypeIndicator.Boolean)
                         {
-                            throw new Exception($"lhs value of {expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
+                            throw new Exception($"lhs value of {expression.Token.TokenType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
 
                         }
 
                         if (rhsValue.TypeToken.TypeIndicator != TypeIndicator.Boolean)
                         {
-                            throw new Exception($"rhs value of{expression.NodeExpressionType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
+                            throw new Exception($"rhs value of{expression.Token.TokenType} must evaluate to a {TypeIndicator.Boolean}.");// todo improve message.
                         }
 
                         break;
                     }
 
                 default:
-                    throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
+                    throw new ArgumentException($"invalid binary operator {expression.Token.TokenType}");
             }
 
             _valueStack.Push(lhsValue); // lhsValue should be sufficient for type checking as lhs and rhs sides of binary operations should be equal now..
@@ -183,6 +183,8 @@ namespace Compiling.Backends
             //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
             // the logic can be copied over.. i think...
             //todo add logic for userdefined types.
+            //todo: functions imported from a library can't currently be mangled, fix? people should not be limited to function names...
+            // or the stdlib.bs should be its seperate module..?
             expression.FunctionName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
 
             var hasFunc = _functions.TryGetValue(expression.FunctionName, out var funcExpr);

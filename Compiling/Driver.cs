@@ -1,13 +1,10 @@
 ﻿using Compiling.Backends;
 using Lexing;
-using LLVMSharp;
 using LLVMSharp.Interop;
 using Parsing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
-using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace Compiling
 {

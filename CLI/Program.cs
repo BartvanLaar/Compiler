@@ -1,7 +1,5 @@
 ﻿using Compiling;
-using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace CLI
 {
@@ -12,16 +10,9 @@ namespace CLI
         {
             CleanUpPrevRun();
 
-            //var code = @"
-            //                func main() -> int {            
-            //                    if(true) {} else if(false) {} else{}     
-            //                    return 42;
-            //                }
-            //          ";
-
-            var code = @"func main() -> double {double x = -5 + 47; return x; }";
-
-            Driver.RunLLVM(code, isExecutable: true, useClangCompiler: true);
+            //var code = "func main() -> int {printf(\"Hello World, % s!\r\n\", \"there\"); printf(\"Hello World!\n\");  return 42; }";
+            var code = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Program.bs"));
+            Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
 
             //todo: add support for order independent code? required 2 separate parse phases
             if (File.Exists("output.exe"))
@@ -35,12 +26,6 @@ namespace CLI
                 Console.WriteLine($"Executable was not generated.");
 
             }
-
-            //code = "2.0 * 7.0;";
-            //Driver.RunLLVM(code);
-
-            //code = "2.0 / 6.0;";
-            //Driver.RunLLVM(code);
 
             Console.WriteLine("Press to exit.");
             Console.ReadKey();

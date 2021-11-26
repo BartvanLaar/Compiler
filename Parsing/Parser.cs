@@ -1,10 +1,7 @@
 ﻿using Exceptions;
 using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace Parsing
 {
@@ -107,11 +104,19 @@ namespace Parsing
                     {
                         return ParseVariableDeclaration();
                     }
+                case TokenType.Namespace:
+                    {
+                        return ParseNameSpaceExpression();
+                    }
+                case TokenType.Class:
+                    {
+                        return ParseClassExpression();
+                    }
                 case TokenType.ImportStatement:
                     {
                         return ParseImportStatementExpression();
                     }
-                case TokenType.ReturnStatement:
+                case TokenType.Return:
                     {
                         return ParseReturnStatementExpression();
                     }
@@ -120,6 +125,26 @@ namespace Parsing
                         return ParseExpression();
                     }
             }
+
+        }
+
+        private ExpressionBase? ParseClassExpression()
+        {
+            throw new NotImplementedException();
+        }
+
+        private ExpressionBase? ParseNameSpaceExpression()
+        {
+            throw new NotImplementedException();
+            Debug.Assert(PeekToken().TokenType is TokenType.Namespace);
+            var namespaceToken = ConsumeToken();
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                throw ParseError(namespaceToken, "opening accolades", "namespace declaration");
+            }
+
+            var expr = ParseTopLevelExpression();
+            //if(expr is not ClassExpression)
 
         }
 
@@ -615,7 +640,7 @@ namespace Parsing
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
 
-            if(PeekToken().TokenType is not TokenType.Value || PeekToken().TypeIndicator is not TypeIndicator.String)
+            if (PeekToken().TokenType is not TokenType.Value || PeekToken().TypeIndicator is not TypeIndicator.String)
             {
                 throw ParseError(importTok, "string expression representing a file path", "after import statement");
             }

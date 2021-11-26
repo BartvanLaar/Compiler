@@ -5,7 +5,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
     public sealed class VariableDeclarationExpression : ValueExpressionBase
     {
 
-        public VariableDeclarationExpression(Token declarationTypeToken, Token identifierToken, Token assignmentToken, ValueExpressionBase valueExpression) : base(declarationTypeToken, valueExpression.Token, ExpressionType.VariableDeclaration) // todo: do we/should we pass a token to the base?
+        public VariableDeclarationExpression(Token declarationTypeToken, Token identifierToken, Token assignmentToken, ValueExpressionBase valueExpression) : base(declarationTypeToken, valueExpression.Token)
         {
             DeclarationTypeToken = declarationTypeToken;
             IdentifierToken = identifierToken;
@@ -19,5 +19,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public string Identifier => IdentifierToken.Name;
         public ValueExpressionBase ValueExpression { get; }
 
+        public override ExpressionType DISCRIMINATOR => ExpressionType.VariableDeclaration;
     }
 }

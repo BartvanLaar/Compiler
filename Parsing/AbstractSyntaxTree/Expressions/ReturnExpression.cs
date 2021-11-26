@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class ReturnExpression : ExpressionBase
     {
-        public ReturnExpression(Token returnToken, ExpressionBase? returnExpression, TypeIndicator functionReturnTypeIndicator) : base(returnToken, ExpressionType.Return)
+        public ReturnExpression(Token returnToken, ExpressionBase? returnExpression, TypeIndicator functionReturnTypeIndicator) : base(returnToken)
         {
             ReturnExpr = returnExpression;
             FunctionReturnTypeIndicator = functionReturnTypeIndicator;
@@ -12,5 +12,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ExpressionBase? ReturnExpr { get; }
         public TypeIndicator FunctionReturnTypeIndicator { get; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.Return;
     }
 }

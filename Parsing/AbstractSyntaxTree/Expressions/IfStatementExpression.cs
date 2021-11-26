@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class IfStatementExpression : ExpressionBase
     {
-        public IfStatementExpression(Token ifToken, ExpressionBase ifCondition, BodyExpression ifBody, ExpressionBase? @else) : base(ifToken, ExpressionType.IfStatementExpression)
+        public IfStatementExpression(Token ifToken, ExpressionBase ifCondition, BodyExpression ifBody, ExpressionBase? @else) : base(ifToken)
         {
             IfCondition = ifCondition;
             IfBody = ifBody;
@@ -14,5 +14,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase IfCondition { get; }
         public ExpressionBase IfBody { get; }
         public ExpressionBase? ElseBody { get; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.If;
     }   
 }

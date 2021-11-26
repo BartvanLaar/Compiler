@@ -1,11 +1,10 @@
 ﻿using Lexing;
-using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class ImportStatementExpression : ExpressionBase
     {
-        public ImportStatementExpression(Token importToken, string path, string? alias, string? filename) : base(importToken, ExpressionType.DontCare)
+        public ImportStatementExpression(Token importToken, string path, string? alias, string? filename) : base(importToken)
         {
             Path = path;
             Alias = alias;
@@ -15,5 +14,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public string Path { get; }
         public string? Alias { get; }
         public string? ImportedInFile { get; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.Import;
     }
 }

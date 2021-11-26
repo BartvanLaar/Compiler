@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public abstract class ValueExpressionBase : ExpressionBase
     {
-        protected ValueExpressionBase(Token token, Token typeToken, ExpressionType expressionType) : base(token, expressionType)
+        protected ValueExpressionBase(Token token, Token typeToken) : base(token)
         {
             TypeToken = typeToken;
         }
@@ -12,19 +12,18 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public bool IsNegative { get; set; }
         public Token TypeToken { get; set; }
         public Token ValueToken { get => Token; }
+        
     }
 
     public abstract class ExpressionBase
     {
-        protected ExpressionBase(Token token, ExpressionType expressionType)
+        protected ExpressionBase(Token token)
         {
             Token = token;
-            NodeExpressionType = expressionType;
         }
-
+        public abstract ExpressionType DISCRIMINATOR { get; }
 
         public Token Token { get; }
-        public ExpressionType NodeExpressionType { get; }
 
     }
 }

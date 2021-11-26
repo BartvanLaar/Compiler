@@ -1,5 +1,4 @@
 ﻿using Parsing.AbstractSyntaxTree.Expressions;
-using System;
 using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Visitors
@@ -22,32 +21,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 return;
             }
 
-            switch (expression.NodeExpressionType)
+            switch (expression.DISCRIMINATOR)
             {
-                // These are all handled by binary operator expressions.
-                case ExpressionType.BitwiseAnd:
-                case ExpressionType.ConditionalAnd:
-                case ExpressionType.BitwiseOr:
-                case ExpressionType.ConditionalOr:
-                    visitor.VisitBinaryExpression((BinaryExpression)expression);
-                    break;
-                case ExpressionType.Add:
-                case ExpressionType.Subtract:
-                case ExpressionType.Multiply:
-                case ExpressionType.Divide:
-                case ExpressionType.Modulo:
-                    visitor.VisitBinaryExpression((BinaryExpression)expression);
-                    break;
-                // These are all handled by binary operator expressions.
-                case ExpressionType.Assignment:
-                case ExpressionType.Equivalent:
-                case ExpressionType.Equals:
-                case ExpressionType.NotEquivalent:
-                case ExpressionType.NotEquals:
-                case ExpressionType.GreaterThan:
-                case ExpressionType.GreaterThanEqual:
-                case ExpressionType.LessThan:
-                case ExpressionType.LessThanEqual:
+                case ExpressionType.Binary:
                     visitor.VisitBinaryExpression((BinaryExpression)expression);
                     break;
                 case ExpressionType.VariableDeclaration:
@@ -68,24 +44,24 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Value:
                     visitor.VisitValueExpression((ValueExpression)expression);
                     break;
-                case ExpressionType.IfStatementExpression:
+                case ExpressionType.If:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);
                     break;
-                case ExpressionType.DoWhileStatementExpression:
+                case ExpressionType.DoWhile:
                     visitor.VisitDoWhileStatementExpression((DoWhileStatementExpression)expression);
                     break;
-                case ExpressionType.WhileStatementExpression:
+                case ExpressionType.While:
                     visitor.VisitWhileStatementExpression((WhileStatementExpression)expression);
                     break;
-                case ExpressionType.Body:
+                case ExpressionType.Body://todo: fix
                     visitor.VisitBodyExpression((BodyExpression)expression);
                     break;
-                case ExpressionType.ForStatementExpression:
+                case ExpressionType.For:
                     visitor.VisitForStatementExpression((ForStatementExpression)expression);
                     break;
                 default:
                     // should this be visiting a top level?
-                    throw new ArgumentException($"Unknown expression type encountered: '{expression.NodeExpressionType}'");
+                    throw new ArgumentException($"Unknown expression type encountered: '{expression.Token.TokenType}'");
             }
         }
     }

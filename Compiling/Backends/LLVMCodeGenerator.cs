@@ -27,22 +27,18 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
+            
+            // hack below.. Some global constant value needs to be set in order to use doubles or floats...
+            // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
+            var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
+            glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
 
-            //var ptr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
-            var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int64 }, true);
+            var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int32, new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
 
             var function = _module.AddFunction("printf", funcType);
             function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;
-            //var type = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new[] { LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
-            //var func = _module.AddFunction("printf", type);
-            //func.Linkage = LLVMLinkage.LLVMDLLImportLinkage;
 
-            // hack below.. Some global constant value needs to be set in order to use doubles or floats...
-            // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
-            //_builder.BuildCall(function, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 32, true) }, $"callPrintFTemp");
-            var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
-            glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
         }
 
         public string Name => "LLVM backend";
@@ -107,7 +103,7 @@ namespace Compiling.Backends
                     }
                 case TypeIndicator.String:
                     {
-                        _valueStack.Push(LLVMValueRef.CreateConstRealOfStringAndSize(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int16, 0), (string)expression.Value, (uint)((string)expression.Value).Length));
+                        _valueStack.Push(_builder.BuildGlobalStringPtr((string)expression.Value));
                         return;
                     }
                 default: throw new Exception($"Visitted value {expression.Value} of type {expression.Token.TypeIndicator} which is not supported by the VisitValueExpression!");
@@ -153,9 +149,9 @@ namespace Compiling.Backends
 
             var lhsAndRhsBothIntegers = rhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind && lhsValue.TypeOf.Kind is LLVMTypeKind.LLVMIntegerTypeKind;
 
-            switch (expression.NodeExpressionType)
+            switch (expression.Token.TokenType)
             {
-                case ExpressionType.Assignment:
+                case TokenType.Assignment:
                     {
                         //todo: refactor the code so all assignments end here.. e.g. += -= *=, etc...?
                         Debug.Assert(_valueAllocationPointers.ContainsKey(((IdentifierExpression)expression.LeftHandSide).Identifier));
@@ -165,7 +161,7 @@ namespace Compiling.Backends
                         _builder.BuildStore(rhsValue, alloca);
                         break;
                     }
-                case ExpressionType.Add:
+                case TokenType.Add:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -177,7 +173,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Subtract:
+                case TokenType.Subtract:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -189,7 +185,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Multiply:
+                case TokenType.Multiply:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -201,7 +197,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Divide:
+                case TokenType.Divide:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -213,7 +209,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Modulo:
+                case TokenType.Modulo:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -225,7 +221,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
+                case TokenType.Equivalent: //todo: actually make this do a type compare? 
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -237,7 +233,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.Equals:
+                case TokenType.Equals:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -249,7 +245,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.NotEquivalent:
+                case TokenType.NotEquivalent:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -261,7 +257,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.NotEquals:
+                case TokenType.NotEquals:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -273,7 +269,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.GreaterThan:
+                case TokenType.GreaterThan:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -286,7 +282,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.GreaterThanEqual:
+                case TokenType.GreaterThanEqual:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -298,7 +294,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.LessThan:
+                case TokenType.LessThan:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -310,7 +306,7 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.LessThanEqual:
+                case TokenType.LessThanEqual:
                     {
                         if (lhsAndRhsBothIntegers)
                         {
@@ -322,44 +318,44 @@ namespace Compiling.Backends
                         }
                         break;
                     }
-                case ExpressionType.BitwiseOr:
+                case TokenType.BitwiseOr:
                     {
                         _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.BitwiseAnd:
+                case TokenType.BitwiseAnd:
                     {
                         _valueStack.Push(_builder.BuildAnd(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.ConditionalOr:
+                case TokenType.ConditionalOr:
                     {
                         _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.ConditionalXOr:
+                case TokenType.ConditionalXOr:
                     {
                         _valueStack.Push(_builder.BuildOr(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.ConditionalAnd:
+                case TokenType.ConditionalAnd:
                     {
                         _valueStack.Push(_builder.BuildAnd(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.BitShiftLeft:
+                case TokenType.BitShiftLeft:
                     {
                         _valueStack.Push(_builder.BuildShl(lhsValue, rhsValue));
                         break;
                     }
-                case ExpressionType.BitShiftRight:
+                case TokenType.BitShiftRight:
                     {
                         _valueStack.Push(_builder.BuildLShr(lhsValue, rhsValue));
                         break;
                     }
                 default:
                     {
-                        throw new ArgumentException($"Invalid binary operator: '{expression.NodeExpressionType}'.");
+                        throw new ArgumentException($"Invalid binary operator: '{expression.Token.TokenType}'.");
                     }
             }
 
@@ -518,7 +514,7 @@ namespace Compiling.Backends
             }
 
             var argumentCount = expression.Arguments.Length;
-            if (function.ParamsCount != argumentCount)
+            if (function.ParamsCount != argumentCount) // todo: fis so it works for varargs...
             {
                 throw new Exception($"Incorrect # arguments passed to {expression.FunctionName}");
             }

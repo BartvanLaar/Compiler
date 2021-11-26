@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class ForStatementExpression : ExpressionBase
     {
-        public ForStatementExpression(Token forToken, VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(forToken, ExpressionType.ForStatementExpression)
+        public ForStatementExpression(Token forToken, VariableDeclarationExpression variableDeclaration, ExpressionBase conditionExpression, ExpressionBase variableIncreaseExpression, BodyExpression forBody) : base(forToken)
         {
             VariableDeclaration = variableDeclaration;
             VariableName = variableDeclaration.Identifier;
@@ -18,5 +18,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase VariableDeclaration { get; }
         public ExpressionBase VariableIncreaseExpression { get; }
         public ExpressionBase Body { get; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.For;
     }
 }

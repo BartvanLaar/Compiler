@@ -11,4 +11,10 @@
     <ProjectReference Include="..\Compiling\Compiling.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Program.bs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

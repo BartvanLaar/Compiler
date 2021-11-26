@@ -1,0 +1,17 @@
+﻿namespace BSharp
+{
+    public class Program
+    {
+        extern func print(string text) -> void;
+
+        func Put(string text) -> void 
+        {
+            print(text);
+        }
+
+        func Main() -> int {
+            Put("Hello world!! Bart here!");
+            return 42;
+        }
+    }
+}

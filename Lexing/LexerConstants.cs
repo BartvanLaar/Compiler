@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Lexing
+﻿namespace Lexing
 {
     public static class LexerConstants
     {
@@ -95,6 +93,7 @@ namespace Lexing
             public const string CLASS = "class";
             public const string ENUM = "enum";
             public const string INTERFACE = "interface";
+            public const string NAMESPACE = "namespace";
 
             public const string IF = "if";
             public const string ELSE = "else";
@@ -145,7 +144,7 @@ namespace Lexing
 
             { Keywords.CONTINUE, TokenType.Continue},
             { Keywords.BREAK, TokenType.Break},
-            { Keywords.RETURN, TokenType.ReturnStatement},
+            { Keywords.RETURN, TokenType.Return},
             { Keywords.IMPORT, TokenType.ImportStatement },
             { Keywords.EXPORT, TokenType.Export},
             { Keywords.EXTEND, TokenType.Extend },
@@ -154,6 +153,7 @@ namespace Lexing
             { Keywords.ENUM, TokenType.Enum },
             { Keywords.CLASS, TokenType.Class },
             { Keywords.INTERFACE, TokenType.Interface },
+            { Keywords.NAMESPACE, TokenType.Namespace },
             { Keywords.STATIC, TokenType.Static },
             { Keywords.CONST, TokenType.Constant },
 

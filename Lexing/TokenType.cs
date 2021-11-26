@@ -68,7 +68,7 @@
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
         ArgumentSeparator,          // ,
         Definition,
-        ReturnStatement,
+        Return,
 
         Export,                     // export
         Extend,                     // extend
@@ -91,5 +91,6 @@
         Class,
         Enum,
         Array,
+        Namespace,
     }
 }

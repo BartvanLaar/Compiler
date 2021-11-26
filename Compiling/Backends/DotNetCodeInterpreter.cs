@@ -1,4 +1,5 @@
-﻿using Parsing.AbstractSyntaxTree.Expressions;
+﻿using Lexing;
+using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
 
@@ -30,29 +31,29 @@ namespace Compiling.Backends
             dynamic rhsValue = Convert.ChangeType(rhs.Value, rhs.TypeInfo);
             rhsValue = expression.RightHandSide?.IsNegative == true ? -rhsValue : rhsValue;
 
-            switch (expression.NodeExpressionType)
+            switch (expression.Token.TokenType)
             {
-                case ExpressionType.Add:
+                case TokenType.Add:
                     {
                         _valueStack.Push((lhsValue + rhsValue, lhs.TypeInfo));
                         break;
                     }
-                case ExpressionType.Subtract:
+                case TokenType.Subtract:
                     {
                         _valueStack.Push((lhsValue - rhsValue, lhs.TypeInfo));
                         break;
                     }
-                case ExpressionType.Multiply:
+                case TokenType.Multiply:
                     {
                         _valueStack.Push((lhsValue * rhsValue, lhs.TypeInfo));
                         break;
                     }
-                case ExpressionType.Divide:
+                case TokenType.Divide:
                     {
                         _valueStack.Push((lhsValue / rhsValue, lhs.TypeInfo));
                         break;
                     }
-                case ExpressionType.Assignment:
+                case TokenType.Assignment:
                     {
                         var expr = expression.LeftHandSide as IdentifierExpression;
                         Debug.Assert(expr is not null);
@@ -60,84 +61,83 @@ namespace Compiling.Backends
                         _namedValues[expr.Identifier] = lhsValue;
                         break;
                     }
-                case ExpressionType.Equivalent: //todo: actually make this do a type compare? 
+                case TokenType.Equivalent: //todo: actually make this do a type compare? 
                     {
                         _valueStack.Push((lhsValue == rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.Equals:
+                case TokenType.Equals:
                     {
                         _valueStack.Push((lhsValue == rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.NotEquivalent: //todo: actually make this do a type compare? 
+                case TokenType.NotEquivalent: //todo: actually make this do a type compare? 
                     {
                         _valueStack.Push(((lhsValue != rhsValue, typeof(bool))));
                         break;
                     }
-                case ExpressionType.NotEquals:
+                case TokenType.NotEquals:
                     {
                         _valueStack.Push((lhsValue != rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.GreaterThan:
+                case TokenType.GreaterThan:
                     {
                         _valueStack.Push((lhsValue > rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.GreaterThanEqual:
+                case TokenType.GreaterThanEqual:
                     {
                         _valueStack.Push((lhsValue >= rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.LessThan:
+                case TokenType.LessThan:
                     {
                         _valueStack.Push((lhsValue < rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.LessThanEqual:
+                case TokenType.LessThanEqual:
                     {
                         _valueStack.Push((lhsValue <= rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.BitwiseOr:
+                case TokenType.BitwiseOr:
                     {
                         _valueStack.Push((lhsValue | rhsValue, typeof(int)));
                         break;
                     }
-
-                case ExpressionType.BitwiseAnd:
+                case TokenType.BitwiseAnd:
                     {
                         _valueStack.Push((lhsValue & rhsValue, typeof(int)));
                         break;
                     }
-                case ExpressionType.ConditionalOr:
+                case TokenType.ConditionalOr:
                     {
                         _valueStack.Push((lhsValue || rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.ConditionalXOr:
+                case TokenType.ConditionalXOr:
                     {
                         _valueStack.Push((lhsValue ^ rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.ConditionalAnd:
+                case TokenType.ConditionalAnd:
                     {
                         _valueStack.Push((lhsValue && rhsValue, typeof(bool)));
                         break;
                     }
-                case ExpressionType.BitShiftLeft:
+                case TokenType.BitShiftLeft:
                     {
                         _valueStack.Push((lhsValue << rhsValue, typeof(int)));
                         break;
                     }
-                case ExpressionType.BitShiftRight:
+                case TokenType.BitShiftRight:
                     {
                         _valueStack.Push((lhsValue >> rhsValue, typeof(int)));
                         break;
                     }
                 default:
-                    throw new ArgumentException($"invalid binary operator {expression.NodeExpressionType}");
+                    throw new ArgumentException($"invalid binary operator {expression.Token.TokenType}");
             }
         }
 

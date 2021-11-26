@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class DoWhileStatementExpression : ExpressionBase
     {
-        public DoWhileStatementExpression(Token whileToken, ExpressionBase condition, BodyExpression doBody) : base(whileToken, ExpressionType.DoWhileStatementExpression)
+        public DoWhileStatementExpression(Token whileToken, ExpressionBase condition, BodyExpression doBody) : base(whileToken)
         {
             Condition = condition;
             Body = doBody;
@@ -12,5 +12,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ExpressionBase Condition { get; set; }
         public ExpressionBase Body {  get; set; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.DoWhile;
     }
 }

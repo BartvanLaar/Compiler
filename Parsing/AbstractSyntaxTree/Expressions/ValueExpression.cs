@@ -1,11 +1,10 @@
 ﻿using Lexing;
-using System.Diagnostics;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public sealed class ValueExpression : ValueExpressionBase
     {
-        public ValueExpression(Token token, Token typeToken) : base(token, typeToken, ExpressionType.Value)
+        public ValueExpression(Token token, Token typeToken) : base(token, typeToken)
         {
             // todo: how to handle nullables?
             if(token?.Value == null)
@@ -23,6 +22,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public TypeIndicator TypeIndicator { get => Token.TypeIndicator; set => Token.TypeIndicator = value; }
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8603 // Possible null reference return.
+        public override ExpressionType DISCRIMINATOR => ExpressionType.Value;
 
 
     }

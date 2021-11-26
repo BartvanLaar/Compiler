@@ -599,7 +599,7 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.Assignment, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Value, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.ReturnStatement, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.Return, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.VariableIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.EndOfStatement, toks[counter++].TokenType);
 

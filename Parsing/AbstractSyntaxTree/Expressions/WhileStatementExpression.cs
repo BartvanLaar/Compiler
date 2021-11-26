@@ -4,7 +4,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 {
     public class WhileStatementExpression : ExpressionBase
     {
-        public WhileStatementExpression(Token whileToken, ExpressionBase whileCondition, BodyExpression doBody) : base(whileToken, ExpressionType.WhileStatementExpression)
+        public WhileStatementExpression(Token whileToken, ExpressionBase whileCondition, BodyExpression doBody) : base(whileToken)
         {
             Condition = whileCondition;
             Body = doBody;
@@ -12,5 +12,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ExpressionBase Condition { get; set; }
         public ExpressionBase Body {  get; set; }
+
+        public override ExpressionType DISCRIMINATOR => ExpressionType.While;
     }
 }
