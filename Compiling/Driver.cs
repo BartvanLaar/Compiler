@@ -29,12 +29,13 @@ namespace Compiling
             // below are all compilation steps..
             var typeChecker = new TypeChecker();
             var codeGenerator = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
-            Run(text, typeChecker, codeGenerator);// todo: replace with LLVM bytecode generator.
+            var timeMs = Run(text, typeChecker, codeGenerator);// todo: replace with LLVM bytecode generator.
             var sw = new Stopwatch();
             sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
             module.WriteBitcodeToFile(output);
             sw.Stop();
+            timeMs += sw.ElapsedMilliseconds;
             Console.WriteLine($"Writing bitcode to file took {sw.ElapsedMilliseconds} ms.");
             sw.Restart();
             module.Dump();
@@ -43,6 +44,7 @@ namespace Compiling
             // i think the module is disposed by disposing the passManager and executionEngine...
             builder.Dispose();
             sw.Stop();
+            timeMs += sw.ElapsedMilliseconds;
             Console.WriteLine($"Cleaning up LLVM leftovers took {sw.ElapsedMilliseconds} ms.");
             sw.Restart();
             Process lld;
@@ -62,22 +64,27 @@ namespace Compiling
             lld.WaitForExit();
             sw.Stop();
             Console.WriteLine($"Creating exe or DLL took {sw.ElapsedMilliseconds} ms.");
-
+            timeMs += sw.ElapsedMilliseconds;
+            Console.WriteLine($"Compiler took a total of {timeMs} milliseconds to create DLL/EXE.");
         }
 
-        internal static void Run(string text, params IAbstractSyntaxTreeVisitor[] visitors)
+        internal static long Run(string text, params IAbstractSyntaxTreeVisitor[] visitors)
         {
+            var totalTimeMs = 0l;
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+
             ILexer lexer = new Lexer(text);
             IParser parser = new Parser(lexer);
             ExpressionBase[] abstractSyntaxTrees = parser.Parse();
             stopwatch.Stop();
+            totalTimeMs += stopwatch.ElapsedMilliseconds;
             Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds.");
             stopwatch.Restart();
             var crawler = new ASTCrawler();
             AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, crawler);
             stopwatch.Stop();
+            totalTimeMs += stopwatch.ElapsedMilliseconds;
             Console.WriteLine($"Crawling AST for scopes, functions, variables, constants, etc. took {stopwatch.ElapsedMilliseconds} milliseconds.");
 
             // For now one file is enough to support.
@@ -88,10 +95,13 @@ namespace Compiling
                 visitor.Initialize(crawler.Scopes);
                 AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
                 stopwatch.Stop();
+                totalTimeMs += stopwatch.ElapsedMilliseconds;
                 Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.ElapsedMilliseconds} milliseconds.");
             }
 
             stopwatch.Stop();
+            totalTimeMs += stopwatch.ElapsedMilliseconds;
+            return totalTimeMs;
         }
 
         private static (LLVMModuleRef Module, LLVMBuilderRef Builder, LLVMExecutionEngineRef engine, LLVMPassManagerRef passManagerLLVMContextRef, LLVMContextRef Context) SetupLLVM()
