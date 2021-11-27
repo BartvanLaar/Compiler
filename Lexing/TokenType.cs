@@ -41,7 +41,7 @@
         Break,                      // break
 
         VariableIdentifier,         // identifier of a variable
-        FunctionCall,         // identifier of a function
+        FunctionIdentifier,         // identifier of a function
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :

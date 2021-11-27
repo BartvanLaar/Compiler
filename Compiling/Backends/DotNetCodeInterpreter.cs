@@ -226,5 +226,36 @@ namespace Compiling.Backends
         {
             _scopes = scopes;
         }
+
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        {
+            foreach(var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
+        }
+
+        public void VisitClassExpression(ClassDefinitionExpression expression)
+        {
+            foreach (var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
+
+            foreach(var variable in expression.Variables)
+            {
+                Visit(variable);
+            }
+
+            foreach(var function in expression.Functions)
+            {
+                Visit(function);
+            }
+        }
+
+        public void VisitImportExpression(ImportStatementExpression expression)
+        {
+            
+        }
     }
 }

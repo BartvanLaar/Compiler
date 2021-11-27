@@ -130,7 +130,7 @@ namespace Lexing
             {
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
-                tok.TokenType = TokenType.FunctionCall;
+                tok.TokenType = TokenType.FunctionIdentifier;
                 return (tok, cursor, lineCount, columnCount);
             }
 

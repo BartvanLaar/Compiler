@@ -1,16 +1,16 @@
 ﻿namespace BSharp
 {
-    public class Program
-    {
-        extern func print(string text) -> void;
+    export class Program
+    {    
+        extern func printf(string text) -> int;
 
-        func Put(string text) -> void 
+        func Print(string text) -> void 
         {
-            print(text);
+            printf(text);
         }
 
-        func Main() -> int {
-            Put("Hello world!! Bart here!");
+        export func Main() -> int {
+            Print("Hello world!! Bart here!\r\n");
             return 42;
         }
     }

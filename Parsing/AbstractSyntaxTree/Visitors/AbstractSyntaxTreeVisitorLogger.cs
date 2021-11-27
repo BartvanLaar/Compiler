@@ -14,11 +14,14 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 Visit(expr);
             }
         }
+
+        public void Initialize(IReadOnlyDictionary<string, IScope> scopes) { }
+
         public void VisitValueExpression(ValueExpression expression)
         {
             LogValue(expression);
         }
-       
+
         public void VisitBinaryExpression(BinaryExpression expression)
         {
             Visit(expression.LeftHandSide);
@@ -83,7 +86,22 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Visit(expression.ReturnExpr);
             Log(expression);
-        }    
+        }
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        {
+            Log(expression);
+        }
+
+        public void VisitClassExpression(ClassDefinitionExpression expression)
+        {
+            Log(expression);
+        }
+
+        public void VisitImportExpression(ImportStatementExpression expression)
+        {
+            LogValue(expression);
+        }
+
         private static void LogValue(ExpressionBase baseExp)
         {
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}' with token: '{baseExp?.Token}'.");
@@ -94,9 +112,6 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
 
-        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
-        {
-            
-        }
+
     }
 }

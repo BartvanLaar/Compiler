@@ -27,17 +27,17 @@ namespace Compiling.Backends
             _builder = builder;
             _executionEngine = executionEngine;
             _passManager = passManager;
-            
+
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
             var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
             glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
 
-            var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int32, new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, true);
+            //var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int64, new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, false);
 
-            var function = _module.AddFunction("printf", funcType);
-            function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-            function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;
+            //var function = _module.AddFunction("printf", funcType);
+            //function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+            //function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;//todo should this be specifyable by user?
         }
 
         public string Name => "LLVM backend";
@@ -126,7 +126,7 @@ namespace Compiling.Backends
                 TypeIndicator.Boolean => LLVMTypeRef.Int1,
                 TypeIndicator.Integer => LLVMTypeRef.Int64,
                 TypeIndicator.Character => LLVMTypeRef.Int16,
-                TypeIndicator.String => LLVMTypeRef.Int16,// should be an array i think ?
+                TypeIndicator.String => LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0),// should be an array i think ?
                 TypeIndicator.DateTime => throw new NotImplementedException(),
                 TypeIndicator.Void => LLVMTypeRef.Void,
                 _ => throw new InvalidOperationException($"TypeIndicator {typeIndicator} is not supported as a return type for LLVM."),
@@ -550,15 +550,23 @@ namespace Compiling.Backends
 
                 Debug.Assert(false, "Should not get here I think as a function always has a body declared when its not extern");
             }
-            else
+
+            for (int i = 0; i < argumentCount; ++i)
             {
-                for (int i = 0; i < argumentCount; ++i)
-                {
-                    arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
-                }
-                var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
-                function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
-                function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+                arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
+            }
+            var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
+            function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
+
+            function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+
+            if (expression.IsExtern)
+            {
+                function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;
+                Debug.Assert(expression.Body is null);
+                function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+                _passManager.RunFunctionPassManager(function);
+                return;
             }
 
             var entryBB = function.AppendBasicBlock("entry");
@@ -634,6 +642,37 @@ namespace Compiling.Backends
         public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
         {
             _scopes = scopes;
+        }
+
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        {
+            foreach (var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
+        }
+
+        public void VisitClassExpression(ClassDefinitionExpression expression)
+        {
+            foreach (var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
+
+            foreach (var variable in expression.Variables)
+            {
+                Visit(variable);
+            }
+
+            foreach (var function in expression.Functions)
+            {
+                Visit(function);
+            }
+        }
+
+        public void VisitImportExpression(ImportStatementExpression expression)
+        {
+
         }
     }
 }

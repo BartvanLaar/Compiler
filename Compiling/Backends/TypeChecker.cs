@@ -309,7 +309,7 @@ namespace Compiling.Backends
 
                     return;
                 }
-            }          
+            }
         }
 
         public void VisitVariableDeclarationExpression(VariableDeclarationExpression expression)
@@ -354,6 +354,9 @@ namespace Compiling.Backends
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression) { }
+        public void VisitClassExpression(ClassDefinitionExpression expression) { }
+        public void VisitImportExpression(ImportStatementExpression expression) { }
 
         //todo: cleanup! DUPLICATE CODE: A COPY exists in the crawler!!
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
@@ -387,6 +390,5 @@ namespace Compiling.Backends
                 _ => throw new NotImplementedException($"Exhaustive use of {nameof(ConvertTypeIndicatorToString)}."),
             };
         }
-
     }
 }

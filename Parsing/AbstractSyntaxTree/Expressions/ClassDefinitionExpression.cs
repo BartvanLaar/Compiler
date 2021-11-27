@@ -2,18 +2,19 @@
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
-    internal class ClassExpression : ExpressionBase
+    public class ClassDefinitionExpression : ExpressionBase
     {
-        public ClassExpression(VariableDeclarationExpression[] variableDeclarationExpressions, FunctionDefinitionExpression[] functionDefinitionExpressions, ClassExpression[] classExpressions, Token token) : base(token)
-        {           
+        public ClassDefinitionExpression(Token classIdentifier, VariableDeclarationExpression[] variableDeclarationExpressions, FunctionDefinitionExpression[] functionDefinitionExpressions, ClassDefinitionExpression[] classExpressions) : base(classIdentifier)
+        {
             Variables = variableDeclarationExpressions;
             Functions = functionDefinitionExpressions;
             Classes = classExpressions;
         }
 
+        public Token ClassName => Token;
         public VariableDeclarationExpression[] Variables { get; }
         public FunctionDefinitionExpression[] Functions { get; }
-        public ClassExpression[] Classes { get; }
+        public ClassDefinitionExpression[] Classes { get; }
 
         public override ExpressionType DISCRIMINATOR => ExpressionType.Class;
     }

@@ -55,7 +55,7 @@ namespace Compiling
                 var more = @"C:\temp\msvcrt.lib";
                 var llc = Process.Start(@"llc", $"--filetype=obj {output}");
                 llc.WaitForExit();
-                lld = isExecutable ? Process.Start(@"lld-link", $"/entry:main {Path.GetFileNameWithoutExtension(output)}.obj {more}")
+                lld = isExecutable ? Process.Start(@"lld-link", $"/subsystem:console /entry:Main {Path.GetFileNameWithoutExtension(output)}.obj {more}")
                     : Process.Start(@"lld-link", $"/subsystem:console /dll /noentry {Path.GetFileNameWithoutExtension(output)}.obj");
             }
 

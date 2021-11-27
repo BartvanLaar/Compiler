@@ -173,5 +173,19 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             throw new NotImplementedException("This method should not be called on the crawler thats providing the scopes!");
         }
 
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        {
+            
+        }
+
+        public void VisitClassExpression(ClassDefinitionExpression expression)
+        {
+            
+        }
+
+        public void VisitImportExpression(ImportStatementExpression expression)
+        {
+            
+        }
     }
 }

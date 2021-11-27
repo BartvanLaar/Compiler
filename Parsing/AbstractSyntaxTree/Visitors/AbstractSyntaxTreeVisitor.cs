@@ -23,45 +23,53 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
             switch (expression.DISCRIMINATOR)
             {
-                case ExpressionType.Binary:
-                    visitor.VisitBinaryExpression((BinaryExpression)expression);
-                    break;
+                case ExpressionType.Import:
+                    visitor.VisitImportExpression((ImportStatementExpression)expression);
+                    return;
+                case ExpressionType.Namespace:
+                    visitor.VisitNamespaceExpression((NamespaceDefinitionExpression)expression);
+                    return;
+                case ExpressionType.Class:
+                    visitor.VisitClassExpression((ClassDefinitionExpression)expression);
+                    return;
                 case ExpressionType.VariableDeclaration:
                     visitor.VisitVariableDeclarationExpression((VariableDeclarationExpression)expression);
-                    break;
-                case ExpressionType.Return:
-                    visitor.VisitReturnExpression((ReturnExpression)expression);
-                    break;
-                case ExpressionType.FunctionCall:
-                    visitor.VisitFunctionCallExpression((FunctionCallExpression)expression);
-                    break;
-                case ExpressionType.Identifier:
-                    visitor.VisitIdentifierExpression((IdentifierExpression)expression);
-                    break;
+                    return;
                 case ExpressionType.FunctionDefinition:
                     visitor.VisitFunctionDefinitionExpression((FunctionDefinitionExpression)expression);
-                    break;
+                    return;
+                case ExpressionType.Body:
+                    visitor.VisitBodyExpression((BodyExpression)expression);
+                    return;
+                case ExpressionType.Binary:
+                    visitor.VisitBinaryExpression((BinaryExpression)expression);
+                    return;
+                case ExpressionType.Return:
+                    visitor.VisitReturnExpression((ReturnExpression)expression);
+                    return;
+                case ExpressionType.FunctionCall:
+                    visitor.VisitFunctionCallExpression((FunctionCallExpression)expression);
+                    return;
+                case ExpressionType.Identifier:
+                    visitor.VisitIdentifierExpression((IdentifierExpression)expression);
+                    return;
                 case ExpressionType.Value:
                     visitor.VisitValueExpression((ValueExpression)expression);
-                    break;
+                    return;
                 case ExpressionType.If:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);
-                    break;
+                    return;
                 case ExpressionType.DoWhile:
                     visitor.VisitDoWhileStatementExpression((DoWhileStatementExpression)expression);
-                    break;
+                    return;
                 case ExpressionType.While:
                     visitor.VisitWhileStatementExpression((WhileStatementExpression)expression);
-                    break;
-                case ExpressionType.Body://todo: fix
-                    visitor.VisitBodyExpression((BodyExpression)expression);
-                    break;
+                    return;
                 case ExpressionType.For:
                     visitor.VisitForStatementExpression((ForStatementExpression)expression);
-                    break;
+                    return;
                 default:
-                    // should this be visiting a top level?
-                    throw new ArgumentException($"Unknown expression type encountered: '{expression.Token.TokenType}'");
+                    throw new ArgumentException($"Unknown expression type encountered: '{expression.DISCRIMINATOR}'");
             }
         }
     }

@@ -535,7 +535,7 @@ namespace Lexing.Tests
 
             var toks = lexer.ConsumeTokens(8);
             Assert.AreEqual(TokenType.FunctionDefinition, toks[0].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[1].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[1].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[2].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[3].TokenType);
             Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[4].TokenType);
@@ -553,7 +553,7 @@ namespace Lexing.Tests
             var toks = lexer.ConsumeTokens(50);
             var counter = 0;
             Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
             Assert.AreEqual(TypeIndicator.Boolean, toks[counter].TypeIndicator);
             Assert.AreEqual(TokenType.Type, toks[counter++].TokenType);
@@ -586,7 +586,7 @@ namespace Lexing.Tests
             var toks = lexer.ConsumeTokens(50);
             var counter = 0;
             Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesClose, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ReturnTypeIndicator, toks[counter++].TokenType);
@@ -616,7 +616,7 @@ namespace Lexing.Tests
             var toks = lexer.ConsumeTokens(50);
             var counter = 0;
             Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
             Assert.AreEqual(TypeIndicator.Boolean, toks[counter].TypeIndicator);
             Assert.AreEqual(TokenType.Type, toks[counter++].TokenType);
@@ -649,7 +649,7 @@ namespace Lexing.Tests
             var toks = lexer.ConsumeTokens(50);
             var counter = 0;
             Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
             Assert.AreEqual(TypeIndicator.Boolean, toks[counter].TypeIndicator);
             Assert.AreEqual(TokenType.Type, toks[counter++].TokenType);
@@ -728,7 +728,7 @@ namespace Lexing.Tests
             var toks = lexer.ConsumeTokens(50);
             var counter = 0;
             Assert.AreEqual(TokenType.FunctionDefinition, toks[counter++].TokenType);
-            Assert.AreEqual(TokenType.FunctionCall, toks[counter++].TokenType);
+            Assert.AreEqual(TokenType.FunctionIdentifier, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.ParanthesesOpen, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.Type, toks[counter++].TokenType);
             Assert.AreEqual(TokenType.VariableIdentifier, toks[counter++].TokenType);
