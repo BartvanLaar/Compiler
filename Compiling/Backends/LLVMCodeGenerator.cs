@@ -42,7 +42,11 @@ namespace Compiling.Backends
 
             //var types = new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), LLVMTypeRef.Int64, LLVMTypeRef.CreateArray(LLVMTypeRef.Int16, 0) };
             //var stringClass = LLVMTypeRef.CreateStruct(types, true);
-            //var test = _module.GetTypeByName("string");
+
+            var structPtr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+            var stringStruct = _module.Context.CreateNamedStruct("class.string");
+            stringStruct.StructSetBody(new[] { structPtr, LLVMTypeRef.Int64 }, true);
+
         }
 
         public LLVMCodeGenerator()
@@ -121,22 +125,14 @@ namespace Compiling.Backends
         private LLVMValueRef CreateStringValue(string value)
         {
             //todo: learn how to access struct members...
-            var structPtr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
-            var stringStruct = _module.Context.CreateNamedStruct("class.string");
-            stringStruct.StructSetBody(new[] { structPtr, LLVMTypeRef.Int64 }, false);
+
             var strPtr = _builder.BuildGlobalStringPtr(value);
             strPtr.Name = "Ptr";
             var length = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)value.Length, true);
             length.Name = "Length";
-            var test = LLVMValueRef.CreateConstNamedStruct(stringStruct, new[] { strPtr, length });
-            //var alloca = CreateEntryBlockAlloca(stringStruct, "testtt");
-            //var store = _builder.BuildStore(test, alloca);
-            //var x = _builder.BuildStructGEP(alloca, 0, "testgep");
-            //var store2 = _builder.BuildStore(x, alloca);
-
-            //return _builder.BuildLoad(alloca);
-
-            return strPtr;//return test;
+            var strType = _module.GetTypeByName("class.string");
+            var test = LLVMValueRef.CreateConstNamedStruct(strType, new[] { strPtr, length });
+            return test;
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -148,7 +144,18 @@ namespace Compiling.Backends
             _valueStack.Push(_builder.BuildLoad(alloca));
         }
 
-        private static LLVMTypeRef GetReturnType(TypeIndicator typeIndicator)
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            var alloca = _valueAllocationPointers[expression.ParentToken.Name];
+
+            //todo: magically get index of member in struct!
+            var memberPtr = _builder.BuildGEP(alloca, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0, true) }, "test");
+            //var memberPtr = _builder.BuildStructGEP(alloca, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0, true) }, "test");
+            var load = _builder.BuildLoad(memberPtr);
+            _valueStack.Push(load);
+        }
+
+        private LLVMTypeRef GetReturnType(TypeIndicator typeIndicator)
         {
             return typeIndicator switch
             {
@@ -157,7 +164,7 @@ namespace Compiling.Backends
                 TypeIndicator.Boolean => LLVMTypeRef.Int1,
                 TypeIndicator.Integer => LLVMTypeRef.Int64,
                 TypeIndicator.Character => LLVMTypeRef.Int16,
-                TypeIndicator.String => LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0),// should be an array i think ?
+                TypeIndicator.String => _module.GetTypeByName("class.string"),// should be an array i think ?
                 TypeIndicator.DateTime => throw new NotImplementedException(),
                 TypeIndicator.Void => LLVMTypeRef.Void,
                 _ => throw new InvalidOperationException($"TypeIndicator {typeIndicator} is not supported as a return type for LLVM."),
@@ -436,9 +443,7 @@ namespace Compiling.Backends
         private LLVMValueRef CreateEntryBlockAlloca(LLVMTypeRef typeRef, string variableName)
         {
             var currentPos = _builder.InsertBlock;
-
             var function = _builder.InsertBlock.Parent.EntryBasicBlock;
-            //todo: make sure the alloca is added to the entry block of the function...? and make sure that this works
             _builder.PositionAtEnd(function);
             var alloca = _builder.BuildAlloca(typeRef, variableName);
             _builder.PositionAtEnd(currentPos);
@@ -607,11 +612,12 @@ namespace Compiling.Backends
             for (int i = 0; i < argumentCount; ++i)
             {
                 Debug.Assert(!string.IsNullOrWhiteSpace(expression?.Arguments[i].ValueToken.Name));
-                var argumentName = expression.Arguments[i].ValueToken.Name;// todo: is this right?
+                var argumentName = expression.Arguments[i].ValueToken.Name;
 
                 LLVMValueRef param = function.GetParam((uint)i);
                 param.Name = argumentName;
-                // is this requried for a func?
+
+                //todo: is this requried for a func?
                 var alloca = CreateEntryBlockAlloca(param.TypeOf, param.Name);
                 _builder.BuildStore(param, alloca);
                 _valueAllocationPointers[argumentName] = alloca;
@@ -645,7 +651,9 @@ namespace Compiling.Backends
             }
             _valueStack.Clear();
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+#if !DEBUG
             _passManager.RunFunctionPassManager(function);
+#endif
         }
 
         public void VisitReturnExpression(ReturnExpression expression)
@@ -699,11 +707,6 @@ namespace Compiling.Backends
             {
                 Visit(function);
             }
-        }
-
-        public void VisitMemberAccessExpression(MemberAccessExpression expression)
-        {
-            var x = 5;
         }
 
         public void VisitImportExpression(ImportStatementExpression expression)

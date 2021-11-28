@@ -10,7 +10,7 @@
         }
 
         export func Main() -> int {
-            Print("Hello world!! Bart here!\r\n");
+            Print("Hello world!! Bart here! \n");
             return 42;
         }
     }
