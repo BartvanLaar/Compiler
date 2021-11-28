@@ -4,13 +4,13 @@
     {    
         extern func printf(string text) -> int;
 
-        func Print(string text) -> void 
+        func Print(string textFormat) -> void 
         {
-            printf(text.ptr);
+            printf(textFormat.Ptr);
         }
 
         export func Main() -> int {
-            Print("Hello world!! Bart here! \n");
+            Print("test \n");
             return 42;
         }
     }

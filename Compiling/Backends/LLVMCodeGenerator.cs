@@ -16,7 +16,7 @@ namespace Compiling.Backends
         private readonly LLVMExecutionEngineRef _executionEngine;
         private readonly LLVMPassManagerRef _passManager;
         private readonly Dictionary<string, LLVMValueRef> _valueAllocationPointers = new();
-
+        private readonly Dictionary<string, string[]> _userDefinedTypes = new();
         private readonly Stack<LLVMValueRef> _valueStack = new();
         private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
 
@@ -34,19 +34,13 @@ namespace Compiling.Backends
             glob.IsGlobalConstant = true;
             glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
 
-            //var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int64, new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, false);
-
-            //var function = _module.AddFunction("printf", funcType);
-            //function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-            //function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;//todo should this be specifyable by user?
-
-            //var types = new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), LLVMTypeRef.Int64, LLVMTypeRef.CreateArray(LLVMTypeRef.Int16, 0) };
-            //var stringClass = LLVMTypeRef.CreateStruct(types, true);
-
             var structPtr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
             var stringStruct = _module.Context.CreateNamedStruct("class.string");
             stringStruct.StructSetBody(new[] { structPtr, LLVMTypeRef.Int64 }, true);
-
+            _userDefinedTypes.Add("class.string", new[] { "Ptr", "Length" });
+            //var ptr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+            //var printf = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int64,  new[] { ptr, ptr }, false);
+            //_module.AddFunction("printf", printf);
         }
 
         public LLVMCodeGenerator()
@@ -147,10 +141,10 @@ namespace Compiling.Backends
         public void VisitMemberAccessExpression(MemberAccessExpression expression)
         {
             var alloca = _valueAllocationPointers[expression.ParentToken.Name];
+            var typeName = alloca.TypeOf.ElementType.StructName;
+            var index = (ulong)Array.IndexOf(_userDefinedTypes[typeName], expression.MemberToken.Name);
 
-            //todo: magically get index of member in struct!
-            var memberPtr = _builder.BuildGEP(alloca, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0, true) }, "test");
-            //var memberPtr = _builder.BuildStructGEP(alloca, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0, true) }, "test");
+            var memberPtr = _builder.BuildGEP(alloca, new[] { LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, index, true) }, "test");
             var load = _builder.BuildLoad(memberPtr);
             _valueStack.Push(load);
         }
@@ -591,6 +585,7 @@ namespace Compiling.Backends
             {
                 arguments[i] = GetReturnType(expression.Arguments[i].TypeToken.TypeIndicator);
             }
+
             var retType = GetReturnType(expression.ReturnTypeToken.TypeIndicator);
             function = _module.AddFunction(functionName, LLVMTypeRef.CreateFunction(retType, arguments, false));
 
@@ -651,9 +646,7 @@ namespace Compiling.Backends
             }
             _valueStack.Clear();
             function.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-#if !DEBUG
             _passManager.RunFunctionPassManager(function);
-#endif
         }
 
         public void VisitReturnExpression(ReturnExpression expression)

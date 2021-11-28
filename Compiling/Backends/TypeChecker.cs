@@ -185,7 +185,8 @@ namespace Compiling.Backends
             //todo add logic for userdefined types.
             //todo: functions imported from a library can't currently be mangled, fix? people should not be limited to function names...
             // or the stdlib.bs should be its seperate module..?
-            expression.FunctionName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
+            //todo: all functions should be known before mangling, as it might be extern and shouldnt be mangled
+            //expression.FunctionName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
 
             var hasFunc = _functions.TryGetValue(expression.FunctionName, out var funcExpr);
             if (!hasFunc)
@@ -343,6 +344,14 @@ namespace Compiling.Backends
 
             _namedValues.Add(expression.Identifier, rhsValue);
         }
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            Debug.Assert(_namedValues.ContainsKey(expression.ParentToken.Name));
+
+            var value = _namedValues[expression.ParentToken.Name];
+            expression.ParentToken.TypeIndicator = value.TypeToken.TypeIndicator;
+            var x = 5;
+        }
 
         public void VisitValueExpression(ValueExpression expression)
         {
@@ -354,8 +363,33 @@ namespace Compiling.Backends
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression) { }
-        public void VisitClassExpression(ClassDefinitionExpression expression) { }
+        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        {
+            // type checker does not work with classes like string :/...
+            //foreach (var @class in expression.Classes)
+            //{
+            //    Visit(@class);
+            //}
+
+
+        }
+        public void VisitClassExpression(ClassDefinitionExpression expression)
+        {
+            foreach (var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
+
+            foreach (var variable in expression.Variables)
+            {
+                Visit(variable);
+            }
+
+            foreach (var function in expression.Functions)
+            {
+                Visit(function);
+            }
+        }
         public void VisitImportExpression(ImportStatementExpression expression) { }
 
         //todo: cleanup! DUPLICATE CODE: A COPY exists in the crawler!!
@@ -391,9 +425,5 @@ namespace Compiling.Backends
             };
         }
 
-        public void VisitMemberAccessExpression(MemberAccessExpression expression)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

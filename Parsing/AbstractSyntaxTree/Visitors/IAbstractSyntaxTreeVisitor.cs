@@ -2,6 +2,15 @@
 
 namespace Parsing.AbstractSyntaxTree.Visitors
 {
+    public interface IContext
+    {
+
+    }
+
+    public class Context : IContext
+    {
+
+    }
     public interface IAbstractSyntaxTreeVisitor
     {
         public string Name { get; }

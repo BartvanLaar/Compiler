@@ -106,7 +106,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             Visit(expression.Body);
 
-            expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
+            //expression.FunctionName = CreateMangledName(expression.FunctionName, expression.Arguments.Select(a => a.TypeToken));
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
