@@ -12,7 +12,8 @@ namespace CLI
 
             //var code = "func main() -> int {printf(\"Hello World, % s!\r\n\", \"there\"); printf(\"Hello World!\n\");  return 42; }";
             var code = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Program.bs"));
-            //var code = @"func main() -> int {if(0==true){return 69;} return 1447}";
+            //var code = @"func Main() -> int {if(0==true){return 69;} return 1447;}";
+
             Driver.RunLLVM(code, isExecutable: true, useClangCompiler: false);
 
             //todo: add support for order independent code? required 2 separate parse phases

@@ -31,6 +31,7 @@ namespace Compiling.Backends
             // hack below.. Some global constant value needs to be set in order to use doubles or floats...
             // its either use this, or use clang for compilation from bc -> exe, but this takes more than 2 sec?! and secretly includes more than just the written code.
             var glob = _module.AddGlobal(LLVMTypeRef.Int1, "_fltused");
+            glob.IsGlobalConstant = true;
             glob.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1);
 
             //var funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Int64, new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) }, false);
@@ -38,6 +39,14 @@ namespace Compiling.Backends
             //var function = _module.AddFunction("printf", funcType);
             //function.Linkage = LLVMLinkage.LLVMExternalLinkage;
             //function.FunctionCallConv = (uint)LLVMCallConv.LLVMCCallConv;//todo should this be specifyable by user?
+
+            //var types = new[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), LLVMTypeRef.Int64, LLVMTypeRef.CreateArray(LLVMTypeRef.Int16, 0) };
+            //var stringClass = LLVMTypeRef.CreateStruct(types, true);
+            //var test = _module.GetTypeByName("string");
+        }
+
+        public LLVMCodeGenerator()
+        {
         }
 
         public string Name => "LLVM backend";
@@ -101,11 +110,33 @@ namespace Compiling.Backends
                     }
                 case TypeIndicator.String:
                     {
-                        _valueStack.Push(_builder.BuildGlobalStringPtr((string)expression.Value));
+                        LLVMValueRef stringValue = CreateStringValue((string)expression.Value);
+                        _valueStack.Push(stringValue);
                         return;
                     }
                 default: throw new Exception($"Visitted value {expression.Value} of type {expression.Token.TypeIndicator} which is not supported by the VisitValueExpression!");
             }
+        }
+
+        private LLVMValueRef CreateStringValue(string value)
+        {
+            //todo: learn how to access struct members...
+            var structPtr = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+            var stringStruct = _module.Context.CreateNamedStruct("class.string");
+            stringStruct.StructSetBody(new[] { structPtr, LLVMTypeRef.Int64 }, false);
+            var strPtr = _builder.BuildGlobalStringPtr(value);
+            strPtr.Name = "Ptr";
+            var length = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)value.Length, true);
+            length.Name = "Length";
+            var test = LLVMValueRef.CreateConstNamedStruct(stringStruct, new[] { strPtr, length });
+            //var alloca = CreateEntryBlockAlloca(stringStruct, "testtt");
+            //var store = _builder.BuildStore(test, alloca);
+            //var x = _builder.BuildStructGEP(alloca, 0, "testgep");
+            //var store2 = _builder.BuildStore(x, alloca);
+
+            //return _builder.BuildLoad(alloca);
+
+            return strPtr;//return test;
         }
 
         public void VisitIdentifierExpression(IdentifierExpression expression)
@@ -668,6 +699,11 @@ namespace Compiling.Backends
             {
                 Visit(function);
             }
+        }
+
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            var x = 5;
         }
 
         public void VisitImportExpression(ImportStatementExpression expression)

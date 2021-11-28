@@ -17,6 +17,7 @@
         Value,
         VariableDeclaration,
         While,
+        MemberAccess,
     }
 
 }

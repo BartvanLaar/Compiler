@@ -6,7 +6,7 @@
 
         func Print(string text) -> void 
         {
-            printf(text);
+            printf(text.ptr);
         }
 
         export func Main() -> int {

@@ -391,17 +391,6 @@ namespace Lexing
                             token.Value = LexerConstants.PLUS_PLUS;
                             return (token, ++cursor, lineCount, ++columnCount);
                         }
-                        //else
-                        //{
-                        //    var numberToken = GetNumberToken(cursor, lineCount, columnCount);
-                        //    if (numberToken.Token is not null)
-                        //    {
-                        //        token = numberToken.Token;
-                        //        cursor = numberToken.Cursor;
-                        //        columnCount = numberToken.ColumnCount;
-                        //        lineCount = numberToken.LineCount;
-                        //    }
-                        //}
 
                         break;
                     }
@@ -428,17 +417,6 @@ namespace Lexing
                             token.Value = LexerConstants.MINUS_MINUS;
                             return (token, ++cursor, lineCount, ++columnCount);
                         }
-                        //else
-                        //{
-                        //    var numberToken = GetNumberToken(cursor, lineCount, columnCount, isKnownToBeNegative:true);
-                        //    if (numberToken.Token is not null)
-                        //    {
-                        //        token = numberToken.Token;
-                        //        cursor = numberToken.Cursor;
-                        //        columnCount = numberToken.ColumnCount;
-                        //        lineCount = numberToken.LineCount;
-                        //    }
-                        //}
                         break;
 
                     }
@@ -576,6 +554,7 @@ namespace Lexing
                 LexerConstants.DOUBLE_QOUTE => new Token(TokenType.Value, lineCount, columnCount) { Value = LexerConstants.DOUBLE_QOUTE, TypeIndicator = TypeIndicator.String },
                 LexerConstants.AND => new Token(TokenType.BitwiseAnd, lineCount, columnCount) { Value = LexerConstants.AND },
                 LexerConstants.OR => new Token(TokenType.BitwiseOr, lineCount, columnCount) { Value = LexerConstants.OR },
+                LexerConstants.DOT => new Token(TokenType.Dot, lineCount, columnCount) { Value = LexerConstants.DOT },
                 _ => null,
             };
         }

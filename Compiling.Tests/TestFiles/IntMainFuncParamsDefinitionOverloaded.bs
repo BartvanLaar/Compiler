@@ -6,6 +6,6 @@ func test(double someInteger) -> double {
     return 1337d;
 }
 
-func main() -> int {
+func Main() -> int {
     return test(5);
 }

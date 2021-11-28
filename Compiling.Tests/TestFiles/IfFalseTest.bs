@@ -1,4 +1,4 @@
-﻿func main() -> int {
+﻿func Main() -> int {
     var x = 69;
     if(x != 1337)
     {

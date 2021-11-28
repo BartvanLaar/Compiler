@@ -1,4 +1,5 @@
 ﻿using Compiling.Backends;
+using Exceptions;
 using Lexing;
 using LLVMSharp.Interop;
 using Parsing;
@@ -36,7 +37,7 @@ namespace Compiling
             module.WriteBitcodeToFile(output);
             sw.Stop();
             timeMs += sw.ElapsedMilliseconds;
-            Console.WriteLine($"Writing bitcode to file took {sw.ElapsedMilliseconds} ms.");
+            Console.WriteLine($"Writing bitcode to file took {sw.Elapsed.TotalSeconds} seconds.");
             sw.Restart();
             module.Dump();
             ctx.Dispose();
@@ -45,7 +46,7 @@ namespace Compiling
             builder.Dispose();
             sw.Stop();
             timeMs += sw.ElapsedMilliseconds;
-            Console.WriteLine($"Cleaning up LLVM leftovers took {sw.ElapsedMilliseconds} ms.");
+            Console.WriteLine($"Cleaning up LLVM leftovers took {sw.Elapsed.TotalSeconds} seconds.");
             sw.Restart();
             Process lld;
             if (useClangCompiler)
@@ -63,29 +64,38 @@ namespace Compiling
 
             lld.WaitForExit();
             sw.Stop();
-            Console.WriteLine($"Creating exe or DLL took {sw.ElapsedMilliseconds} ms.");
+            Console.WriteLine($"Creating exe or DLL took {sw.Elapsed.TotalSeconds} seconds.");
             timeMs += sw.ElapsedMilliseconds;
-            Console.WriteLine($"Compiler took a total of {timeMs} milliseconds to create DLL/EXE.");
+            Console.WriteLine($"Compiler took a total of {timeMs / 1000d} seconds to create DLL/EXE.");
         }
 
         internal static long Run(string text, params IAbstractSyntaxTreeVisitor[] visitors)
         {
-            var totalTimeMs = 0l;
+            var totalTimeMs = 0L;
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             ILexer lexer = new Lexer(text);
             IParser parser = new Parser(lexer);
-            ExpressionBase[] abstractSyntaxTrees = parser.Parse();
+            var abstractSyntaxTrees = Array.Empty<ExpressionBase>();
+            try
+            {
+                abstractSyntaxTrees = parser.Parse();
+            }
+            catch (SyntaxErrorException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
             stopwatch.Stop();
             totalTimeMs += stopwatch.ElapsedMilliseconds;
-            Console.WriteLine($"Lexing and parsing took {stopwatch.ElapsedMilliseconds} milliseconds.");
+            Console.WriteLine($"Lexing and parsing took {stopwatch.Elapsed.TotalSeconds} seconds.");
             stopwatch.Restart();
             var crawler = new ASTCrawler();
             AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, crawler);
             stopwatch.Stop();
             totalTimeMs += stopwatch.ElapsedMilliseconds;
-            Console.WriteLine($"Crawling AST for scopes, functions, variables, constants, etc. took {stopwatch.ElapsedMilliseconds} milliseconds.");
+            Console.WriteLine($"Crawling AST for scopes, functions, variables, constants, etc. took {stopwatch.Elapsed.TotalSeconds} seconds.");
 
             // For now one file is enough to support.
             // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
@@ -96,7 +106,7 @@ namespace Compiling
                 AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
                 stopwatch.Stop();
                 totalTimeMs += stopwatch.ElapsedMilliseconds;
-                Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.ElapsedMilliseconds} milliseconds.");
+                Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.Elapsed.TotalSeconds} seconds.");
             }
 
             stopwatch.Stop();

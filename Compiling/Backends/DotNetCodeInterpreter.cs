@@ -257,5 +257,10 @@ namespace Compiling.Backends
         {
             
         }
+
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

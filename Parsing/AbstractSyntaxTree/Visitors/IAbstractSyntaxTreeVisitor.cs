@@ -12,6 +12,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitClassExpression(ClassDefinitionExpression expression);
         void VisitImportExpression(ImportStatementExpression expression);
         void VisitVariableDeclarationExpression(VariableDeclarationExpression expression);
+        void VisitMemberAccessExpression(MemberAccessExpression expression);
         void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression);
         void VisitBodyExpression(BodyExpression expression);
         void VisitValueExpression(ValueExpression expression);

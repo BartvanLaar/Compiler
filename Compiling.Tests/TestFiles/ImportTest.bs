@@ -1,5 +1,5 @@
 ﻿import "TestFiles/importTestFile.bs";
 
-func main() -> int {
+func Main() -> int {
 	return test();
 }

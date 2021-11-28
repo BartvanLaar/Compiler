@@ -59,6 +59,7 @@
         public const string TERNIARY_OPERATOR_FALSE = ":";
 
         public const string HEX_SIGN = "0x";
+        public const string DOT = ".";
         public const string DECIMAL_SEPARATOR_SIGN = ".";
         public const string NUMBER_INDENTATION = "_";
 

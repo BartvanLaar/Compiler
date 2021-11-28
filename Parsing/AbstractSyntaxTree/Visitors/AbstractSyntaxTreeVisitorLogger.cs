@@ -112,6 +112,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Console.WriteLine($"Visited tree node of type: '{baseExp?.GetType()?.Name ?? null}'");
         }
 
-
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

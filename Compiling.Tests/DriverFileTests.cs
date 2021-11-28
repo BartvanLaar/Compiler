@@ -24,7 +24,7 @@ namespace Compiling.Tests
             {
                 yield return new object[] { FN("VoidLibFuncNoParamsDefinition"), new TestFile() { IsExecutable = false } };
                 yield return new object[] { FN("VoidLibFuncNoParamsReturnDefinition"), new TestFile() { IsExecutable = false } };
-                yield return new object[] { FN("VoidMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } }; // null exit code cause void main...
+                yield return new object[] { FN("VoidMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } }; // null exit code cause void Main...
                 yield return new object[] { FN("IntMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("IntMainFuncNoParamsDefinitionCall"), new TestFile() { IsExecutable = true, ExitCode = 42 } };
                 yield return new object[] { FN("DoubleMainFuncNoParamsDefinition"), new TestFile() { IsExecutable = true } };

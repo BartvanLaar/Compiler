@@ -35,6 +35,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.VariableDeclaration:
                     visitor.VisitVariableDeclarationExpression((VariableDeclarationExpression)expression);
                     return;
+                case ExpressionType.MemberAccess:
+                    visitor.VisitMemberAccessExpression((MemberAccessExpression)expression);
+                    return;
                 case ExpressionType.FunctionDefinition:
                     visitor.VisitFunctionDefinitionExpression((FunctionDefinitionExpression)expression);
                     return;

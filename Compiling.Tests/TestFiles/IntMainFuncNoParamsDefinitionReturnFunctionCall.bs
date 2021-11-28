@@ -2,6 +2,6 @@
     return 42;
 }
 
-func main() -> int {
+func Main() -> int {
     return Test();
 }

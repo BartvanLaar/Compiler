@@ -390,5 +390,10 @@ namespace Compiling.Backends
                 _ => throw new NotImplementedException($"Exhaustive use of {nameof(ConvertTypeIndicatorToString)}."),
             };
         }
+
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

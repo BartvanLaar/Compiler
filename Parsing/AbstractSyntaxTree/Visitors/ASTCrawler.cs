@@ -187,5 +187,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         {
             
         }
+
+        public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+        }
     }
 }

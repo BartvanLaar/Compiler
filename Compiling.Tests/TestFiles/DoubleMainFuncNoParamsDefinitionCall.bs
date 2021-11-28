@@ -2,7 +2,7 @@
     return 69d;
 }
 
-func main() -> double {
+func Main() -> double {
     test();
     return 1337d;
 }

@@ -1,4 +1,4 @@
-﻿func main() -> int {
+﻿func Main() -> int {
     var x = 0;    
     while(false) 
     do

@@ -1,4 +1,4 @@
-﻿func main() -> int {
+﻿func Main() -> int {
     var x = 0;
 
     for(var i = 42; i < 42; i = i + 1)

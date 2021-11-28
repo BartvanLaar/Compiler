@@ -139,7 +139,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.Class)
             {
-                throw ParserError(PeekToken(), TokenType.Class, "after export declaration on scope level of namespace.");
+                throw ParseError(PeekToken(), TokenType.Class, "after export declaration on scope level of namespace.");
             }
 
             ConsumeToken();
@@ -211,6 +211,7 @@ namespace Parsing
                 TokenType.EndOfFile => null,
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
+                TokenType.VariableIdentifier when(peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
                 TokenType.Add => ParseValueExpression(), // e.g. var x = +1;
@@ -218,7 +219,7 @@ namespace Parsing
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
-        }
+        }    
 
         private ValueExpressionBase? ParseValueExpression()
         {
@@ -239,6 +240,22 @@ namespace Parsing
             };
         }
 
+        private ValueExpressionBase ParseMemberAccessExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.VariableIdentifier);
+
+            var parent = ConsumeToken();
+            Debug.Assert(PeekToken().TokenType is TokenType.Dot, $"{nameof(ParseExpressionResultingInValue)}, should check whether a dot is present! Else its just a normal variable, not an member access...");
+            var dot = ConsumeToken();
+            if(PeekToken().TokenType is not TokenType.VariableIdentifier)
+            {
+                throw ParseError(PeekToken(), TokenType.VariableIdentifier, "after a dot indicating a member access expression.");
+            }
+
+            var memberAccess = ConsumeToken();
+
+            return new MemberAccessExpression(parent, memberAccess);
+        }
         private ExpressionBase ParseReturnStatementExpression()
         {
             if (!_currentFunctionReturnType.HasValue)
@@ -312,14 +329,14 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.FunctionDefinition)
             {
-                throw ParserError(PeekToken(), TokenType.FunctionDefinition, "after extern or export declaration");
+                throw ParseError(PeekToken(), TokenType.FunctionDefinition, "after extern or export declaration");
             }
 
             ConsumeToken();
 
             if (PeekToken().TokenType is not TokenType.FunctionIdentifier)
             {
-                throw ParserError(PeekToken(), TokenType.FunctionIdentifier, "after func definition");
+                throw ParseError(PeekToken(), TokenType.FunctionIdentifier, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
@@ -363,7 +380,7 @@ namespace Parsing
                 currentPeek = PeekToken();
                 if (currentPeek.TokenType is not TokenType.VariableIdentifier)
                 {
-                    throw ParserError(currentPeek, TokenType.VariableIdentifier, "in func parameter body");
+                    throw ParseError(currentPeek, TokenType.VariableIdentifier, "in func parameter body");
                 }
 
                 var variableToken = ConsumeToken();
@@ -534,7 +551,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.VariableIdentifier)
             {
-                throw ParserError(leftHandSideTok, TokenType.VariableIdentifier, "before assignment of variable");
+                throw ParseError(leftHandSideTok, TokenType.VariableIdentifier, "before assignment of variable");
             }
 
             var leftHandSideIdentifierExpression = ConsumeToken(); // variable name...
@@ -696,7 +713,7 @@ namespace Parsing
 
                 if (PeekToken().TokenType is not TokenType.VariableIdentifier)
                 {
-                    throw ParserError(expr.Token, TokenType.VariableIdentifier, "after specifying 'as' when creating an alias for an import.");
+                    throw ParseError(expr.Token, TokenType.VariableIdentifier, "after specifying 'as' when creating an alias for an import.");
                 }
                 alias = ConsumeToken();
             }
@@ -778,12 +795,12 @@ namespace Parsing
         }
 
 
-        private SyntaxErrorException ParserError(TokenType expectedTokenType, string expectedInOrAt)
+        private SyntaxErrorException ParseError(TokenType expectedTokenType, string expectedInOrAt)
         {
             return ParseError(PeekToken(), expectedTokenType.ToString(), expectedInOrAt);
         }
 
-        private SyntaxErrorException ParserError(Token token, TokenType expectedTokenType, string expectedInOrAt)
+        private SyntaxErrorException ParseError(Token token, TokenType expectedTokenType, string expectedInOrAt)
         {
             return ParseError(token, expectedTokenType.ToString(), expectedInOrAt);
         }
@@ -793,7 +810,7 @@ namespace Parsing
             return ParseError(token, $"Expected '{expectedCharacter}' {exptectedInOrAt}");
         }
 
-        private SyntaxErrorException ParserError(string message)
+        private SyntaxErrorException ParseError(string message)
         {
             return ParseError(PeekToken(), message);
         }

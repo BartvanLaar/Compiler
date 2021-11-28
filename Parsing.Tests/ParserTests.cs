@@ -1,6 +1,7 @@
 ﻿using Exceptions;
 using Lexing;
 using NUnit.Framework;
+using Parsing.AbstractSyntaxTree.Expressions;
 using System.Linq;
 using TestHelpers.Tests;
 
@@ -234,7 +235,7 @@ namespace Parsing.Tests
             }
             catch (SyntaxErrorException ex)
             {
-                if(ex.Message.ToLower().Contains("could not be found"))
+                if (ex.Message.ToLower().Contains("could not be found"))
                 {
                     Assert.Pass();
                 }
@@ -252,6 +253,34 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             Assert.Throws<SyntaxErrorException>(() => parser.Parse());
+        }
+
+        [Test]
+        public void Parse_MemberAccessExpression()
+        {
+            var lexer = new Lexer("parent.member;");
+            var parser = new Parser(lexer);
+            var res = parser.Parse();
+            Assert.IsNotNull(res);
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ExpressionType.MemberAccess, res.First().DISCRIMINATOR);
+
+            lexer = new Lexer("parent.member = 5;");
+            parser = new Parser(lexer);
+            res = parser.Parse();
+            Assert.IsNotNull(res);
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ExpressionType.Binary, res.First().DISCRIMINATOR);
+            Assert.AreEqual(ExpressionType.MemberAccess, ((BinaryExpression)res.First()).LeftHandSide.DISCRIMINATOR);
+
+
+            lexer = new Lexer("var x = parent.member;");
+            parser = new Parser(lexer);
+            res = parser.Parse();
+            Assert.IsNotNull(res);
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ExpressionType.VariableDeclaration, res.First().DISCRIMINATOR);
+            Assert.AreEqual(ExpressionType.MemberAccess, ((VariableDeclarationExpression)res.First()).ValueExpression.DISCRIMINATOR);
         }
     }
 }

@@ -942,7 +942,7 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.EndOfFile, toks[5].TokenType);
         }
 
-        [TestCase]
+        [Test]
         public void Lexer_Test_Import_Statement()
         {
             var lexer = new Lexer("import \"this\\is\\a\\file\\path\";");
@@ -952,6 +952,16 @@ namespace Lexing.Tests
             Assert.AreEqual(TokenType.Value, toks[1].TokenType);
             Assert.AreEqual("this\\is\\a\\file\\path", toks[1].Value);
             Assert.AreEqual(TokenType.EndOfStatement, toks[2].TokenType);
+        }
+
+        [Test]
+        public void Lexer_Test_Member_Access()
+        {
+            var lexer = new Lexer("parent.member");
+            var toks = lexer.ConsumeTokens(3);
+            Assert.AreEqual(TokenType.VariableIdentifier, toks[0].TokenType);
+            Assert.AreEqual(TokenType.Dot, toks[1].TokenType);
+            Assert.AreEqual(TokenType.VariableIdentifier, toks[2].TokenType);
         }
     }
 }

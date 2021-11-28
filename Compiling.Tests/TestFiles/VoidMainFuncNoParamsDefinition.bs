@@ -1,1 +1,1 @@
-﻿func main() -> void {}
+﻿func Main() -> void {}

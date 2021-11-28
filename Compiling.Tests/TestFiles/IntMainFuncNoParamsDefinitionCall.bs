@@ -2,7 +2,7 @@
     return 20;
 }
 
-func main() -> int {
+func Main() -> int {
     test();
     return 42;
 }

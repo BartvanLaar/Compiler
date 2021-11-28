@@ -17,9 +17,9 @@
         Equals,                     // ===
         NotEquals,                  // !==
         GreaterThan,                // >
-        GreaterThanEqual,       // >=
+        GreaterThanEqual,           // >=
         LessThan,                   // <
-        LessThanEqual,          // <=
+        LessThanEqual,              // <=
 
         BitwiseAnd,                 // &
         ConditionalAnd,             // &&
@@ -92,5 +92,6 @@
         Enum,
         Array,
         Namespace,
+        Dot,
     }
 }
