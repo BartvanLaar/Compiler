@@ -1,4 +1,5 @@
 ﻿using Lexing;
+using Parsing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using Parsing.AbstractSyntaxTree.Visitors;
 using System.Diagnostics;
@@ -180,20 +181,29 @@ namespace Compiling.Backends
                 Visit(arg);
                 arguments.Add(_valueStack.Pop());
             }
-            //todo: refactor compiler so function names are already mangled and all user defined types, constants, etc are known before type checking.
-            // the logic can be copied over.. i think...
-            //todo add logic for userdefined types.
-            //todo: functions imported from a library can't currently be mangled, fix? people should not be limited to function names...
-            // or the stdlib.bs should be its seperate module..?
-            //todo: all functions should be known before mangling, as it might be extern and shouldnt be mangled
-            //expression.FunctionName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
 
-            var hasFunc = _functions.TryGetValue(expression.FunctionName, out var funcExpr);
-            if (!hasFunc)
+            var mangledName = CreateMangledName(expression.FunctionName, arguments.Select(a => a.TypeToken));
+
+            var hasFunc = _functions.TryGetValue(mangledName, out var funcExpr);
+            if (hasFunc)
             {
-                var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Value} {x.ValueToken.Name}"));
-                throw new Exception($"Function '{expression.FunctionName}' with argument types: ({argString}) does not exist.");// todo: improve message and make custom exception.
+                expression.FunctionName = mangledName;
             }
+            else
+            {
+                hasFunc = _functions.TryGetValue(expression.FunctionName, out funcExpr);
+                if (funcExpr is not null && !funcExpr.IsExtern)
+                {
+                    Debug.Assert(false, "unmangled function names should only be used for extern functions!");
+                }
+
+                if (!hasFunc)
+                {
+                    var argString = string.Join(", ", arguments.Select(x => $"{x.TypeToken.Value} {x.ValueToken.Name}"));
+                    throw new Exception($"Function '{expression.FunctionName}' with argument types: ({argString}) does not exist.");// todo: improve message and make custom exception.
+                }
+            }
+
 
             Debug.Assert(funcExpr != null); // stupid assert as hasFunc is checked above
             expression.TypeToken = funcExpr.ReturnTypeToken; // ugly?                                            
@@ -349,8 +359,10 @@ namespace Compiling.Backends
             Debug.Assert(_namedValues.ContainsKey(expression.ParentToken.Name));
 
             var value = _namedValues[expression.ParentToken.Name];
+            // @todo! @fixme isnt this only valid in case of strings?
             expression.ParentToken.TypeIndicator = value.TypeToken.TypeIndicator;
-            var x = 5;
+            _valueStack.Push(new TypeCheckValue(value.ValueToken, value.TypeToken));
+
         }
 
         public void VisitValueExpression(ValueExpression expression)
@@ -366,10 +378,10 @@ namespace Compiling.Backends
         public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
         {
             // type checker does not work with classes like string :/...
-            //foreach (var @class in expression.Classes)
-            //{
-            //    Visit(@class);
-            //}
+            foreach (var @class in expression.Classes)
+            {
+                Visit(@class);
+            }
 
 
         }
@@ -392,10 +404,9 @@ namespace Compiling.Backends
         }
         public void VisitImportExpression(ImportStatementExpression expression) { }
 
-        //todo: cleanup! DUPLICATE CODE: A COPY exists in the crawler!!
+        //todo: cleanup! DUPLICATE CODE: A COPY exists in the Parser!!
         private static string CreateMangledName(string baseName, IEnumerable<Token> typeTokens)
         {
-            //todo: code below doesnt really work for user defined types as the name can have the same starting value....?
             var name = baseName;
 
             foreach (var token in typeTokens)
@@ -407,6 +418,7 @@ namespace Compiling.Backends
             return name;
         }
 
+        //todo: cleanup! DUPLICATE CODE: A COPY exists in the Parser!!
         private static string ConvertTypeIndicatorToString(TypeIndicator typeIndicator)
         {
             return typeIndicator switch

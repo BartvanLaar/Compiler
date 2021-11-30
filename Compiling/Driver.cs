@@ -90,19 +90,14 @@ namespace Compiling
             stopwatch.Stop();
             totalTimeMs += stopwatch.ElapsedMilliseconds;
             Console.WriteLine($"Lexing and parsing took {stopwatch.Elapsed.TotalSeconds} seconds.");
-            stopwatch.Restart();
-            var crawler = new ASTCrawler();
-            AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, crawler);
-            stopwatch.Stop();
-            totalTimeMs += stopwatch.ElapsedMilliseconds;
-            Console.WriteLine($"Crawling AST for scopes, functions, variables, constants, etc. took {stopwatch.Elapsed.TotalSeconds} seconds.");
 
             // For now one file is enough to support.
             // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
+            var scopes = new Dictionary<string, IScope>();//@todo: @Fix me!!
             foreach (var visitor in visitors)
             {
                 stopwatch.Restart();
-                visitor.Initialize(crawler.Scopes);
+                visitor.Initialize(scopes);
                 AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
                 stopwatch.Stop();
                 totalTimeMs += stopwatch.ElapsedMilliseconds;
