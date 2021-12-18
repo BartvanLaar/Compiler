@@ -7,39 +7,44 @@ namespace Parsing
 {
     public interface IParser
     {
-        ExpressionBase[] Parse();
-    }
-
-    internal class ScopeKey // use a struct so it gets copied when passed to other methods.
-    {
-        public ScopeKey? Parent { get; set; }
-        public string? Namespace { get; set; }
-        public string? ClassName { get; set; }
-        public string? FunctionName { get; set; }
-
-        public ScopeKey(ScopeKey? parent = null)
-        {
-            Parent = parent;
-        }
+        List<IScope> Parse();
     }
 
     public interface IScope
     {
         //todo: fixme!
+        string Name { get; }
+        List<NamespaceDefinitionExpression> Namespaces { get; }
+        List<ClassDefinitionExpression> Classes { get; }
+        List<FunctionDefinitionExpression> Functions { get; }
+        List<VariableDeclarationExpression> Variables { get; }
+        List<ExpressionBase> ExpressionTree { get; }
     }
 
-    internal class Scope : IScope
+    public class Scope : IScope
     {
-        public Dictionary<string, NamespaceDefinitionExpression> Namespaces { get; set; } = new();
-        public Dictionary<string, ClassDefinitionExpression> Classes { get; set; } = new();
-        public Dictionary<string, FunctionScope> Functions { get; set; } = new();
-        public Dictionary<string, VariableDeclarationExpression> Variables { get; set; } = new();
+        public Scope(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
+        public List<NamespaceDefinitionExpression> Namespaces { get; } = new();
+        public List<ClassDefinitionExpression> Classes { get;  } = new();
+        internal List<FunctionScope> FunctionsInternal { get;  } = new(); // outside doesnt need to know the functionScope, expression is enough..
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+        public List<FunctionDefinitionExpression> Functions => FunctionsInternal.Select(x => x.Expression).ToList();
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+        public List<VariableDeclarationExpression> Variables { get; } = new();
+        public List<ExpressionBase> ExpressionTree { get; } = new();
     }
 
     internal class FunctionScope
     {
-        public FunctionDefinitionExpression Expression { get; set; }
-        public Token ReturnType { get; set; }
+        // function scope seems to contain redundant information, but return type is useful when parsing the body to set the return type on return expressions.
+        // perhaps its not the cleanest solution but its useful.
+        public FunctionDefinitionExpression? Expression { get; set; }
+        public Token? ReturnType { get; set; }
     }
 
     public sealed class Parser : IParser
@@ -48,10 +53,7 @@ namespace Parsing
 
         private readonly ILexer _lexer;
         private readonly string _file;
-        private readonly List<ExpressionBase> _expressions;
-        private readonly static ScopeKey GLOBAL_SCOPE = new ScopeKey();
-        private readonly Dictionary<ScopeKey, Scope> _scopes; //Todo: @fixme I think expressions should get to know what Scope they are in...        
-        private TypeIndicator? _currentFunctionReturnType = null; // not THREAD SAFE! May be visited at a later date... Perhaps files should be parsed one at a time?
+        private readonly List<Scope> _scopes;
 
         public Parser(ILexer lexer) : this(lexer, DIRECT_TEXT_INPUT) { }
 
@@ -59,12 +61,10 @@ namespace Parsing
         {
             _lexer = lexer;
             _file = file;
-            _expressions = new();
-            _scopes = new Dictionary<ScopeKey, Scope>();
-            _scopes.Add(GLOBAL_SCOPE, new Scope());
+            _scopes = new();
         }
 
-        public ExpressionBase[] Parse()
+        public List<IScope> Parse()
         {
             // how to handle multiple files.. 
             // Are we gonna added them to the same queue, or are we going to return a list of queues?
@@ -76,9 +76,10 @@ namespace Parsing
             // should we require import "stuff" as <NAME HERE> so we know which version they mean? or should it be optional in case of ambiguity
             // once that is valid, we need to do some type checking.
             // then the last step is code gen... which we can do already.. sort of...
+            _scopes.Add(new Scope(_file));
             while (PeekToken().TokenType is not TokenType.EndOfFile)
             {
-                var expr = ParseEntryLevelExpression(GLOBAL_SCOPE);
+                var expr = ParseEntryLevelExpression();
 
                 if (expr is ImportStatementExpression importExpr)
                 {
@@ -86,31 +87,31 @@ namespace Parsing
                     var text = File.ReadAllText(importExpr.Path);
                     var lexer = new Lexer(text);
                     var parser = new Parser(lexer, Path.GetFileNameWithoutExtension(importExpr.Path));
-                    _expressions.AddRange(parser.Parse());
+                    _scopes.AddRange(parser.Parse().Cast<Scope>());// ugly...
                 }
 
                 ConsumeExpression(expr);
             }
 
-            return _expressions.ToArray();
+            return _scopes.Cast<IScope>().ToList();
         }
 
         // top level expressions should not reference a value or function call, this is handled by the default case.
-        private ExpressionBase? ParseEntryLevelExpression(ScopeKey currentScope)
+        private ExpressionBase? ParseEntryLevelExpression()
         {
             switch (PeekToken().TokenType)
             {
                 case TokenType.Namespace:
                     {
-                        return ParseNameSpaceExpression(currentScope);
+                        return ParseNameSpaceExpression();
                     }
                 default:
                     {
-                        return ParseTopLevelExpression(currentScope);
+                        return ParseTopLevelExpression();
                     }
             }
         }
-        private ExpressionBase? ParseTopLevelExpression(ScopeKey currentScope)
+        private ExpressionBase? ParseTopLevelExpression()
         {
             var peekedTokens = PeekTokens(2);
             switch (peekedTokens[0].TokenType)
@@ -127,56 +128,54 @@ namespace Parsing
 #endif
                 case TokenType.If:
                     {
-                        return ParseIfStatementExpression(currentScope);
+                        return ParseIfStatementExpression();
                     }
                 case TokenType.Do:
                     {
-                        return ParseDoWhileStatementExpression(currentScope);
+                        return ParseDoWhileStatementExpression();
                     }
                 case TokenType.While:
                     {
-                        return ParseWhileStatementExpression(currentScope);
+                        return ParseWhileStatementExpression();
                     }
                 case TokenType.For:
                     {
-                        return ParseForLoopStatementExpression(currentScope);
+                        return ParseForLoopStatementExpression();
                     }
                 case TokenType.Extern:
                 case TokenType.Export when (peekedTokens[1].TokenType is TokenType.FunctionDefinition):
                 case TokenType.FunctionDefinition:
                     {
-                        return ParseFunctionDefinitionExpression(currentScope);
+                        return ParseFunctionDefinitionExpression();
                     }
                 case TokenType.Type when (peekedTokens[1].TokenType is TokenType.VariableIdentifier):
                     {
-                        return ParseVariableDeclaration(currentScope);
+                        return ParseVariableDeclaration();
                     }
                 case TokenType.Export when (peekedTokens[1].TokenType is TokenType.Class):
                 case TokenType.Class:
                     {
-                        return ParseClassExpression(currentScope);
+                        return ParseClassExpression();
                     }
                 case TokenType.ImportStatement:
                     {
-                        return ParseImportStatementExpression(currentScope);
+                        return ParseImportStatementExpression();
                     }
                 case TokenType.Return:
                     {
-                        return ParseReturnStatementExpression(currentScope);
+                        return ParseReturnStatementExpression();
                     }
                 default:
                     {
-                        return ParseExpression(currentScope);
+                        return ParseExpression();
                     }
             }
 
         }
 
-        private ClassDefinitionExpression ParseClassExpression(ScopeKey scope)
+        private ClassDefinitionExpression ParseClassExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Class or TokenType.Export);
-            var originalScope = scope;
-            scope = new ScopeKey(scope);
 
             var isExport = PeekToken().TokenType is TokenType.Export;
 
@@ -198,9 +197,8 @@ namespace Parsing
             }
 
             var classIdentifierToken = ConsumeToken();
-            scope.ClassName = classIdentifierToken.Name; // set new scope class name before parsing body
-            _scopes.Add(scope, new Scope()); // also add it before hand.
-            var classBody = ParseBodyExpression(scope, classIdentifierToken, "class token");
+
+            var classBody = ParseBodyExpression(classIdentifierToken, "class token");
 
             var variableDeclarations = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.VariableDeclaration).Cast<VariableDeclarationExpression>().ToArray();
             var functionDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.FunctionDefinition).Cast<FunctionDefinitionExpression>().ToArray();
@@ -213,16 +211,13 @@ namespace Parsing
             }
 
             var expr = new ClassDefinitionExpression(classIdentifierToken, variableDeclarations, functionDefinitions, classDefinitions);
-            _scopes[originalScope].Classes.Add(scope.ClassName, expr);
+            _scopes.Last().Classes.Add(expr);
 
             return expr;
         }
 
-        private NamespaceDefinitionExpression ParseNameSpaceExpression(ScopeKey scope)
+        private NamespaceDefinitionExpression ParseNameSpaceExpression()
         {
-            var originalScope = scope;
-            scope = new ScopeKey(scope);
-
             Debug.Assert(PeekToken().TokenType is TokenType.Namespace);
             ConsumeToken();
 
@@ -232,9 +227,7 @@ namespace Parsing
             }
             var namespaceIdentifier = ConsumeToken();
 
-            scope.Namespace = namespaceIdentifier.Name;  // set new scope class name before parsing body
-            _scopes.Add(scope, new Scope());             // also add it before hand.
-            var namespaceBody = ParseNamespaceBodyExpression(scope, namespaceIdentifier, "namespace declaration");
+            var namespaceBody = ParseNamespaceBodyExpression(namespaceIdentifier, "namespace declaration");
 
             if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Namespace)))
             {
@@ -244,11 +237,11 @@ namespace Parsing
             var namespaces = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Namespace).Cast<NamespaceDefinitionExpression>()?.ToArray();
             var classes = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Class).Cast<ClassDefinitionExpression>()?.ToArray();
             var namespaceExp = new NamespaceDefinitionExpression(namespaceIdentifier, namespaces, classes); //todo: support dots in namespace.
-            _scopes[originalScope].Namespaces.Add(scope.Namespace, namespaceExp);
+            _scopes.Last().Namespaces.Add(namespaceExp);
             return namespaceExp;
         }
 
-        private BodyExpression ParseNamespaceBodyExpression(ScopeKey currentScope, Token parentToken, string bodyName)
+        private BodyExpression ParseNamespaceBodyExpression(Token parentToken, string bodyName)
         {
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
@@ -265,7 +258,7 @@ namespace Parsing
                     throw ParseError(PeekToken(), $"Expected matching closing '{ LexerConstants.ACCOLADES_CLOSE}'", $"after {bodyName} body");
                 }
 
-                var expression = ParseEntryLevelExpression(currentScope); // different between parse body and this is what level of expressions are allowed.
+                var expression = ParseEntryLevelExpression(); // different between parse body and this is what level of expressions are allowed.
                 if (expression == null)
                 {
                     ConsumeToken();
@@ -291,11 +284,11 @@ namespace Parsing
             }
             else
             {
-                _expressions.Add(expression);
+                _scopes.Last().ExpressionTree.Add(expression);
             }
         }
 
-        private ValueExpressionBase? ParseExpressionResultingInValue(ScopeKey currentScope)
+        private ValueExpressionBase? ParseExpressionResultingInValue()
         {
             var peekedTokens = PeekTokens(2);
             var currentTokenType = peekedTokens[0].TokenType;
@@ -305,13 +298,13 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
-                TokenType.FunctionIdentifier => ParseFunctionCallExpression(currentScope), // kind of a hack, but a function name is also an identifier.
+                TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.VariableIdentifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpression(),
                 TokenType.Add => ParseValueExpression(), // e.g. var x = +1;
-                TokenType.Subtract => ParseNegativeValueExpression(currentScope), // e.g. var x = -1;
-                TokenType.ParanthesesOpen => ParseParantheseOpen(currentScope),
+                TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
+                TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -351,12 +344,14 @@ namespace Parsing
 
             return new MemberAccessExpression(parent, memberAccess);
         }
-        private ExpressionBase ParseReturnStatementExpression(ScopeKey currentScope)
+        private ExpressionBase ParseReturnStatementExpression()
         {
             try
             {
-                var returnType = _scopes[currentScope.Parent].Functions[currentScope.FunctionName].ReturnType.TypeIndicator;
-                return new ReturnExpression(ConsumeToken(), ParseExpression(currentScope), returnType);
+                var returnType = _scopes.Last().FunctionsInternal.Last().ReturnType;
+                Debug.Assert(returnType is not null);
+                var returnTypeIndicator = returnType.TypeIndicator;
+                return new ReturnExpression(ConsumeToken(), ParseExpression(), returnTypeIndicator);
             }
             catch
             {
@@ -365,12 +360,12 @@ namespace Parsing
 
         }
 
-        private ValueExpressionBase? ParseParantheseOpen(ScopeKey currentScope)
+        private ValueExpressionBase? ParseParantheseOpen()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ParanthesesOpen);
             var paranOpenToken = ConsumeToken();
 
-            var exp = ParseExpression(currentScope, false);
+            var exp = ParseExpression(false);
             if (exp == null)
             {
                 throw ParseError(paranOpenToken, "Parantheses should contain an expression");
@@ -391,10 +386,10 @@ namespace Parsing
             return vExp;
         }
 
-        private ValueExpressionBase ParseNegativeValueExpression(ScopeKey currentScope)
+        private ValueExpressionBase ParseNegativeValueExpression()
         {
             var subtractTok = ConsumeToken();
-            var expr = ParseExpressionResultingInValue(currentScope);
+            var expr = ParseExpressionResultingInValue();
             if (expr == null)
             {
                 throw ParseError(subtractTok, "an expression after a subtract '-' symbol.");
@@ -411,11 +406,8 @@ namespace Parsing
             return new ValueExpression(tok, tok);
         }
 
-        private FunctionDefinitionExpression ParseFunctionDefinitionExpression(ScopeKey scope)
+        private FunctionDefinitionExpression ParseFunctionDefinitionExpression()
         {
-            var originalScope = scope;
-            scope = new ScopeKey(scope);
-
             var isExtern = PeekToken().TokenType is TokenType.Extern;
             var isExport = PeekToken().TokenType is TokenType.Export;
 
@@ -496,9 +488,6 @@ namespace Parsing
                 funcIdentifier.Name = CreateMangledName(funcIdentifier.Name, parameters.Select(a => a.TypeToken));
             }
 
-            scope.FunctionName = funcIdentifier.Name;  // set new scope class name before parsing body
-            _scopes.Add(scope, new Scope());           // also add it before hand.
-
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
                 throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "after func identifier");
@@ -519,7 +508,7 @@ namespace Parsing
             }
 
             var returnType = ConsumeToken();
-            _scopes[originalScope].Functions.Add(scope.FunctionName, new FunctionScope() { ReturnType = returnType });
+            _scopes.Last().FunctionsInternal.Add(new FunctionScope() { ReturnType = returnType }); // add return info before parsing body...
 
             if (isExtern)
             {
@@ -531,13 +520,14 @@ namespace Parsing
                 ConsumeToken();
 
                 Debug.Assert(!isExport);
-
-                return new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, null, true, false);
+                var externExpr = new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, null, true, false);
+                _scopes.Last().FunctionsInternal.Last().Expression = externExpr;
+                return externExpr;
             }
 
-            var body = ParseBodyExpression(scope, funcIdentifier, "function body");
+            var body = ParseBodyExpression(funcIdentifier, "function body");
             var expr = new FunctionDefinitionExpression(funcIdentifier, parameters.ToArray(), returnType, body, isExtern, isExport); ;
-            _scopes[originalScope].Functions[scope.FunctionName].Expression = expr;
+            _scopes.Last().FunctionsInternal.Last().Expression = expr;
             return expr;
         }
 
@@ -573,19 +563,19 @@ namespace Parsing
             };
         }
 
-        private ExpressionBase? ParseDoWhileStatementExpression(ScopeKey currentScope)
+        private ExpressionBase? ParseDoWhileStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Do);
             var doToken = ConsumeToken();
 
-            var doBody = ParseBodyExpression(currentScope, doToken, "while statement");
+            var doBody = ParseBodyExpression(doToken, "while statement");
 
             if (PeekToken().TokenType is not TokenType.While)
             {
                 throw ParseError(PeekToken(), LexerConstants.Keywords.WHILE, $"'{LexerConstants.Keywords.DO}' keyword");
             }
             var whileTok = ConsumeToken();
-            var condition = ParseExpression(currentScope, false);
+            var condition = ParseExpression(false);
             if (condition == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
@@ -593,11 +583,11 @@ namespace Parsing
             return new DoWhileStatementExpression(whileTok, condition, doBody);
         }
 
-        private WhileStatementExpression ParseWhileStatementExpression(ScopeKey currentScope)
+        private WhileStatementExpression ParseWhileStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.While);
             var whileTok = ConsumeToken();
-            var conditionalExpression = ParseExpression(currentScope, false);
+            var conditionalExpression = ParseExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParseError(whileTok, "expression", "after while keyword.");
@@ -610,12 +600,12 @@ namespace Parsing
 
             //todo: handle multiple { and } signs indented inside ?
             //todo: Or should we disallow such weird scopes.
-            var bodyExpr = ParseBodyExpression(currentScope, whileTok, "after while statement body");
+            var bodyExpr = ParseBodyExpression(whileTok, "after while statement body");
 
             return new WhileStatementExpression(whileTok, conditionalExpression, bodyExpr);
         }
 
-        private BodyExpression ParseBodyExpression(ScopeKey currentScope, Token parentToken, string bodyName)
+        private BodyExpression ParseBodyExpression(Token parentToken, string bodyName)
         {
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
@@ -632,7 +622,7 @@ namespace Parsing
                     throw ParseError(PeekToken(), $"Expected matching closing '{ LexerConstants.ACCOLADES_CLOSE}'", $"after {bodyName} body");
                 }
 
-                var expression = ParseTopLevelExpression(currentScope);
+                var expression = ParseTopLevelExpression();
                 if (expression == null)
                 {
                     ConsumeToken();
@@ -648,17 +638,17 @@ namespace Parsing
             return new BodyExpression(parentToken, body);
         }
 
-        private IfStatementExpression ParseIfStatementExpression(ScopeKey currentScope)
+        private IfStatementExpression ParseIfStatementExpression()
         {
             var ifToken = ConsumeToken();
             Debug.Assert(ifToken.TokenType == TokenType.If);
-            var conditionalExpression = ParseExpression(currentScope, false);
+            var conditionalExpression = ParseExpression(false);
             if (conditionalExpression == null)
             {
                 throw ParseError(ifToken, "Expected an expression but got none.");
             }
 
-            var ifBody = ParseBodyExpression(currentScope, ifToken, "if statement");
+            var ifBody = ParseBodyExpression(ifToken, "if statement");
 
             if (PeekToken().TokenType is not TokenType.Else)
             {
@@ -671,17 +661,17 @@ namespace Parsing
             ExpressionBase? elseExpression;
             if (isIfStatementNext)
             {
-                elseExpression = ParseIfStatementExpression(currentScope);
+                elseExpression = ParseIfStatementExpression();
             }
             else
             {
-                elseExpression = ParseBodyExpression(currentScope, elseTok, "else statement body");
+                elseExpression = ParseBodyExpression(elseTok, "else statement body");
             }
 
             return new IfStatementExpression(ifToken, conditionalExpression, ifBody, elseExpression);
         }
 
-        private VariableDeclarationExpression? ParseVariableDeclaration(ScopeKey currentScope)
+        private VariableDeclarationExpression? ParseVariableDeclaration()
         {
             var declarationTypeToken = ConsumeToken();
 
@@ -700,7 +690,7 @@ namespace Parsing
             }
 
             var assignmentTok = ConsumeToken();
-            var valueExpression = ParseExpression(currentScope);
+            var valueExpression = ParseExpression();
             if (valueExpression == null) // this is not the case? it's actiually usual optional.... for now keep it an error tho...
             {
                 throw ParseError(assignmentTok, "value expression", "after assignment of variable");
@@ -708,9 +698,9 @@ namespace Parsing
             return new VariableDeclarationExpression(declarationTypeToken, leftHandSideVariableIdentifierExpression, assignmentTok, valueExpression);
         }
 
-        private ValueExpressionBase? ParseExpression(ScopeKey currentScope, bool throwErrorOnMissingSemicolon = true)
+        private ValueExpressionBase? ParseExpression(bool throwErrorOnMissingSemicolon = true)
         {
-            var expr = ParseExpressionInternal(currentScope);
+            var expr = ParseExpressionInternal();
 
             if (PeekToken().TokenType is not TokenType.EndOfStatement)
             {
@@ -726,9 +716,9 @@ namespace Parsing
             return expr;
         }
 
-        private ValueExpressionBase? ParseExpressionInternal(ScopeKey currentScope, int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
+        private ValueExpressionBase? ParseExpressionInternal(int minTokenPrecedence = LexerConstants.OperatorPrecedence.DEFAULT_OPERATOR_PRECEDENCE)
         {
-            var lhs = ParseExpressionResultingInValue(currentScope);
+            var lhs = ParseExpressionResultingInValue();
 
             if (lhs == null)
             {
@@ -757,7 +747,7 @@ namespace Parsing
 
                 var nextMinOperatorPrecedence = operatorMetadata.IsLeftAssociated ? binaryOperatorPrecedence + 1 : binaryOperatorPrecedence;
 
-                var rhs = ParseExpressionInternal(currentScope, nextMinOperatorPrecedence);
+                var rhs = ParseExpressionInternal(nextMinOperatorPrecedence);
 
                 if (operatorMetadata.IsCompoundAssignment)
                 {
@@ -773,7 +763,7 @@ namespace Parsing
             return lhs;
         }
 
-        private FunctionCallExpression ParseFunctionCallExpression(ScopeKey currentScope)
+        private FunctionCallExpression ParseFunctionCallExpression()
         {
             if (PeekToken().TokenType != TokenType.FunctionIdentifier)
             {
@@ -804,7 +794,7 @@ namespace Parsing
                     ConsumeToken();
                 }
 
-                var argumentExpression = ParseExpression(currentScope, false);
+                var argumentExpression = ParseExpression(false);
 
                 if (argumentExpression == null)
                 {
@@ -823,7 +813,7 @@ namespace Parsing
             return new FunctionCallExpression(functionToken, functionArguments.ToArray());
         }
 
-        private ExpressionBase ParseImportStatementExpression(ScopeKey currentScope)
+        private ExpressionBase ParseImportStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.ImportStatement);
             var importTok = ConsumeToken();
@@ -876,7 +866,7 @@ namespace Parsing
             return new ImportStatementExpression(importTok, expr.Token.ValueAsString, alias?.ValueAsString, _file);
         }
 
-        private ExpressionBase ParseForLoopStatementExpression(ScopeKey currentScope)
+        private ExpressionBase ParseForLoopStatementExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.For);
             var forToken = ConsumeToken();
@@ -888,19 +878,19 @@ namespace Parsing
 
             ConsumeToken();
 
-            var variableDeclExp = ParseVariableDeclaration(currentScope);
+            var variableDeclExp = ParseVariableDeclaration();
             if (variableDeclExp is null)
             {
                 throw ParseError(PeekToken(), "variable declaration", "inside, but at the start of, the 'for loop' header");
             }
 
-            var conditionExpr = ParseExpression(currentScope);
+            var conditionExpr = ParseExpression();
             if (conditionExpr is null)
             {
                 throw ParseError(PeekToken(), "conditional expression", "inside, but in the center of, the 'for loop' header");
             }
 
-            var variableIncreaseExpression = ParseExpression(currentScope, false);
+            var variableIncreaseExpression = ParseExpression(false);
             if (variableIncreaseExpression is null)
             {
                 throw ParseError(PeekToken(), "variable modifier expression", "inside, but at the end of, the 'for loop' header");
@@ -913,7 +903,7 @@ namespace Parsing
 
             ConsumeToken();
 
-            var forBody = ParseBodyExpression(currentScope, forToken, "for statement");
+            var forBody = ParseBodyExpression(forToken, "for statement");
             if (forBody is null)
             {
                 throw ParseError(PeekToken(), "body of for loop", "after the 'for loop' header");

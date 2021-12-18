@@ -77,10 +77,10 @@ namespace Compiling
 
             ILexer lexer = new Lexer(text);
             IParser parser = new Parser(lexer);
-            var abstractSyntaxTrees = Array.Empty<ExpressionBase>();
+            List<IScope> scopes = new List<IScope>();
             try
             {
-                abstractSyntaxTrees = parser.Parse();
+                scopes.AddRange(parser.Parse());
             }
             catch (SyntaxErrorException ex)
             {
@@ -93,12 +93,11 @@ namespace Compiling
 
             // For now one file is enough to support.
             // We should some day support a way of importing other files, but should that result in multiple bytecode files? or even abstract trees? not sure.. Probably not.
-            var scopes = new Dictionary<string, IScope>();//@todo: @Fix me!!
             foreach (var visitor in visitors)
             {
                 stopwatch.Restart();
-                visitor.Initialize(scopes);
-                AbstractSyntaxTreeVisitor.Visit(abstractSyntaxTrees, visitor);
+                visitor.Initialize(scopes);// why do we init? why not just pass the scope(s) to the visitor
+                AbstractSyntaxTreeVisitor.Visit(scopes.SelectMany(s => s.ExpressionTree).ToArray(), visitor);// todo: fix to use scopes?
                 stopwatch.Stop();
                 totalTimeMs += stopwatch.ElapsedMilliseconds;
                 Console.WriteLine($"Running {visitor.Name} visitor took {stopwatch.Elapsed.TotalSeconds} seconds.");

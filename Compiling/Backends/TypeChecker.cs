@@ -25,13 +25,13 @@ namespace Compiling.Backends
         private readonly Dictionary<string, TypeCheckValue> _namedValues = new();
         private readonly Dictionary<string, Token> _userDefinedTypes = new();
         private readonly Stack<TypeCheckValue> _valueStack = new();
-        private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
+        private List<IScope> _scopes = new ();
 
         public string Name => "Type checker";
 
         public void Visit(ExpressionBase? expression) => AbstractSyntaxTreeVisitor.Visit(this, expression);
 
-        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        public void Initialize(List<IScope> scopes)
         {
             _scopes = scopes;
         }

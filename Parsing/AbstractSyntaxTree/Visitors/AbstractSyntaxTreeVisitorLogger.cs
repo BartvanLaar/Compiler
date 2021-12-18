@@ -15,7 +15,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             }
         }
 
-        public void Initialize(IReadOnlyDictionary<string, IScope> scopes) { }
+        public void Initialize(List<IScope> scopes) { }
 
         public void VisitValueExpression(ValueExpression expression)
         {

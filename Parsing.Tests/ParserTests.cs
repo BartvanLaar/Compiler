@@ -26,7 +26,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            Assert.AreEqual(expectedAmountOfTrees, ast.Length);
+            Assert.AreEqual(expectedAmountOfTrees, ast.First().ExpressionTree.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Length);
         }
 
@@ -44,7 +44,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Length);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.First().ExpressionTree.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Length);
         }
 
@@ -60,7 +60,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Length);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.First().ExpressionTree.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Length);
         }
 
@@ -72,7 +72,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.Length);
+            Assert.AreEqual(expectedAmountOfExpressionTrees, ast.First().ExpressionTree.Count());
             Assert.AreEqual(expectedAmountOfErrors, errors.Length);
         }
 
@@ -86,7 +86,7 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
-            Assert.AreEqual(1, ast.Length);
+            Assert.AreEqual(1, ast.First().ExpressionTree.Count());
             Assert.IsEmpty(errors);
         }
 
@@ -101,7 +101,7 @@ namespace Parsing.Tests
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            Assert.AreEqual(1, ast.Length);
+            Assert.AreEqual(1, ast.First().ExpressionTree.Count());
             Assert.AreEqual(1, errors.Count());
         }
 
@@ -149,7 +149,7 @@ namespace Parsing.Tests
 
             var (errors, ast) = StandardOutputHelper.RunActionAndCaptureStdOut(parser.Parse);
 
-            Assert.AreEqual(1, ast.Length);
+            Assert.AreEqual(1, ast.First().ExpressionTree.Count());
             Assert.IsEmpty(errors);
         }
 
@@ -262,25 +262,25 @@ namespace Parsing.Tests
             var parser = new Parser(lexer);
             var res = parser.Parse();
             Assert.IsNotNull(res);
-            Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ExpressionType.MemberAccess, res.First().DISCRIMINATOR);
+            Assert.AreEqual(1, res.First().ExpressionTree.Count());
+            Assert.AreEqual(ExpressionType.MemberAccess, res.First().ExpressionTree.First().DISCRIMINATOR);
 
             lexer = new Lexer("parent.member = 5;");
             parser = new Parser(lexer);
             res = parser.Parse();
             Assert.IsNotNull(res);
-            Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ExpressionType.Binary, res.First().DISCRIMINATOR);
-            Assert.AreEqual(ExpressionType.MemberAccess, ((BinaryExpression)res.First()).LeftHandSide.DISCRIMINATOR);
+            Assert.AreEqual(1, res.First().ExpressionTree.Count());
+            Assert.AreEqual(ExpressionType.Binary, res.First().ExpressionTree.First().DISCRIMINATOR);
+            Assert.AreEqual(ExpressionType.MemberAccess, ((BinaryExpression)res.First().ExpressionTree.First()).LeftHandSide.DISCRIMINATOR);
 
 
             lexer = new Lexer("var x = parent.member;");
             parser = new Parser(lexer);
             res = parser.Parse();
             Assert.IsNotNull(res);
-            Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ExpressionType.VariableDeclaration, res.First().DISCRIMINATOR);
-            Assert.AreEqual(ExpressionType.MemberAccess, ((VariableDeclarationExpression)res.First()).ValueExpression.DISCRIMINATOR);
+            Assert.AreEqual(1, res.First().ExpressionTree.Count());
+            Assert.AreEqual(ExpressionType.VariableDeclaration, res.First().ExpressionTree.First().DISCRIMINATOR);
+            Assert.AreEqual(ExpressionType.MemberAccess, ((VariableDeclarationExpression)res.First().ExpressionTree.First()).ValueExpression.DISCRIMINATOR);
         }
     }
 }

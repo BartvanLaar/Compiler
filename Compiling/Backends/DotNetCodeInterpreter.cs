@@ -11,7 +11,7 @@ namespace Compiling.Backends
         private readonly Stack<(object? Value, Type? TypeInfo)> _valueStack = new();
         private readonly Dictionary<string, object?> _namedValues = new();
         private readonly Dictionary<string, ExpressionBase> _functions = new();
-        private IReadOnlyDictionary<string, IScope> _scopes = new Dictionary<string, IScope>();
+        private List<IScope> _scopes = new ();
 
         public IEnumerable<object?> Results => _valueStack.Select(x => x.Value);
         public string Name => "Dot Net Interpreter / simulator";
@@ -223,7 +223,7 @@ namespace Compiling.Backends
             Visit(expression.ReturnExpr);
         }
 
-        public void Initialize(IReadOnlyDictionary<string, IScope> scopes)
+        public void Initialize(List<IScope> scopes)
         {
             _scopes = scopes;
         }
