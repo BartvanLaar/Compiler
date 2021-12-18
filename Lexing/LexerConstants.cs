@@ -111,6 +111,7 @@
             public const string CONTINUE = "continue";
             public const string BREAK = "break";
             public const string RETURN = "return";
+            public const string NEW = "new";
 
             public const string DOUBLE = "double";
             public const string FLOAT = "float";
@@ -146,6 +147,7 @@
             { Keywords.CONTINUE, TokenType.Continue},
             { Keywords.BREAK, TokenType.Break},
             { Keywords.RETURN, TokenType.Return},
+            { Keywords.NEW, TokenType.New},
             { Keywords.IMPORT, TokenType.ImportStatement },
             { Keywords.EXPORT, TokenType.Export},
             { Keywords.EXTEND, TokenType.Extend },

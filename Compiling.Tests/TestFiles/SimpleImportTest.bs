@@ -1,0 +1,3 @@
+﻿import "TestFiles/IntMainFuncParamsDefinition.bs";
+
+func main() -> int { return test(42); }

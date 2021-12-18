@@ -173,6 +173,17 @@ namespace Parsing
 
         }
 
+        private ObjectInstantiationExpression? ParseObjectInstantiationExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.New);
+            var newToken = ConsumeToken();
+
+            var classIdentifier = ParseIdentifierExpression();
+            var args = ParseArguments(classIdentifier.ValueToken.ValueAsString);
+
+            return new ObjectInstantiationExpression(newToken, classIdentifier, args);
+        }
+
         private ClassDefinitionExpression ParseClassExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Class or TokenType.Export);
@@ -301,27 +312,28 @@ namespace Parsing
                 TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
                 TokenType.VariableIdentifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
                 TokenType.VariableIdentifier => ParseIdentifierExpression(),
-                TokenType.Value => ParseValueExpression(),
-                TokenType.Add => ParseValueExpression(), // e.g. var x = +1;
+                TokenType.Value => ParseValueExpressions(),
+                TokenType.Add => ParseValueExpressions(), // e.g. var x = +1;
                 TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
-                TokenType.ParanthesesOpen => ParseParantheseOpen(),
+                TokenType.New => ParseObjectInstantiationExpression(),
+            TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
 
-        private ValueExpressionBase? ParseValueExpression()
+        private ValueExpressionBase? ParseValueExpressions()
         {
             var peekedToken = PeekToken();
             return peekedToken.TypeIndicator switch
             {
                 TypeIndicator.None => throw new InvalidOperationException("TypeIndicator 'None' should never be used with a TokenType.Value."),
-                TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpression)} does not support inferring types. The calling method should handle this"),
-                TypeIndicator.Float => ParseValueExpressionInternal(),
-                TypeIndicator.Double => ParseValueExpressionInternal(),
-                TypeIndicator.Boolean => ParseValueExpressionInternal(),
-                TypeIndicator.Integer => ParseValueExpressionInternal(),
-                TypeIndicator.Character => ParseValueExpressionInternal(),
-                TypeIndicator.String => ParseValueExpressionInternal(),
+                TypeIndicator.Inferred => throw new InvalidOperationException($"{nameof(ParseValueExpressions)} does not support inferring types. The calling method should handle this"),
+                TypeIndicator.Float => ParseSingleValueExpression(),
+                TypeIndicator.Double => ParseSingleValueExpression(),
+                TypeIndicator.Boolean => ParseSingleValueExpression(),
+                TypeIndicator.Integer => ParseSingleValueExpression(),
+                TypeIndicator.Character => ParseSingleValueExpression(),
+                TypeIndicator.String => ParseSingleValueExpression(),
                 TypeIndicator.DateTime => throw new NotImplementedException(),
                 TypeIndicator.Void => throw new InvalidOperationException("Should not get here in case of void type."),
                 _ => throw new InvalidOperationException($"Encountered an unkown type indicator {peekedToken.TypeIndicator}."),
@@ -400,7 +412,7 @@ namespace Parsing
             return expr;
         }
 
-        private ValueExpressionBase ParseValueExpressionInternal()
+        private ValueExpressionBase ParseSingleValueExpression()
         {
             var tok = ConsumeToken();
             return new ValueExpression(tok, tok);
@@ -442,7 +454,7 @@ namespace Parsing
 
             ConsumeToken();
 
-            var parameters = new List<FunctionDefinitionArgument>();
+            var parameters = new List<DefinitionArgument>();
 
             while (PeekToken().TokenType is not (TokenType.ParanthesesClose or TokenType.EndOfFile))
             {
@@ -480,7 +492,7 @@ namespace Parsing
                 // kind of ugly, but makes it cleaner for the rest of the program...
                 // type indicators are nothing more than an enum value anyway... (at least, for base types.. this is not the case for user defined types.)
                 variableToken.TypeIndicator = typeIdentifier.TypeIndicator;
-                parameters.Add(new FunctionDefinitionArgument(typeIdentifier, variableToken));
+                parameters.Add(new DefinitionArgument(typeIdentifier, variableToken));
             }
 
             if (!isExtern)
@@ -763,16 +775,8 @@ namespace Parsing
             return lhs;
         }
 
-        private FunctionCallExpression ParseFunctionCallExpression()
+       private ExpressionBase[] ParseArguments(string name)
         {
-            if (PeekToken().TokenType != TokenType.FunctionIdentifier)
-            {
-                // Expected a function name...
-                throw ParseError(PeekToken(), "a function name", "function call");
-            }
-
-            var functionToken = ConsumeToken();
-
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
                 throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call");
@@ -798,7 +802,7 @@ namespace Parsing
 
                 if (argumentExpression == null)
                 {
-                    throw ParseError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{functionToken}' ");
+                    throw ParseError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{name}' ");
                 }
 
                 functionArguments.Add(argumentExpression);
@@ -810,7 +814,22 @@ namespace Parsing
             }
 
             ConsumeToken();
-            return new FunctionCallExpression(functionToken, functionArguments.ToArray());
+            return functionArguments.ToArray();
+        }
+
+        private FunctionCallExpression ParseFunctionCallExpression()
+        {
+            if (PeekToken().TokenType != TokenType.FunctionIdentifier)
+            {
+                // Expected a function name...
+                throw ParseError(PeekToken(), "a function name", "function call");
+            }
+
+            var functionToken = ConsumeToken();
+
+            var functionArguments = ParseArguments(functionToken.Name);
+            
+            return new FunctionCallExpression(functionToken, functionArguments);
         }
 
         private ExpressionBase ParseImportStatementExpression()
@@ -823,7 +842,7 @@ namespace Parsing
                 throw ParseError(importTok, "string expression representing a file path", "after import statement");
             }
 
-            var expr = ParseValueExpression();
+            var expr = ParseValueExpressions();
             if (expr == null || expr.Token is null || expr.Token.TypeIndicator is not TypeIndicator.String)
             {
                 throw ParseError(importTok, "string expression representing a file path", "after import statement");
@@ -912,7 +931,7 @@ namespace Parsing
             return new ForStatementExpression(forToken, variableDeclExp, conditionExpr, variableIncreaseExpression, forBody);
         }
 
-        private ValueExpressionBase ParseIdentifierExpression()
+        private IdentifierExpression ParseIdentifierExpression()
         {
             return new IdentifierExpression(ConsumeToken());
         }

@@ -18,6 +18,7 @@
         VariableDeclaration,
         While,
         MemberAccess,
+        ObjectInstantiation,
     }
 
 }

@@ -93,5 +93,6 @@
         Array,
         Namespace,
         Dot,
+        New,
     }
 }

@@ -1,16 +1,19 @@
 ﻿namespace BSharp
 {
-    export class Program
-    {    
+    class TestClass
+    {
         extern func printf(string text) -> int;
-
         func Print(string textFormat) -> void 
         {
             printf(textFormat.Ptr);
         }
+    }
 
+    export class Program
+    {    
         export func Main() -> int {
-            Print("test \n");
+            var x = new TestClass();
+            x.Print("This is a test");
             return 42;
         }
     }
