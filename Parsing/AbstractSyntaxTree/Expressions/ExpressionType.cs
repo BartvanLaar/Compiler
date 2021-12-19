@@ -19,6 +19,9 @@
         While,
         MemberAccess,
         ObjectInstantiation,
+        Enum,
+        Switch,
+        Foreach,
     }
 
 }

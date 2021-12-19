@@ -32,6 +32,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Class:
                     visitor.VisitClassExpression((ClassDefinitionExpression)expression);
                     return;
+                case ExpressionType.Enum:
+                    visitor.VisitEnumExpression((EnumDefinitionExpression)expression);
+                    return;
                 case ExpressionType.VariableDeclaration:
                     visitor.VisitVariableDeclarationExpression((VariableDeclarationExpression)expression);
                     return;
@@ -56,11 +59,17 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Identifier:
                     visitor.VisitIdentifierExpression((IdentifierExpression)expression);
                     return;
+                case ExpressionType.ObjectInstantiation:
+                    visitor.VisitObjectInstantiationExpression((ObjectInstantiationExpression)expression);
+                    return;
                 case ExpressionType.Value:
                     visitor.VisitValueExpression((ValueExpression)expression);
                     return;
                 case ExpressionType.If:
                     visitor.VisitIfStatementExpression((IfStatementExpression)expression);
+                    return;
+                case ExpressionType.Switch:
+                    visitor.VisitSwitchStatementExpression((SwitchStatementExpression)expression);
                     return;
                 case ExpressionType.DoWhile:
                     visitor.VisitDoWhileStatementExpression((DoWhileStatementExpression)expression);
@@ -70,6 +79,9 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                     return;
                 case ExpressionType.For:
                     visitor.VisitForStatementExpression((ForStatementExpression)expression);
+                    return;
+                case ExpressionType.Foreach:
+                    visitor.VisitForeachStatementExpression((ForeachStatementExpression)expression);
                     return;
                 default:
                     throw new ArgumentException($"Unknown expression type encountered: '{expression.DISCRIMINATOR}'");

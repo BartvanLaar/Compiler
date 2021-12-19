@@ -14,6 +14,7 @@ namespace Lexing
         String,
         DateTime, // !notimplemented
         Void,
+        UserDefined,
         //Hexadecimal, // Is actually just a different way to type an integer? But would be kinda cool to be its own type perhaps
     }
 }

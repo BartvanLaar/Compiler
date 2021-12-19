@@ -106,6 +106,8 @@
             public const string FOR = "for";
             public const string FOREACH = "each";
 
+            public const string SWITCH = "switch";
+
             public const string WHILE = "while";
             public const string DO = "do";
             public const string CONTINUE = "continue";
@@ -136,6 +138,8 @@
             {Keywords.FOREACH, TokenType.ForEach},
             {Keywords.WHILE, TokenType.While },
             {Keywords.DO, TokenType.Do },
+
+            {Keywords.SWITCH, TokenType.Switch },
 
             {Keywords.IF, TokenType.If },
             {Keywords.ELSE, TokenType.Else },

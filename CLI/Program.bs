@@ -1,5 +1,12 @@
 ﻿namespace BSharp
 {
+    enum TestEnum 
+    {
+        Value1 = 0,
+        Value2 = 3,
+        Value3,
+    }
+
     class TestClass
     {
         extern func printf(string text) -> int;
@@ -14,6 +21,7 @@
         export func Main() -> int {
             var x = new TestClass();
             x.Print("This is a test");
+            var y = TestEnum.Value1;
             return 42;
         }
     }

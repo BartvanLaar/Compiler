@@ -94,5 +94,6 @@
         Namespace,
         Dot,
         New,
+        Switch,
     }
 }

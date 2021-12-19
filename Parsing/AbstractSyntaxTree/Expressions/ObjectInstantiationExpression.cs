@@ -17,7 +17,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             Arguments = arguments;
         }
 
-        public string FunctionName { get => Token.Name; set => Token.Name = value; }
         public IdentifierExpression ClassIdentifier { get; }
         public ExpressionBase[] Arguments { get; }
         public override ExpressionType DISCRIMINATOR => ExpressionType.ObjectInstantiation;

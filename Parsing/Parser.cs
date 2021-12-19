@@ -12,10 +12,10 @@ namespace Parsing
 
     public interface IScope
     {
-        //todo: fixme!
         string Name { get; }
         List<NamespaceDefinitionExpression> Namespaces { get; }
         List<ClassDefinitionExpression> Classes { get; }
+        List<EnumDefinitionExpression> Enums { get; }
         List<FunctionDefinitionExpression> Functions { get; }
         List<VariableDeclarationExpression> Variables { get; }
         List<ExpressionBase> ExpressionTree { get; }
@@ -30,13 +30,15 @@ namespace Parsing
 
         public string Name { get; }
         public List<NamespaceDefinitionExpression> Namespaces { get; } = new();
-        public List<ClassDefinitionExpression> Classes { get;  } = new();
-        internal List<FunctionScope> FunctionsInternal { get;  } = new(); // outside doesnt need to know the functionScope, expression is enough..
+        public List<ClassDefinitionExpression> Classes { get; } = new();
+        public List<EnumDefinitionExpression> Enums { get; } = new();
+        internal List<FunctionScope> FunctionsInternal { get; } = new(); // outside doesnt need to know the functionScope, expression is enough..
 #pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         public List<FunctionDefinitionExpression> Functions => FunctionsInternal.Select(x => x.Expression).ToList();
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         public List<VariableDeclarationExpression> Variables { get; } = new();
         public List<ExpressionBase> ExpressionTree { get; } = new();
+
     }
 
     internal class FunctionScope
@@ -157,6 +159,11 @@ namespace Parsing
                     {
                         return ParseClassExpression();
                     }
+                case TokenType.Export when (peekedTokens[1].TokenType is TokenType.Enum):
+                case TokenType.Enum:
+                    {
+                        return ParseEnumExpression();
+                    }
                 case TokenType.ImportStatement:
                     {
                         return ParseImportStatementExpression();
@@ -173,12 +180,78 @@ namespace Parsing
 
         }
 
+        private ExpressionBase? ParseEnumExpression()
+        {
+            Debug.Assert(PeekToken().TokenType is TokenType.Enum or TokenType.Export);
+
+            var isExport = PeekToken().TokenType is TokenType.Export;
+
+            if (isExport)
+            {
+                ConsumeToken();
+            }
+
+            if (PeekToken().TokenType is not TokenType.Enum)
+            {
+                // todo: fix, below error clashes with class error. (first error gets printed first..)
+                throw ParseError(PeekToken(), TokenType.Enum, "after export declaration on scope level of namespace.");
+            }
+
+            ConsumeToken();
+
+            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            {
+                throw ParseError(PeekToken(), "identifier", "at start of class declaration.");
+            }
+
+            var enumIdentifierToken = ConsumeToken();
+            if (PeekToken().TokenType is not TokenType.AccoladesOpen)
+            {
+                throw ParseError(PeekToken(), $"Expected opening '{LexerConstants.ACCOLADES_OPEN}'", $"at start of {TokenType.Enum} body");
+            }
+
+            ConsumeToken();
+            var variableDeclarations = new List<ExpressionBase>();
+            while (PeekToken().TokenType is not TokenType.AccoladesClose)
+            {
+                if (PeekToken().TokenType is TokenType.EndOfFile)
+                {
+                    throw ParseError(PeekToken(), $"Expected matching closing '{LexerConstants.ACCOLADES_CLOSE}'", $"after {TokenType.Enum} body");
+                }
+
+                var expression = ParseExpression(false);
+                if (expression == null)
+                {
+                    ConsumeToken();
+                }
+                else
+                {
+                    variableDeclarations.Add(expression);
+                }
+
+                if (PeekToken().TokenType is not TokenType.ArgumentSeparator)
+                {
+                    throw ParseError(PeekToken(), $"Expected '{LexerConstants.ARGUMENT_SEPARATOR}'", "after enum expression.");
+                }
+                ConsumeToken();
+            }
+
+            Debug.Assert(PeekToken().TokenType is TokenType.AccoladesClose);
+            ConsumeToken();
+
+            var expr = new EnumDefinitionExpression(enumIdentifierToken, new BodyExpression(enumIdentifierToken, variableDeclarations));
+            _scopes.Last().Enums.Add(expr);
+
+            return expr;
+        }
+
         private ObjectInstantiationExpression? ParseObjectInstantiationExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.New);
             var newToken = ConsumeToken();
 
             var classIdentifier = ParseIdentifierExpression();
+            classIdentifier.TypeToken.TypeIndicator = TypeIndicator.UserDefined;
             var args = ParseArguments(classIdentifier.ValueToken.ValueAsString);
 
             return new ObjectInstantiationExpression(newToken, classIdentifier, args);
@@ -214,6 +287,7 @@ namespace Parsing
             var variableDeclarations = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.VariableDeclaration).Cast<VariableDeclarationExpression>().ToArray();
             var functionDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.FunctionDefinition).Cast<FunctionDefinitionExpression>().ToArray();
             var classDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.Class).Cast<ClassDefinitionExpression>().ToArray();
+            var enumDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.Enum).Cast<EnumDefinitionExpression>().ToArray();
 
             var expectedTotalLength = variableDeclarations.Length + functionDefinitions.Length + classDefinitions.Length;
             if (classBody.Body.Length != expectedTotalLength)
@@ -221,7 +295,7 @@ namespace Parsing
                 throw ParseError(classIdentifierToken, "variable, function or class definitions", "after class definition.");
             }
 
-            var expr = new ClassDefinitionExpression(classIdentifierToken, variableDeclarations, functionDefinitions, classDefinitions);
+            var expr = new ClassDefinitionExpression(classIdentifierToken, variableDeclarations, functionDefinitions, classDefinitions, enumDefinitions);
             _scopes.Last().Classes.Add(expr);
 
             return expr;
@@ -240,14 +314,15 @@ namespace Parsing
 
             var namespaceBody = ParseNamespaceBodyExpression(namespaceIdentifier, "namespace declaration");
 
-            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Namespace)))
+            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Enum or ExpressionType.Namespace)))
             {
                 throw ParseError(namespaceIdentifier, "only classes and namespaces", "after namespace delcaration.");
             }
 
             var namespaces = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Namespace).Cast<NamespaceDefinitionExpression>()?.ToArray();
             var classes = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Class).Cast<ClassDefinitionExpression>()?.ToArray();
-            var namespaceExp = new NamespaceDefinitionExpression(namespaceIdentifier, namespaces, classes); //todo: support dots in namespace.
+            var enums = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Enum).Cast<EnumDefinitionExpression>()?.ToArray();
+            var namespaceExp = new NamespaceDefinitionExpression(namespaceIdentifier, namespaces, classes, enums); //todo: support dots in namespace.
             _scopes.Last().Namespaces.Add(namespaceExp);
             return namespaceExp;
         }
@@ -316,7 +391,7 @@ namespace Parsing
                 TokenType.Add => ParseValueExpressions(), // e.g. var x = +1;
                 TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
                 TokenType.New => ParseObjectInstantiationExpression(),
-            TokenType.ParanthesesOpen => ParseParantheseOpen(),
+                TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
         }
@@ -347,12 +422,12 @@ namespace Parsing
             var parent = ConsumeToken();
             Debug.Assert(PeekToken().TokenType is TokenType.Dot, $"{nameof(ParseExpressionResultingInValue)}, should check whether a dot is present! Else its just a normal variable, not an member access...");
             var dot = ConsumeToken();
-            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            if (PeekToken().TokenType is not (TokenType.VariableIdentifier or TokenType.FunctionIdentifier))
             {
-                throw ParseError(PeekToken(), TokenType.VariableIdentifier, "after a dot indicating a member access expression.");
+                throw ParseError(PeekToken(), TokenType.VariableIdentifier, $"after a dot indicating a member access expression but got '{PeekToken().TokenType}' instead.");
             }
 
-            var memberAccess = ConsumeToken();
+            var memberAccess = ParseExpressionResultingInValue();
 
             return new MemberAccessExpression(parent, memberAccess);
         }
@@ -775,11 +850,11 @@ namespace Parsing
             return lhs;
         }
 
-       private ExpressionBase[] ParseArguments(string name)
+        private ExpressionBase[] ParseArguments(string name)
         {
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
-                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call");
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call or object instantiation");
             }
 
             ConsumeToken();
@@ -790,7 +865,7 @@ namespace Parsing
             {
                 if (PeekToken().TokenType is not TokenType.ArgumentSeparator && functionArguments.Count >= 1)
                 {
-                    throw ParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function call");
+                    throw ParseError(PeekToken(), LexerConstants.ARGUMENT_SEPARATOR, "function call or object instantiation");
                 }
 
                 if (PeekToken().TokenType is TokenType.ArgumentSeparator)
@@ -802,7 +877,7 @@ namespace Parsing
 
                 if (argumentExpression == null)
                 {
-                    throw ParseError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function: '{name}' ");
+                    throw ParseError(PeekToken(), $"Passed illegal expression '{PeekToken()}' to function/object instantiation: '{name}' ");
                 }
 
                 functionArguments.Add(argumentExpression);
@@ -810,7 +885,7 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.ParanthesesClose)
             {
-                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "function call");
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_CLOSE, "function call or object instantiation");
             }
 
             ConsumeToken();
@@ -828,7 +903,7 @@ namespace Parsing
             var functionToken = ConsumeToken();
 
             var functionArguments = ParseArguments(functionToken.Name);
-            
+
             return new FunctionCallExpression(functionToken, functionArguments);
         }
 

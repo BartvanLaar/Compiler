@@ -30,7 +30,7 @@ namespace Compiling
             // below are all compilation steps..
             var typeChecker = new TypeChecker();
             var codeGenerator = new LLVMCodeGenerator(module, builder, executionEngine, passManager);
-            var timeMs = Run(text, typeChecker, codeGenerator);// todo: replace with LLVM bytecode generator.
+            var timeMs = Run(text, typeChecker, codeGenerator);
             var sw = new Stopwatch();
             sw.Start();
             var output = Path.Join(Directory.GetCurrentDirectory(), $"{Path.GetFileNameWithoutExtension(filename)}.bc");
