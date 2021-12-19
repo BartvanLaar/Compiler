@@ -854,7 +854,7 @@ namespace Parsing
         {
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
-                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "function call or object instantiation");
+                throw ParseError(PeekToken(), LexerConstants.PARANTHESES_OPEN, "after function call or object instantiation");
             }
 
             ConsumeToken();

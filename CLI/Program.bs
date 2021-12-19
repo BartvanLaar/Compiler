@@ -22,6 +22,7 @@
             var x = new TestClass();
             x.Print("This is a test");
             var y = TestEnum.Value1;
+            var z = new int[]{1,2,3,4};
             return 42;
         }
     }
