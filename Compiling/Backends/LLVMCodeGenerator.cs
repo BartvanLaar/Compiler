@@ -697,6 +697,7 @@ namespace Compiling.Backends
 
         public void VisitClassExpression(ClassDefinitionExpression expression)
         {
+            //todo: create struct?
             foreach (var @enum in expression.Enums)
             {
                 Visit(@enum);
