@@ -12,7 +12,7 @@
         Identifier,
         If,
         Import,
-        Namespace,
+        Context,
         Return,
         Value,
         VariableDeclaration,

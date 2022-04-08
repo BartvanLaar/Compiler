@@ -7,7 +7,7 @@ using TestHelpers.Tests;
 
 namespace Parsing.Tests
 {
-    internal class ParserTests
+    public class ParserTests
     {
         [TestCase("x + 5;", 1)]
         [TestCase("x+5;", 1)]

@@ -383,11 +383,11 @@ namespace Compiling.Backends
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
-            foreach (var @namespace in expression.Namespaces)
+            foreach (var context in expression.Contexts)
             {
-                Visit(@namespace);
+                Visit(context);
             }
 
             foreach (var @enum in expression.Enums)
@@ -436,7 +436,7 @@ namespace Compiling.Backends
 
             foreach (var token in typeTokens)
             {
-                var typeName = token.TokenType is TokenType.VariableIdentifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
+                var typeName = token.TokenType is TokenType.Identifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
                 name += $"<{typeName}>";
             }
 

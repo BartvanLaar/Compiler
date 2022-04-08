@@ -40,8 +40,7 @@
         Continue,                   // continue
         Break,                      // break
 
-        VariableIdentifier,         // identifier of a variable
-        FunctionIdentifier,         // identifier of a function
+        Identifier,                 // Identifier
         EndOfStatement,             // ;
         TerniaryOperatorTrue,       // ?
         TerniaryOperatorFalse,      // :
@@ -62,7 +61,7 @@
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
-        //VariableDeclaration,        // var, auto
+        //VariableDeclaration,       // var, auto
         FunctionDefinition,         // func
         ReturnTypeIndicator,        // ->
         ReAssignment,               // @UsedByParser @Hack @PlsRefactor...
@@ -91,7 +90,7 @@
         Class,
         Enum,
         Array,
-        Namespace,
+        Context,
         Dot,
         New,
         Switch,

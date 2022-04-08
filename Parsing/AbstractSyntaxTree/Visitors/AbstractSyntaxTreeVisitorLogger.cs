@@ -87,7 +87,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Visit(expression.ReturnExpr);
             Log(expression);
         }
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
             Log(expression);
         }

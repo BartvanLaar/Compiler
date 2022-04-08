@@ -13,7 +13,7 @@ namespace Parsing
     public interface IScope
     {
         string Name { get; }
-        List<NamespaceDefinitionExpression> Namespaces { get; }
+        List<ContextDefinitionExpression> Contexts { get; }
         List<ClassDefinitionExpression> Classes { get; }
         List<EnumDefinitionExpression> Enums { get; }
         List<FunctionDefinitionExpression> Functions { get; }
@@ -29,7 +29,7 @@ namespace Parsing
         }
 
         public string Name { get; }
-        public List<NamespaceDefinitionExpression> Namespaces { get; } = new();
+        public List<ContextDefinitionExpression> Contexts { get; } = new();
         public List<ClassDefinitionExpression> Classes { get; } = new();
         public List<EnumDefinitionExpression> Enums { get; } = new();
         internal List<FunctionScope> FunctionsInternal { get; } = new(); // outside doesnt need to know the functionScope, expression is enough..
@@ -103,9 +103,9 @@ namespace Parsing
         {
             switch (PeekToken().TokenType)
             {
-                case TokenType.Namespace:
+                case TokenType.Context:
                     {
-                        return ParseNameSpaceExpression();
+                        return ParseContextDefinitionExpression();
                     }
                 default:
                     {
@@ -150,7 +150,7 @@ namespace Parsing
                     {
                         return ParseFunctionDefinitionExpression();
                     }
-                case TokenType.Type when (peekedTokens[1].TokenType is TokenType.VariableIdentifier):
+                case TokenType.Type when (peekedTokens[1].TokenType is TokenType.Identifier):
                     {
                         return ParseVariableDeclaration();
                     }
@@ -194,12 +194,12 @@ namespace Parsing
             if (PeekToken().TokenType is not TokenType.Enum)
             {
                 // todo: fix, below error clashes with class error. (first error gets printed first..)
-                throw ParseError(PeekToken(), TokenType.Enum, "after export declaration on scope level of namespace.");
+                throw ParseError(PeekToken(), TokenType.Enum, "after export declaration on scope level of context.");
             }
 
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
                 throw ParseError(PeekToken(), "identifier", "at start of class declaration.");
             }
@@ -270,12 +270,12 @@ namespace Parsing
 
             if (PeekToken().TokenType is not TokenType.Class)
             {
-                throw ParseError(PeekToken(), TokenType.Class, "after export declaration on scope level of namespace.");
+                throw ParseError(PeekToken(), TokenType.Class, "after export declaration on scope level of context.");
             }
 
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
                 throw ParseError(PeekToken(), "identifier", "at start of class declaration.");
             }
@@ -301,33 +301,33 @@ namespace Parsing
             return expr;
         }
 
-        private NamespaceDefinitionExpression ParseNameSpaceExpression()
+        private ContextDefinitionExpression ParseContextDefinitionExpression()
         {
-            Debug.Assert(PeekToken().TokenType is TokenType.Namespace);
+            Debug.Assert(PeekToken().TokenType is TokenType.Context);
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
-                throw ParseError(PeekToken(), "identifier", "at start of namespace declaration.");
+                throw ParseError(PeekToken(), "identifier", "at start of context declaration.");
             }
-            var namespaceIdentifier = ConsumeToken();
+            var contextIdentifier = ConsumeToken();
 
-            var namespaceBody = ParseNamespaceBodyExpression(namespaceIdentifier, "namespace declaration");
+            var namespaceBody = ParseContextBodyExpression(contextIdentifier, "context declaration");
 
-            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Enum or ExpressionType.Namespace)))
+            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Enum or ExpressionType.Context)))
             {
-                throw ParseError(namespaceIdentifier, "only classes and namespaces", "after namespace delcaration.");
+                throw ParseError(contextIdentifier, "only classes and contexts", "after context delcaration.");
             }
 
-            var namespaces = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Namespace).Cast<NamespaceDefinitionExpression>()?.ToArray();
+            var contexts = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Context).Cast<ContextDefinitionExpression>()?.ToArray();
             var classes = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Class).Cast<ClassDefinitionExpression>()?.ToArray();
             var enums = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Enum).Cast<EnumDefinitionExpression>()?.ToArray();
-            var namespaceExp = new NamespaceDefinitionExpression(namespaceIdentifier, namespaces, classes, enums); //todo: support dots in namespace.
-            _scopes.Last().Namespaces.Add(namespaceExp);
-            return namespaceExp;
+            var contextDefinitionExpression = new ContextDefinitionExpression(contextIdentifier, contexts, classes, enums); //todo: support dots in namespace.
+            _scopes.Last().Contexts.Add(contextDefinitionExpression);
+            return contextDefinitionExpression;
         }
 
-        private BodyExpression ParseNamespaceBodyExpression(Token parentToken, string bodyName)
+        private BodyExpression ParseContextBodyExpression(Token parentToken, string bodyName)
         {
             if (PeekToken().TokenType is not TokenType.AccoladesOpen)
             {
@@ -384,9 +384,9 @@ namespace Parsing
                 TokenType.EndOfStatement => null,
                 TokenType.EndOfFile => null,
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
-                TokenType.FunctionIdentifier => ParseFunctionCallExpression(), // kind of a hack, but a function name is also an identifier.
-                TokenType.VariableIdentifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
-                TokenType.VariableIdentifier => ParseIdentifierExpression(),
+                TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.ParanthesesOpen) => ParseFunctionCallExpression(),
+                TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
+                TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpressions(),
                 TokenType.Add => ParseValueExpressions(), // e.g. var x = +1;
                 TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
@@ -417,14 +417,14 @@ namespace Parsing
 
         private ValueExpressionBase ParseMemberAccessExpression()
         {
-            Debug.Assert(PeekToken().TokenType is TokenType.VariableIdentifier);
+            Debug.Assert(PeekToken().TokenType is TokenType.Identifier);
 
             var parent = ConsumeToken();
             Debug.Assert(PeekToken().TokenType is TokenType.Dot, $"{nameof(ParseExpressionResultingInValue)}, should check whether a dot is present! Else its just a normal variable, not an member access...");
             var dot = ConsumeToken();
-            if (PeekToken().TokenType is not (TokenType.VariableIdentifier or TokenType.FunctionIdentifier))
+            if (PeekToken().TokenType is not (TokenType.Identifier or TokenType.Identifier))
             {
-                throw ParseError(PeekToken(), TokenType.VariableIdentifier, $"after a dot indicating a member access expression but got '{PeekToken().TokenType}' instead.");
+                throw ParseError(PeekToken(), TokenType.Identifier, $"after a dot indicating a member access expression but got '{PeekToken().TokenType}' instead.");
             }
 
             var memberAccess = ParseExpressionResultingInValue();
@@ -515,9 +515,9 @@ namespace Parsing
 
             ConsumeToken();
 
-            if (PeekToken().TokenType is not TokenType.FunctionIdentifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
-                throw ParseError(PeekToken(), TokenType.FunctionIdentifier, "after func definition");
+                throw ParseError(PeekToken(), TokenType.Identifier, "after func definition");
             }
 
             var funcIdentifier = ConsumeToken();
@@ -558,9 +558,9 @@ namespace Parsing
                 ConsumeToken();
 
                 currentPeek = PeekToken();
-                if (currentPeek.TokenType is not TokenType.VariableIdentifier)
+                if (currentPeek.TokenType is not TokenType.Identifier)
                 {
-                    throw ParseError(currentPeek, TokenType.VariableIdentifier, "in func parameter body");
+                    throw ParseError(currentPeek, TokenType.Identifier, "in func parameter body");
                 }
 
                 var variableToken = ConsumeToken();
@@ -589,7 +589,7 @@ namespace Parsing
 
             ConsumeToken(); // don't care about return type indicator
 
-            if (PeekToken().TokenType is not (TokenType.Type or TokenType.VariableIdentifier))
+            if (PeekToken().TokenType is not (TokenType.Type or TokenType.Identifier))
             {
                 throw ParseError(PeekToken(), "Type or Identifier", $"after return type indicator '{LexerConstants.RETURN_TYPE_INDICATOR}'");
             }
@@ -625,7 +625,7 @@ namespace Parsing
 
             foreach (var token in typeTokens)
             {
-                var typeName = token.TokenType is TokenType.VariableIdentifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
+                var typeName = token.TokenType is TokenType.Identifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
                 name += $"<{typeName}>";
             }
 
@@ -764,9 +764,9 @@ namespace Parsing
 
             var leftHandSideTok = PeekToken();
 
-            if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
-                throw ParseError(leftHandSideTok, TokenType.VariableIdentifier, "before assignment of variable");
+                throw ParseError(leftHandSideTok, TokenType.Identifier, "before assignment of variable");
             }
 
             var leftHandSideVariableIdentifierExpression = ConsumeToken();
@@ -894,7 +894,7 @@ namespace Parsing
 
         private FunctionCallExpression ParseFunctionCallExpression()
         {
-            if (PeekToken().TokenType != TokenType.FunctionIdentifier)
+            if (PeekToken().TokenType != TokenType.Identifier)
             {
                 // Expected a function name...
                 throw ParseError(PeekToken(), "a function name", "function call");
@@ -928,9 +928,9 @@ namespace Parsing
             {
                 ConsumeToken();
 
-                if (PeekToken().TokenType is not TokenType.VariableIdentifier)
+                if (PeekToken().TokenType is not TokenType.Identifier)
                 {
-                    throw ParseError(expr.Token, TokenType.VariableIdentifier, "after specifying 'as' when creating an alias for an import.");
+                    throw ParseError(expr.Token, TokenType.Identifier, "after specifying 'as' when creating an alias for an import.");
                 }
                 alias = ConsumeToken();
             }
@@ -1042,6 +1042,8 @@ namespace Parsing
 
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);
         private Token PeekToken() => _lexer.PeekToken();
+        private Token[] GetPreviousTokens(int amount) => _lexer.GetPreviousTokens(amount);
+        private Token GetPreviousToken() => _lexer.GetPreviousToken();
         private Token[] ConsumeTokens(int amount) => _lexer.ConsumeTokens(amount);
         private Token ConsumeToken() => _lexer.ConsumeToken();
     }

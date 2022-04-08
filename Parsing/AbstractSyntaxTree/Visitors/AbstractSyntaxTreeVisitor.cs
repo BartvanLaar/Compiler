@@ -26,8 +26,8 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 case ExpressionType.Import:
                     visitor.VisitImportExpression((ImportStatementExpression)expression);
                     return;
-                case ExpressionType.Namespace:
-                    visitor.VisitNamespaceExpression((NamespaceDefinitionExpression)expression);
+                case ExpressionType.Context:
+                    visitor.VisitContextExpression((ContextDefinitionExpression)expression);
                     return;
                 case ExpressionType.Class:
                     visitor.VisitClassExpression((ClassDefinitionExpression)expression);

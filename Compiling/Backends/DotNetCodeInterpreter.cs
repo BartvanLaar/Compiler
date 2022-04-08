@@ -228,9 +228,9 @@ namespace Compiling.Backends
             _scopes = scopes;
         }
 
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
-            foreach (var @namespace in expression.Namespaces)
+            foreach (var @namespace in expression.Contexts)
             {
                 Visit(@namespace);
             }

@@ -94,7 +94,7 @@
             public const string CLASS = "class";
             public const string ENUM = "enum";
             public const string INTERFACE = "interface";
-            public const string NAMESPACE = "namespace";
+            public const string CONTEXT = "context";
 
             public const string IF = "if";
             public const string ELSE = "else";
@@ -160,7 +160,7 @@
             { Keywords.ENUM, TokenType.Enum },
             { Keywords.CLASS, TokenType.Class },
             { Keywords.INTERFACE, TokenType.Interface },
-            { Keywords.NAMESPACE, TokenType.Namespace },
+            { Keywords.CONTEXT, TokenType.Context },
             { Keywords.STATIC, TokenType.Static },
             { Keywords.CONST, TokenType.Constant },
 

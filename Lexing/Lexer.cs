@@ -9,6 +9,8 @@ namespace Lexing
         Token PeekToken();
         Token[] ConsumeTokens(int amount);
         Token[] PeekTokens(int amount);
+        Token[] GetPreviousTokens(int amount);
+        Token? GetPreviousToken();
     }
 
     public class Lexer : ILexer
@@ -20,6 +22,7 @@ namespace Lexing
         private int _cursorPosition;
         private int _lineCounter;
         private int _columnCounter;
+        private List<Token> _consumedTokens = new List<Token>();
 
         public Lexer(string text) : this(text, DIRECT_TEXT_INPUT) { }
         public Lexer(string text, string filename)
@@ -67,6 +70,7 @@ namespace Lexing
                 _cursorPosition = cursor;
                 _lineCounter = lineCounter;
                 _columnCounter = columnCounter;
+                _consumedTokens.AddRange(tokens);
             }
 
             return tokens;
@@ -120,7 +124,7 @@ namespace Lexing
 
                 return (predefinedToken, cursor, lineCount, columnCount);
             }
-            var tok = new Token(TokenType.VariableIdentifier, identifier, lineCount, columnCountStart) { Value = identifier };
+            var tok = new Token(TokenType.Identifier, identifier, lineCount, columnCountStart) { Value = identifier };
             // kind of a hack, but check if next single char tok is a parantheseOpen, indicating a function call or definition
             // but first eat all white spaces.
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
@@ -130,7 +134,7 @@ namespace Lexing
             {
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
-                tok.TokenType = TokenType.FunctionIdentifier;
+                tok.TokenType = TokenType.Identifier;
                 return (tok, cursor, lineCount, columnCount);
             }
 
@@ -610,5 +614,14 @@ namespace Lexing
                     currentChar == LexerConstants.DOUBLE_INDICATOR;
         }
 
+        public Token[] GetPreviousTokens(int amount)
+        {
+            return _consumedTokens.TakeLast(amount).ToArray();
+        }
+
+        public Token? GetPreviousToken()
+        {
+            return GetPreviousTokens(1).SingleOrDefault();
+        }
     }
 }
