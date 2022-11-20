@@ -9,12 +9,13 @@ namespace Lexing
         Token PeekToken();
         Token[] ConsumeTokens(int amount);
         Token[] PeekTokens(int amount);
-        Token[] GetPreviousTokens(int amount);
-        Token? GetPreviousToken();
+        Token[] GetConsumedTokens(int amount);
+        Token? GetLastConsumedToken();
     }
 
     public class Lexer : ILexer
     {
+        const int MAX_DESCOVERED_TOKEN_CACHE = 10;
         /// Represents a single file.
         private const string DIRECT_TEXT_INPUT = "Direct input";
         private readonly string _text;
@@ -22,6 +23,8 @@ namespace Lexing
         private int _cursorPosition;
         private int _lineCounter;
         private int _columnCounter;
+
+        private List<Token> _traversedTokens = new List<Token>();
         private List<Token> _consumedTokens = new List<Token>();
 
         public Lexer(string text) : this(text, DIRECT_TEXT_INPUT) { }
@@ -92,53 +95,71 @@ namespace Lexing
             return (tokens, cursor, lineCounter, columnCounter);
         }
 
-        private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int columnCount)
+        private Token? GetlastTraversedToken()
+        {
+            return _traversedTokens.LastOrDefault();
+        }
+
+        private void AddDiscoveredTokenToCache(Token token)
+        {
+            if (_traversedTokens.Count > MAX_DESCOVERED_TOKEN_CACHE)
+            {
+                _traversedTokens.RemoveAt(0);
+            }
+            _traversedTokens.Add(token);
+        }
+
+        private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int currentCursor, int currentLineCount, int currentColumnCount)
         {
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
-            (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
+            (currentCursor, currentLineCount, currentColumnCount) = SkipWhiteSpaces(currentCursor, currentLineCount, currentColumnCount);
 
-            (var symbolToken, cursor, lineCount, columnCount) = GetNextSymbolToken(cursor, lineCount, columnCount);
+            (var symbolToken, currentCursor, currentLineCount, currentColumnCount) = GetNextSymbolToken(currentCursor, currentLineCount, currentColumnCount);
             if (symbolToken is not null)
             {
-                return (symbolToken, cursor, lineCount, columnCount);
+                AddDiscoveredTokenToCache(symbolToken);
+                return (symbolToken, currentCursor, currentLineCount, currentColumnCount);
             }
 
-            (var numberToken, cursor, lineCount, columnCount) = GetNumberToken(cursor, lineCount, columnCount);
+            (var numberToken, currentCursor, currentLineCount, currentColumnCount) = GetNumberToken(currentCursor, currentLineCount, currentColumnCount);
             if (numberToken is not null)
             {
-                return (numberToken, cursor, lineCount, columnCount);
+                AddDiscoveredTokenToCache(numberToken);
+                return (numberToken, currentCursor, currentLineCount, currentColumnCount);
             }
 
             // save start column count for retrieving identifier.
-            var columnCountStart = columnCount;
+            var columnCountStart = currentColumnCount;
             // Consume identifier...
-            (var identifier, cursor, lineCount, columnCount) = GetIdentifier(cursor, lineCount, columnCount);
-            if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType))
+            (var identifier, currentCursor, currentLineCount, currentColumnCount) = GetIdentifier(currentCursor, currentLineCount, currentColumnCount);
+            if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType) && GetlastTraversedToken()?.TokenType is TokenType.Dot)
             {
-                var predefinedToken = new Token(tokenType, identifier, lineCount, columnCountStart) { Value = identifier };
+                var predefinedToken = new Token(tokenType, identifier, currentLineCount, columnCountStart) { Value = identifier };
                 predefinedToken.TypeIndicator = LexerConstants.ConvertKeywordToTypeIndicator(identifier);
                 if (identifier is LexerConstants.Keywords.TRUE or LexerConstants.Keywords.FALSE)
                 {
                     predefinedToken.Value = identifier is LexerConstants.Keywords.TRUE;
                 }
 
-                return (predefinedToken, cursor, lineCount, columnCount);
+                return (predefinedToken, currentCursor, currentLineCount, currentColumnCount);
             }
-            var tok = new Token(TokenType.Identifier, identifier, lineCount, columnCountStart) { Value = identifier };
+            var tok = new Token(TokenType.Identifier, identifier, currentLineCount, columnCountStart) { Value = identifier };
             // kind of a hack, but check if next single char tok is a parantheseOpen, indicating a function call or definition
             // but first eat all white spaces.
-            (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
+            (currentCursor, currentLineCount, currentColumnCount) = SkipWhiteSpaces(currentCursor, currentLineCount, currentColumnCount);
 
-            var nextTok = GetSingleCharacterToken(cursor, lineCount, columnCount);
+            var nextTok = GetSingleCharacterToken(currentCursor, currentLineCount, currentColumnCount);
             if (nextTok?.TokenType == TokenType.ParanthesesOpen)
             {
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
                 tok.TokenType = TokenType.Identifier;
-                return (tok, cursor, lineCount, columnCount);
-            }
+                AddDiscoveredTokenToCache(tok);
 
-            return (tok, cursor, lineCount, columnCount);
+                return (tok, currentCursor, currentLineCount, currentColumnCount);
+            }
+            AddDiscoveredTokenToCache(tok);
+            return (tok, currentCursor, currentLineCount, currentColumnCount);
         }
 
         private (string Identifier, int Cursor, int LineCount, int ColumnCount) GetIdentifier(int cursor, int lineCount, int columnCount)
@@ -614,14 +635,15 @@ namespace Lexing
                     currentChar == LexerConstants.DOUBLE_INDICATOR;
         }
 
-        public Token[] GetPreviousTokens(int amount)
+        public Token[] GetConsumedTokens(int amount)
         {
             return _consumedTokens.TakeLast(amount).ToArray();
         }
 
-        public Token? GetPreviousToken()
+        public Token? GetLastConsumedToken()
         {
-            return GetPreviousTokens(1).SingleOrDefault();
+            return GetConsumedTokens(1).SingleOrDefault();
         }
+
     }
 }

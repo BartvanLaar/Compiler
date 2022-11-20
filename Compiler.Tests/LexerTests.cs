@@ -1,4 +1,6 @@
-﻿namespace Lexing.Tests
+﻿using System.Diagnostics.Metrics;
+
+namespace Lexing.Tests
 {
     public class LexerTests
     {
@@ -965,10 +967,17 @@
         {
             var code = "context this.is.a.test;";
             var lexer = new Lexer(code);
-            var toks = lexer.ConsumeTokens(3);
+            var toks = lexer.ConsumeTokens(255);
             var counter = -1;
             Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.ContextStatement));
             Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Identifier));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Dot));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Identifier));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Dot));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Identifier));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Dot));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Identifier));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.EndOfStatement));
             Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.EndOfFile));
 
         }

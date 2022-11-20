@@ -16,7 +16,7 @@ namespace Parsing
         List<ContextDefinitionExpression> Contexts { get; }
         List<ClassDefinitionExpression> Classes { get; }
         List<EnumDefinitionExpression> Enums { get; }
-        List<FunctionDefinitionExpression> Functions { get; }
+        FunctionDefinitionExpression[] Functions { get; }
         List<VariableDeclarationExpression> Variables { get; }
         List<ExpressionBase> ExpressionTree { get; }
     }
@@ -33,9 +33,7 @@ namespace Parsing
         public List<ClassDefinitionExpression> Classes { get; } = new();
         public List<EnumDefinitionExpression> Enums { get; } = new();
         internal List<FunctionScope> FunctionsInternal { get; } = new(); // outside doesnt need to know the functionScope, expression is enough..
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-        public List<FunctionDefinitionExpression> Functions => FunctionsInternal.Select(x => x.Expression).ToList();
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+        public FunctionDefinitionExpression[] Functions => FunctionsInternal.Where(x => x.Expression != null).Select(x => x.Expression).ToArray();
         public List<VariableDeclarationExpression> Variables { get; } = new();
         public List<ExpressionBase> ExpressionTree { get; } = new();
 
@@ -1042,8 +1040,8 @@ namespace Parsing
 
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);
         private Token PeekToken() => _lexer.PeekToken();
-        private Token[] GetPreviousTokens(int amount) => _lexer.GetPreviousTokens(amount);
-        private Token? GetPreviousToken() => _lexer.GetPreviousToken();
+        private Token[] GetPreviousConsumedTokens(int amount) => _lexer.GetConsumedTokens(amount);
+        private Token? GetPreviousConsumedToken() => _lexer.GetLastConsumedToken();
         private Token[] ConsumeTokens(int amount) => _lexer.ConsumeTokens(amount);
         private Token ConsumeToken() => _lexer.ConsumeToken();
     }
