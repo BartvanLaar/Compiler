@@ -1,8 +1,6 @@
 ﻿using Exceptions;
 using Lexing;
-using NUnit.Framework;
 using Parsing.AbstractSyntaxTree.Expressions;
-using System.Linq;
 using TestHelpers.Tests;
 
 namespace Parsing.Tests
@@ -280,7 +278,35 @@ namespace Parsing.Tests
             Assert.IsNotNull(res);
             Assert.That(res.First().ExpressionTree.Count(), Is.EqualTo(1));
             Assert.That(res.First().ExpressionTree.First(), Is.TypeOf<VariableDeclarationExpression>());
-            Assert.That(((VariableDeclarationExpression)res.First().ExpressionTree.First()).ValueExpression, Is.TypeOf<MemberAccessExpression>());
+            Assert.That(((VariableDeclarationExpression)res.First().ExpressionTree[0]).ValueExpression, Is.TypeOf<MemberAccessExpression>());
+        }
+
+        [Test]
+        public void Parse_ContextDefinitionExpression()
+        {
+            var lexer = new Lexer("context this.is.the.context;");
+            var parser = new Parser(lexer);
+            var res = parser.Parse();
+            Assert.IsNotNull(res);
+            Assert.That(res.First().ExpressionTree.Count(), Is.EqualTo(1));
+            Assert.That(res.First().ExpressionTree.First(), Is.TypeOf<ContextDefinitionExpression>());
+
+        }
+
+        [Test]
+        public void Parse_ContextDefinitionExpression_Errors()
+        {
+            var lexer = new Lexer("context this.is.the.context");
+            var parser = new Parser(lexer);
+            Assert.Throws<SyntaxErrorException>(() => parser.Parse());
+
+            lexer = new Lexer("context");
+            parser = new Parser(lexer);
+            Assert.Throws<SyntaxErrorException>(() => parser.Parse());
+
+            lexer = new Lexer("this.is.the.context");
+            parser = new Parser(lexer);
+            Assert.Throws<SyntaxErrorException>(() => parser.Parse());
         }
     }
 }

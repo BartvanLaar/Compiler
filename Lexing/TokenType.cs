@@ -90,7 +90,7 @@
         Class,
         Enum,
         Array,
-        Context,
+        ContextStatement,
         Dot,
         New,
         Switch,

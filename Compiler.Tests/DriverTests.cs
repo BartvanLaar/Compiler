@@ -1,6 +1,4 @@
-﻿using NUnit.Framework;
-using System.Linq;
-using TestHelpers.Tests;
+﻿using TestHelpers.Tests;
 
 namespace Compiling.Tests
 {

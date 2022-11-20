@@ -1,8 +1,4 @@
-﻿using NUnit.Framework;
-using System;
-using System.Linq;
-
-namespace Lexing.Tests
+﻿namespace Lexing.Tests
 {
     public class LexerTests
     {
@@ -967,11 +963,12 @@ namespace Lexing.Tests
         [Test]
         public void Lexer_Test_Context()
         {
-            var code = "context this.is.a.test";
+            var code = "context this.is.a.test;";
             var lexer = new Lexer(code);
-            var toks = lexer.ConsumeTokens(2);
+            var toks = lexer.ConsumeTokens(3);
             var counter = -1;
-            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Context));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.ContextStatement));
+            Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.Identifier));
             Assert.That(toks[++counter].TokenType, Is.EqualTo(TokenType.EndOfFile));
 
         }

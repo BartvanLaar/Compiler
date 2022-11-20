@@ -160,7 +160,7 @@
             { Keywords.ENUM, TokenType.Enum },
             { Keywords.CLASS, TokenType.Class },
             { Keywords.INTERFACE, TokenType.Interface },
-            { Keywords.CONTEXT, TokenType.Context },
+            { Keywords.CONTEXT, TokenType.ContextStatement},
             { Keywords.STATIC, TokenType.Static },
             { Keywords.CONST, TokenType.Constant },
 

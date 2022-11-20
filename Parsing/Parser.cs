@@ -2,7 +2,6 @@
 using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Parsing
 {
@@ -104,7 +103,7 @@ namespace Parsing
         {
             switch (PeekToken().TokenType)
             {
-                case TokenType.Context:
+                case TokenType.ContextStatement:
                     {
                         return ParseContextDefinitionExpression();
                     }
@@ -304,7 +303,7 @@ namespace Parsing
 
         private ContextDefinitionExpression ParseContextDefinitionExpression()
         {
-            Debug.Assert(PeekToken().TokenType is TokenType.Context);
+            Debug.Assert(PeekToken().TokenType is TokenType.ContextStatement);
             ConsumeToken();
 
             if (PeekToken().TokenType is not TokenType.Identifier)
@@ -423,13 +422,13 @@ namespace Parsing
             var parent = ConsumeToken();
             Debug.Assert(PeekToken().TokenType is TokenType.Dot, $"{nameof(ParseExpressionResultingInValue)}, should check whether a dot is present! Else its just a normal variable, not an member access...");
             var dot = ConsumeToken();
-            if (PeekToken().TokenType is not (TokenType.Identifier or TokenType.Identifier))
+            if (PeekToken().TokenType is not TokenType.Identifier)
             {
                 throw ParseError(PeekToken(), TokenType.Identifier, $"after a dot indicating a member access expression but got '{PeekToken().TokenType}' instead.");
             }
 
             var memberAccess = ParseExpressionResultingInValue();
-
+            Debug.Assert(memberAccess != null, "idendtifier token from ParseExpressionResultingInValue without checking this code!");
             return new MemberAccessExpression(parent, memberAccess);
         }
         private ExpressionBase ParseReturnStatementExpression()
@@ -851,7 +850,7 @@ namespace Parsing
             return lhs;
         }
 
-        private ExpressionBase[] ParseArguments(string name)
+        private ExpressionBase[] ParseArguments(string? name)
         {
             if (PeekToken().TokenType != TokenType.ParanthesesOpen)
             {
@@ -1044,7 +1043,7 @@ namespace Parsing
         private Token[] PeekTokens(int amount) => _lexer.PeekTokens(amount);
         private Token PeekToken() => _lexer.PeekToken();
         private Token[] GetPreviousTokens(int amount) => _lexer.GetPreviousTokens(amount);
-        private Token GetPreviousToken() => _lexer.GetPreviousToken();
+        private Token? GetPreviousToken() => _lexer.GetPreviousToken();
         private Token[] ConsumeTokens(int amount) => _lexer.ConsumeTokens(amount);
         private Token ConsumeToken() => _lexer.ConsumeToken();
     }
