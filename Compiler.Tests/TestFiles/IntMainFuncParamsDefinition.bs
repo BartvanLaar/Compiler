@@ -1,0 +1,5 @@
+﻿func test(int returnValue) -> int {return returnValue;}
+
+func Main() -> int {
+    return test(42);
+}

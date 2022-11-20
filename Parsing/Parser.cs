@@ -2,6 +2,7 @@
 using Lexing;
 using Parsing.AbstractSyntaxTree.Expressions;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Parsing
 {
@@ -284,10 +285,10 @@ namespace Parsing
 
             var classBody = ParseBodyExpression(classIdentifierToken, "class token");
 
-            var variableDeclarations = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.VariableDeclaration).Cast<VariableDeclarationExpression>().ToArray();
-            var functionDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.FunctionDefinition).Cast<FunctionDefinitionExpression>().ToArray();
-            var classDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.Class).Cast<ClassDefinitionExpression>().ToArray();
-            var enumDefinitions = classBody.Body.Where(x => x.DISCRIMINATOR is ExpressionType.Enum).Cast<EnumDefinitionExpression>().ToArray();
+            var variableDeclarations = classBody.Body.OfType<VariableDeclarationExpression>().ToArray();
+            var functionDefinitions = classBody.Body.OfType<FunctionDefinitionExpression>().ToArray();
+            var classDefinitions = classBody.Body.OfType<ClassDefinitionExpression>().ToArray();
+            var enumDefinitions = classBody.Body.OfType<EnumDefinitionExpression>().ToArray();
 
             var expectedTotalLength = variableDeclarations.Length + functionDefinitions.Length + classDefinitions.Length;
             if (classBody.Body.Length != expectedTotalLength)
@@ -312,17 +313,17 @@ namespace Parsing
             }
             var contextIdentifier = ConsumeToken();
 
-            var namespaceBody = ParseContextBodyExpression(contextIdentifier, "context declaration");
+            var contextBody = ParseContextBodyExpression(contextIdentifier, "context declaration");
 
-            if (namespaceBody.Body.Any(x => x.DISCRIMINATOR is not (ExpressionType.Class or ExpressionType.Enum or ExpressionType.Context)))
+            if (contextBody.Body.Any(x => x is not (ClassDefinitionExpression or EnumDefinitionExpression or ContextDefinitionExpression)))
             {
                 throw ParseError(contextIdentifier, "only classes and contexts", "after context delcaration.");
             }
 
-            var contexts = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Context).Cast<ContextDefinitionExpression>()?.ToArray();
-            var classes = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Class).Cast<ClassDefinitionExpression>()?.ToArray();
-            var enums = namespaceBody?.Body?.Where(x => x.DISCRIMINATOR == ExpressionType.Enum).Cast<EnumDefinitionExpression>()?.ToArray();
-            var contextDefinitionExpression = new ContextDefinitionExpression(contextIdentifier, contexts, classes, enums); //todo: support dots in namespace.
+            var contexts = contextBody?.Body?.OfType<ContextDefinitionExpression>().ToArray();
+            var classes = contextBody?.Body?.OfType<ClassDefinitionExpression>().ToArray();
+            var enums = contextBody?.Body?.OfType<EnumDefinitionExpression>().ToArray();
+            var contextDefinitionExpression = new ContextDefinitionExpression(contextIdentifier, contexts, classes, enums); //todo: support dots in context.
             _scopes.Last().Contexts.Add(contextDefinitionExpression);
             return contextDefinitionExpression;
         }

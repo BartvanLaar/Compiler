@@ -22,7 +22,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public TypeIndicator TypeIndicator { get => Token.TypeIndicator; set => Token.TypeIndicator = value; }
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8603 // Possible null reference return.
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Value;
 
 
     }

@@ -13,6 +13,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public string FunctionName { get => Token.Name; set => Token.Name = value; }
         public ExpressionBase[] Arguments { get; }
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.FunctionCall;
     }
 }

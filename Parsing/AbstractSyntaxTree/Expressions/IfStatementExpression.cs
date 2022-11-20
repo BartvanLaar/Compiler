@@ -14,7 +14,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase IfCondition { get; }
         public ExpressionBase IfBody { get; }
         public ExpressionBase? ElseBody { get; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.If;
     }   
 }

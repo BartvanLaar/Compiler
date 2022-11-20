@@ -15,7 +15,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ClassDefinitionExpression[] Classes { get; }
         public EnumDefinitionExpression[] Enums { get; }
         public ContextDefinitionExpression[] Contexts { get; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Context;
     }
 }

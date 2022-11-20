@@ -12,6 +12,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ExpressionBase[] Body { get; }
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Body;
     }
 }

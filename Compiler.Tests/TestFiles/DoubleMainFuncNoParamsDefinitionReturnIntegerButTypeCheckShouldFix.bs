@@ -1,0 +1,3 @@
+﻿func Main() -> double {
+    return 1337;
+}

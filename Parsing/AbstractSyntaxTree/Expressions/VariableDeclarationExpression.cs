@@ -19,6 +19,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public string Identifier => IdentifierToken.Name;
         public ValueExpressionBase ValueExpression { get; }
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.VariableDeclaration;
     }
 }

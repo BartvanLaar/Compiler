@@ -10,6 +10,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         }
 
         public BodyExpression EnumValuesBody { get; }
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Enum;
     }
 }

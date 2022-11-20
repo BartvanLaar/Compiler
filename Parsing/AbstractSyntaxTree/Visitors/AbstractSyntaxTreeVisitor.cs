@@ -21,70 +21,70 @@ namespace Parsing.AbstractSyntaxTree.Visitors
                 return;
             }
 
-            switch (expression.DISCRIMINATOR)
+            switch (expression)
             {
-                case ExpressionType.Import:
-                    visitor.VisitImportExpression((ImportStatementExpression)expression);
+                case ImportStatementExpression importStatementExpression:
+                    visitor.VisitImportExpression(importStatementExpression);
                     return;
-                case ExpressionType.Context:
-                    visitor.VisitContextExpression((ContextDefinitionExpression)expression);
+                case ContextDefinitionExpression contextDefinitionExpression:
+                    visitor.VisitContextExpression(contextDefinitionExpression);
                     return;
-                case ExpressionType.Class:
-                    visitor.VisitClassExpression((ClassDefinitionExpression)expression);
+                case ClassDefinitionExpression classDefinitionExpression:
+                    visitor.VisitClassExpression(classDefinitionExpression);
                     return;
-                case ExpressionType.Enum:
-                    visitor.VisitEnumExpression((EnumDefinitionExpression)expression);
+                case EnumDefinitionExpression enumDefinitionExpression:
+                    visitor.VisitEnumExpression(enumDefinitionExpression);
                     return;
-                case ExpressionType.VariableDeclaration:
-                    visitor.VisitVariableDeclarationExpression((VariableDeclarationExpression)expression);
+                case VariableDeclarationExpression variableDeclarationExpression:
+                    visitor.VisitVariableDeclarationExpression(variableDeclarationExpression);
                     return;
-                case ExpressionType.MemberAccess:
-                    visitor.VisitMemberAccessExpression((MemberAccessExpression)expression);
+                case MemberAccessExpression memberAccessExpression:
+                    visitor.VisitMemberAccessExpression(memberAccessExpression);
                     return;
-                case ExpressionType.FunctionDefinition:
-                    visitor.VisitFunctionDefinitionExpression((FunctionDefinitionExpression)expression);
+                case FunctionDefinitionExpression functionDefinitionExpression:
+                    visitor.VisitFunctionDefinitionExpression(functionDefinitionExpression);
                     return;
-                case ExpressionType.Body:
-                    visitor.VisitBodyExpression((BodyExpression)expression);
+                case BodyExpression bodyExpression:
+                    visitor.VisitBodyExpression(bodyExpression);
                     return;
-                case ExpressionType.Binary:
-                    visitor.VisitBinaryExpression((BinaryExpression)expression);
+                case BinaryExpression binaryExpression:
+                    visitor.VisitBinaryExpression(binaryExpression);
                     return;
-                case ExpressionType.Return:
-                    visitor.VisitReturnExpression((ReturnExpression)expression);
+                case ReturnExpression returnExpression:
+                    visitor.VisitReturnExpression(returnExpression);
                     return;
-                case ExpressionType.FunctionCall:
-                    visitor.VisitFunctionCallExpression((FunctionCallExpression)expression);
+                case FunctionCallExpression functionCallExpression:
+                    visitor.VisitFunctionCallExpression(functionCallExpression);
                     return;
-                case ExpressionType.Identifier:
-                    visitor.VisitIdentifierExpression((IdentifierExpression)expression);
+                case IdentifierExpression identifierExpression:
+                    visitor.VisitIdentifierExpression(identifierExpression);
                     return;
-                case ExpressionType.ObjectInstantiation:
-                    visitor.VisitObjectInstantiationExpression((ObjectInstantiationExpression)expression);
+                case ObjectInstantiationExpression objectInstantiationExpression:
+                    visitor.VisitObjectInstantiationExpression(objectInstantiationExpression);
                     return;
-                case ExpressionType.Value:
-                    visitor.VisitValueExpression((ValueExpression)expression);
+                case ValueExpression valueExpression:
+                    visitor.VisitValueExpression(valueExpression);
                     return;
-                case ExpressionType.If:
-                    visitor.VisitIfStatementExpression((IfStatementExpression)expression);
+                case IfStatementExpression ifStatementExpression:
+                    visitor.VisitIfStatementExpression(ifStatementExpression);
                     return;
-                case ExpressionType.Switch:
-                    visitor.VisitSwitchStatementExpression((SwitchStatementExpression)expression);
+                case SwitchStatementExpression switchStatementExpression:
+                    visitor.VisitSwitchStatementExpression(switchStatementExpression);
                     return;
-                case ExpressionType.DoWhile:
-                    visitor.VisitDoWhileStatementExpression((DoWhileStatementExpression)expression);
+                case DoWhileStatementExpression doWhileStatementExpression:
+                    visitor.VisitDoWhileStatementExpression(doWhileStatementExpression);
                     return;
-                case ExpressionType.While:
-                    visitor.VisitWhileStatementExpression((WhileStatementExpression)expression);
+                case WhileStatementExpression whileStatementExpression:
+                    visitor.VisitWhileStatementExpression(whileStatementExpression);
                     return;
-                case ExpressionType.For:
-                    visitor.VisitForStatementExpression((ForStatementExpression)expression);
+                case ForStatementExpression forStatementExpression:
+                    visitor.VisitForStatementExpression(forStatementExpression);
                     return;
-                case ExpressionType.Foreach:
-                    visitor.VisitForeachStatementExpression((ForeachStatementExpression)expression);
+                case ForeachStatementExpression foreachStatementExpression:
+                    visitor.VisitForeachStatementExpression(foreachStatementExpression);
                     return;
                 default:
-                    throw new ArgumentException($"Unknown expression type encountered: '{expression.DISCRIMINATOR}'");
+                    throw new ArgumentException($"Unknown expression type encountered: '{expression.GetType().Name}'");
             }
         }
     }

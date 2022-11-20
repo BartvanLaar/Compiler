@@ -1,0 +1,10 @@
+﻿func Main() -> int {
+    var x = 0;    
+    while(false) 
+    do
+    {
+        x = x + 1;
+    }
+
+    return x;
+}

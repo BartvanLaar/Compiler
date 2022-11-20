@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Compiling\Compiling.csproj" />
-    <ProjectReference Include="..\TestHelpers.Tests\TestHelpers.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

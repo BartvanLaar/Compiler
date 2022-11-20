@@ -230,9 +230,9 @@ namespace Compiling.Backends
 
         public void VisitContextExpression(ContextDefinitionExpression expression)
         {
-            foreach (var @namespace in expression.Contexts)
+            foreach (var context in expression.Contexts)
             {
-                Visit(@namespace);
+                Visit(context);
             }
 
             foreach (var @enum in expression.Enums)

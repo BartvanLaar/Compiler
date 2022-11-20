@@ -1,0 +1,7 @@
+﻿func Main() -> int {
+    if(false)
+    {
+        return 1337;
+    } 
+    return 42;
+}

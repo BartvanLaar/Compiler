@@ -9,8 +9,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             SwitchValue = switchValue;
             Cases = cases;
         }
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Switch;
-
         public ValueExpressionBase SwitchValue { get; }
         public SwitchCase[] Cases { get; }
     }

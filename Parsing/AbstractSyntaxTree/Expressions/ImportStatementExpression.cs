@@ -14,7 +14,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public string Path { get; }
         public string? Alias { get; }
         public string? ImportedInFile { get; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Import;
     }
 }

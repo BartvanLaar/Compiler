@@ -21,7 +21,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         {
             Token = token;
         }
-        public abstract ExpressionType DISCRIMINATOR { get; }
 
         public Token Token { get; }
 

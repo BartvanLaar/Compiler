@@ -1,0 +1,7 @@
+﻿func Test() -> int {
+    return 42;
+}
+
+func Main() -> int {
+    return Test();
+}

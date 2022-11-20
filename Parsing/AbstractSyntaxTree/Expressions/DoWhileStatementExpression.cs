@@ -12,7 +12,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ExpressionBase Condition { get; set; }
         public ExpressionBase Body {  get; set; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.DoWhile;
     }
 }

@@ -19,6 +19,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ValueExpressionBase MemberAccess { get; }
         public Token MemberToken => Token;
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.MemberAccess;
     }
 }

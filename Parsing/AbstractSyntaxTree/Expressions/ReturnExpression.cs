@@ -13,6 +13,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase? ReturnExpr { get; }
         public TypeIndicator FunctionReturnTypeIndicator { get; }
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Return;
     }
 }

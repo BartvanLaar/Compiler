@@ -19,6 +19,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public IdentifierExpression ClassIdentifier { get; }
         public ExpressionBase[] Arguments { get; }
-        public override ExpressionType DISCRIMINATOR => ExpressionType.ObjectInstantiation;
     }
 }

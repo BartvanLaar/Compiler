@@ -13,7 +13,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         {
 
         }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Foreach;
     }
 }
