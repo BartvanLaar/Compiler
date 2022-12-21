@@ -1,9 +1,4 @@
 ﻿using Lexing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Parsing.AbstractSyntaxTree.Expressions
 {
@@ -17,9 +12,7 @@ namespace Parsing.AbstractSyntaxTree.Expressions
             Arguments = arguments;
         }
 
-        public string FunctionName { get => Token.Name; set => Token.Name = value; }
         public IdentifierExpression ClassIdentifier { get; }
         public ExpressionBase[] Arguments { get; }
-        public override ExpressionType DISCRIMINATOR => ExpressionType.ObjectInstantiation;
     }
 }

@@ -87,7 +87,7 @@ namespace Parsing.AbstractSyntaxTree.Visitors
             Visit(expression.ReturnExpr);
             Log(expression);
         }
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
             Log(expression);
         }
@@ -114,7 +114,28 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         public void VisitMemberAccessExpression(MemberAccessExpression expression)
         {
-            throw new NotImplementedException();
+            Log(expression);
+            LogValue(expression);
+        }
+
+        public void VisitEnumExpression(EnumDefinitionExpression expression)
+        {
+            Log(expression);
+        }
+
+        public void VisitForeachStatementExpression(ForeachStatementExpression expression)
+        {            
+            Log(expression);
+        }
+
+        public void VisitSwitchStatementExpression(SwitchStatementExpression expression)
+        {
+            Log(expression);
+        }
+
+        public void VisitObjectInstantiationExpression(ObjectInstantiationExpression expression)
+        {
+            Log(expression);
         }
     }
 }

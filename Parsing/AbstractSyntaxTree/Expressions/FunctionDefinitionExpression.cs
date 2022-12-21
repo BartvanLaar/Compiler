@@ -21,7 +21,6 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public bool IsExtern { get; }
         public bool IsExport { get; }
 
-        public override ExpressionType DISCRIMINATOR => ExpressionType.FunctionDefinition;
     }
 
     public class DefinitionArgument

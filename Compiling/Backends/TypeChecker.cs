@@ -25,7 +25,7 @@ namespace Compiling.Backends
         private readonly Dictionary<string, TypeCheckValue> _namedValues = new();
         private readonly Dictionary<string, Token> _userDefinedTypes = new();
         private readonly Stack<TypeCheckValue> _valueStack = new();
-        private List<IScope> _scopes = new ();
+        private List<IScope> _scopes = new();
 
         public string Name => "Type checker";
 
@@ -282,13 +282,17 @@ namespace Compiling.Backends
             var rhsType = rhs.TypeToken;
             //todo: refactor and infer type before calling this method...
             var isTypeInferred = lhsType.TypeIndicator is TypeIndicator.Inferred || rhsType.TypeIndicator is TypeIndicator.Inferred;
-            if (lhsType.TypeIndicator == rhsType.TypeIndicator)
+            if (lhsType.TypeIndicator == rhsType.TypeIndicator && isTypeInferred)
             {
-                if (isTypeInferred) // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
-                {
-                    throw new Exception("Unable to infer type, both lhs and rhs are type inferred.");
-                }
+                // not sure if this is actually valid... get rid of it if required -BvL 13-11-2021.
+                throw new Exception("Unable to infer type, both lhs and rhs are type inferred.");
+            }
 
+            // perhaps this check can be simpliefied by removing rhs part..
+            if (lhsType.TypeIndicator is TypeIndicator.Inferred && rhsType.TypeIndicator is TypeIndicator.UserDefined)
+            {
+                lhsType.TypeIndicator = rhsType.TypeIndicator;
+                lhs.ValueToken.TypeIndicator = rhsType.TypeIndicator;
                 return;
             }
 
@@ -308,7 +312,7 @@ namespace Compiling.Backends
                     lhs.ValueToken.TypeIndicator = typeData.TypeIndicator;
                     rhs.ValueToken.TypeIndicator = typeData.TypeIndicator;
 
-                    if (lhs.TypeToken.TokenType is TokenType.Value)
+                    if (lhs.TypeToken.TokenType is TokenType.Value) // why do we set the value to both lhs and rhs? Isn't that a waste of space?
                     {
                         lhs.ValueToken.Value = Convert.ChangeType(lhs.ValueToken.Value, typeData.TypeInfo);
                     }
@@ -354,14 +358,18 @@ namespace Compiling.Backends
 
             _namedValues.Add(expression.Identifier, rhsValue);
         }
+
         public void VisitMemberAccessExpression(MemberAccessExpression expression)
         {
             Debug.Assert(_namedValues.ContainsKey(expression.ParentToken.Name));
-
-            var value = _namedValues[expression.ParentToken.Name];
-            // @todo! @fixme isnt this only valid in case of strings?
-            expression.ParentToken.TypeIndicator = value.TypeToken.TypeIndicator;
-            _valueStack.Push(new TypeCheckValue(value.ValueToken, value.TypeToken));
+            if (_namedValues.ContainsKey(expression.ParentToken.Name)) // hack!! Need to support static classes! and enums!
+            {
+                var value = _namedValues[expression.ParentToken.Name];
+                // @todo! @fixme isnt this only valid in case of strings?
+                expression.ParentToken.TypeIndicator = value.TypeToken.TypeIndicator;
+                _valueStack.Push(new TypeCheckValue(value.ValueToken, value.TypeToken));
+            }
+     
 
         }
 
@@ -375,8 +383,18 @@ namespace Compiling.Backends
             Debug.Assert(expression?.Token is not null);
             _valueStack.Push(new TypeCheckValue(expression.ValueToken, expression.TypeToken));
         }
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
+            foreach (var context in expression.Contexts)
+            {
+                Visit(context);
+            }
+
+            foreach (var @enum in expression.Enums)
+            {
+                Visit(@enum);
+            }
+
             // type checker does not work with classes like string :/...
             foreach (var @class in expression.Classes)
             {
@@ -385,8 +403,15 @@ namespace Compiling.Backends
 
 
         }
+
         public void VisitClassExpression(ClassDefinitionExpression expression)
         {
+            _userDefinedTypes.Add(expression.Token.Name, expression.Token);
+            foreach (var @enum in expression.Enums)
+            {
+                Visit(@enum);
+            }
+
             foreach (var @class in expression.Classes)
             {
                 Visit(@class);
@@ -411,11 +436,38 @@ namespace Compiling.Backends
 
             foreach (var token in typeTokens)
             {
-                var typeName = token.TokenType is TokenType.VariableIdentifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
+                var typeName = token.TokenType is TokenType.Identifier ? token.Name : ConvertTypeIndicatorToString(token.TypeIndicator);
                 name += $"<{typeName}>";
             }
 
             return name;
+        }
+
+
+
+        public void VisitEnumExpression(EnumDefinitionExpression expression)
+        {
+            _userDefinedTypes.Add(expression.Token.Name, expression.Token);
+
+        }
+
+        public void VisitForeachStatementExpression(ForeachStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitSwitchStatementExpression(SwitchStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitObjectInstantiationExpression(ObjectInstantiationExpression expression)
+        {
+            if (!_userDefinedTypes.ContainsKey(expression.TypeToken.ValueAsString))
+            {
+                throw new Exception($"Type '{expression.TypeToken.ValueAsString}' does not exist."); // todo: Custom exception type.
+            }
+            _valueStack.Push(new TypeCheckValue(expression.TypeToken, expression.TypeToken));
         }
 
         //todo: cleanup! DUPLICATE CODE: A COPY exists in the Parser!!
@@ -436,6 +488,5 @@ namespace Compiling.Backends
                 _ => throw new NotImplementedException($"Exhaustive use of {nameof(ConvertTypeIndicatorToString)}."),
             };
         }
-
     }
 }

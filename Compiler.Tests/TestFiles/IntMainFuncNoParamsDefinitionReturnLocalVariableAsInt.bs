@@ -1,0 +1,4 @@
+﻿func Main() -> int {
+    int x = 42;
+    return x;
+}

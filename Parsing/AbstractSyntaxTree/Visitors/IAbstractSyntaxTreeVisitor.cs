@@ -17,9 +17,10 @@ namespace Parsing.AbstractSyntaxTree.Visitors
 
         void Initialize(List<IScope> scopes);
         void Visit(ExpressionBase expression);
-        void VisitNamespaceExpression(NamespaceDefinitionExpression expression);
-        void VisitClassExpression(ClassDefinitionExpression expression);
         void VisitImportExpression(ImportStatementExpression expression);
+        void VisitContextExpression(ContextDefinitionExpression expression);
+        void VisitClassExpression(ClassDefinitionExpression expression);
+        void VisitEnumExpression(EnumDefinitionExpression expression);
         void VisitVariableDeclarationExpression(VariableDeclarationExpression expression);
         void VisitMemberAccessExpression(MemberAccessExpression expression);
         void VisitFunctionDefinitionExpression(FunctionDefinitionExpression expression);
@@ -30,8 +31,11 @@ namespace Parsing.AbstractSyntaxTree.Visitors
         void VisitIdentifierExpression(IdentifierExpression expression);
         void VisitIfStatementExpression(IfStatementExpression expression);
         void VisitForStatementExpression(ForStatementExpression expression);
+        void VisitForeachStatementExpression(ForeachStatementExpression expression);
         void VisitWhileStatementExpression(WhileStatementExpression expression);
         void VisitDoWhileStatementExpression(DoWhileStatementExpression expression);
         void VisitReturnExpression(ReturnExpression expression);
+        void VisitSwitchStatementExpression(SwitchStatementExpression expression);
+        void VisitObjectInstantiationExpression(ObjectInstantiationExpression expression);
     }
 }

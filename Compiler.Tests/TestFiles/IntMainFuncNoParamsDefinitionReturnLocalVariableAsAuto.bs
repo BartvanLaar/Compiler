@@ -1,0 +1,4 @@
+﻿func Main() -> int {
+    auto x = 42;
+    return x;
+}

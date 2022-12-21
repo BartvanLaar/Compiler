@@ -1,0 +1,8 @@
+﻿func test() -> double {
+    return 69d;
+}
+
+func Main() -> double {
+    test();
+    return 1337d;
+}

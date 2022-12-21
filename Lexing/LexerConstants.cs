@@ -94,7 +94,7 @@
             public const string CLASS = "class";
             public const string ENUM = "enum";
             public const string INTERFACE = "interface";
-            public const string NAMESPACE = "namespace";
+            public const string CONTEXT = "context";
 
             public const string IF = "if";
             public const string ELSE = "else";
@@ -105,6 +105,8 @@
 
             public const string FOR = "for";
             public const string FOREACH = "each";
+
+            public const string SWITCH = "switch";
 
             public const string WHILE = "while";
             public const string DO = "do";
@@ -137,6 +139,8 @@
             {Keywords.WHILE, TokenType.While },
             {Keywords.DO, TokenType.Do },
 
+            {Keywords.SWITCH, TokenType.Switch },
+
             {Keywords.IF, TokenType.If },
             {Keywords.ELSE, TokenType.Else },
 
@@ -156,7 +160,7 @@
             { Keywords.ENUM, TokenType.Enum },
             { Keywords.CLASS, TokenType.Class },
             { Keywords.INTERFACE, TokenType.Interface },
-            { Keywords.NAMESPACE, TokenType.Namespace },
+            { Keywords.CONTEXT, TokenType.ContextStatement},
             { Keywords.STATIC, TokenType.Static },
             { Keywords.CONST, TokenType.Constant },
 

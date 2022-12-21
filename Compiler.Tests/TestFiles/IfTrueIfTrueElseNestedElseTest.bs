@@ -1,0 +1,17 @@
+﻿func Main() -> int {
+    if(true)
+    {
+        if(true)
+        {
+            return 42;
+        }
+        else 
+        {
+            return 1337;
+        }
+    } 
+    else 
+    {
+        return 42;
+    }
+}

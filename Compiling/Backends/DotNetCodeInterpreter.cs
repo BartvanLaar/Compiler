@@ -228,9 +228,19 @@ namespace Compiling.Backends
             _scopes = scopes;
         }
 
-        public void VisitNamespaceExpression(NamespaceDefinitionExpression expression)
+        public void VisitContextExpression(ContextDefinitionExpression expression)
         {
-            foreach(var @class in expression.Classes)
+            foreach (var context in expression.Contexts)
+            {
+                Visit(context);
+            }
+
+            foreach (var @enum in expression.Enums)
+            {
+                Visit(@enum);
+            }
+
+            foreach (var @class in expression.Classes)
             {
                 Visit(@class);
             }
@@ -238,6 +248,11 @@ namespace Compiling.Backends
 
         public void VisitClassExpression(ClassDefinitionExpression expression)
         {
+            foreach (var @enum in expression.Enums)
+            {
+                Visit(@enum);
+            }
+
             foreach (var @class in expression.Classes)
             {
                 Visit(@class);
@@ -260,6 +275,26 @@ namespace Compiling.Backends
         }
 
         public void VisitMemberAccessExpression(MemberAccessExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitEnumExpression(EnumDefinitionExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitForeachStatementExpression(ForeachStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitSwitchStatementExpression(SwitchStatementExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void VisitObjectInstantiationExpression(ObjectInstantiationExpression expression)
         {
             throw new NotImplementedException();
         }

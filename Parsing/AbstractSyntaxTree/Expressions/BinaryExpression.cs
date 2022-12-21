@@ -12,7 +12,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
 
         public ValueExpressionBase LeftHandSide { get; }
         public ValueExpressionBase? RightHandSide { get; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.Binary;
     }
 }

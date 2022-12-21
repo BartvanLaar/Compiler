@@ -18,7 +18,5 @@ namespace Parsing.AbstractSyntaxTree.Expressions
         public ExpressionBase VariableDeclaration { get; }
         public ExpressionBase VariableIncreaseExpression { get; }
         public ExpressionBase Body { get; }
-
-        public override ExpressionType DISCRIMINATOR => ExpressionType.For;
     }
 }
