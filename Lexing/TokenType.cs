@@ -2,7 +2,8 @@
 {
     public enum TokenType
     {
-        EndOfFile,                  // EOF
+        Bug = -999,
+        EndOfFile = 0,                  // EOF
         Type,                       // type token
         Value,                      // value token
         AccoladesOpen,              // {

@@ -1,5 +1,6 @@
 ﻿
 using Exceptions;
+using System.Diagnostics.SymbolStore;
 
 namespace Lexing
 {
@@ -93,7 +94,7 @@ namespace Lexing
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
             (cursor, lineCount, columnCount) = SkipWhiteSpaces(cursor, lineCount, columnCount);
 
-            (var symbolToken, cursor, lineCount, columnCount) = GetNextSymbolToken(cursor, lineCount, columnCount);
+            (var SymbolToken, cursor, lineCount, columnCount) = GetNextSymbolToken(cursor, lineCount, columnCount);
             if (symbolToken is not null)
             {
                 return (symbolToken, cursor, lineCount, columnCount);
