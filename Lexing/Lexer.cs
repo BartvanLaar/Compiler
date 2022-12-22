@@ -25,9 +25,6 @@ namespace Lexing
         private int _lineCounter;
         private int _columnCounter;
 
-        private List<Token> _traversedTokens = new List<Token>();
-        private List<Token> _consumedTokens = new List<Token>();
-
         public Lexer(string text) : this(text, DIRECT_TEXT_INPUT) { }
         public Lexer(string text, string filename)
         {
@@ -43,7 +40,6 @@ namespace Lexing
             return TraverseTokens(1, true).First();
         }
 
-        //TODO: should we cache peek results?
         public Token PeekToken()
         {
             return TraverseTokens(1, false).First();
@@ -74,7 +70,6 @@ namespace Lexing
                 _cursorPosition = cursor;
                 _lineCounter = lineCounter;
                 _columnCounter = columnCounter;
-                _consumedTokens.AddRange(tokens);
             }
 
             return tokens;
@@ -96,20 +91,6 @@ namespace Lexing
             return (tokens, cursor, lineCounter, columnCounter);
         }
 
-        private Token? GetlastTraversedToken()
-        {
-            return _traversedTokens.LastOrDefault();
-        }
-
-        private void AddDiscoveredTokenToCache(Token token)
-        {
-            if (_traversedTokens.Count > MAX_DESCOVERED_TOKEN_CACHE)
-            {
-                _traversedTokens.RemoveAt(0);
-            }
-            _traversedTokens.Add(token);
-        }
-
         private (Token Token, int Cursor, int LineCount, int ColumnCount) GetNextToken(int cursor, int lineCount, int lineColumnCount)
         {
             //todo: should this language except weird characters like latin or arabic (hint: probably only as a char or string value...)?
@@ -123,14 +104,12 @@ namespace Lexing
             (var symbolToken, cursor, lineCount, lineColumnCount) = GetNextSymbolToken(cursor, lineCount, lineColumnCount);
             if (symbolToken is not null)
             {
-                AddDiscoveredTokenToCache(symbolToken);
                 return (symbolToken, cursor, lineCount, lineColumnCount);
             }
 
             (var numberToken, cursor, lineCount, lineColumnCount) = GetNumberToken(cursor, lineCount, lineColumnCount);
             if (numberToken is not null)
             {
-                AddDiscoveredTokenToCache(numberToken);
                 return (numberToken, cursor, lineCount, lineColumnCount);
             }
 
@@ -138,7 +117,7 @@ namespace Lexing
             var columnCountStart = lineColumnCount;
             // Consume identifier...
             (var identifier, cursor, lineCount, lineColumnCount) = GetIdentifier(cursor, lineCount, lineColumnCount);
-            if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType) && GetlastTraversedToken()?.TokenType is TokenType.Dot)
+            if (LexerConstants.IsPredefinedKeyword(identifier, out var tokenType))
             {
                 var predefinedToken = new Token(tokenType, identifier, lineCount, columnCountStart) { Value = identifier };
                 predefinedToken.TypeIndicator = LexerConstants.ConvertKeywordToTypeIndicator(identifier);
@@ -160,11 +139,9 @@ namespace Lexing
                 // We wont increase any counts.
                 // as this token is important to the parser for detecting func args and syntax check.                                
                 tok.TokenType = TokenType.Identifier;
-                AddDiscoveredTokenToCache(tok);
 
                 return (tok, cursor, lineCount, lineColumnCount);
             }
-            AddDiscoveredTokenToCache(tok);
             return (tok, cursor, lineCount, lineColumnCount);
         }
 
@@ -645,7 +622,7 @@ namespace Lexing
 
         public Token[] GetConsumedTokens(int amount)
         {
-            return _consumedTokens.TakeLast(amount).ToArray();
+            return Array.Empty<Token>();
         }
 
         public Token? GetLastConsumedToken()
