@@ -23,13 +23,13 @@
 
         public const string MINUS_ASSIGN = "-=";
         public const string TIMES = "*";
-        public const string TIMES_ASSIGN = "*=";
+        public const string MULTIPLIY_ASSIGN = "*=";
         public const string DIVIDE = "/";
         public const string DIVIDE_ASSIGN = "/=";
         public const string MODULO = "%";
         public const string MODULO_ASSIGN = "%=";
-        public const string POWER = "^";
-        //public const string POWER_ASSIGN = "^"; // what should this do haha
+        public const string POWER = "**";
+        public const string POWER_ASSIGN = "**=";
 
         public const string GREATER_THAN_SIGN = ">";
         public const string GREATER_THAN_EQUAL_SIGN = ">=";

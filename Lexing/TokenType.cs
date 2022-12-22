@@ -3,7 +3,7 @@
     public enum TokenType
     {
         Bug = -999,
-        EndOfFile = 0,                  // EOF
+        EndOfFile = 0,              // EOF
         Type,                       // type token
         Value,                      // value token
         AccoladesOpen,              // {
@@ -52,13 +52,14 @@
         Multiply,                   // *
         Divide,                     // /
         Modulo,                     // %
-        //Power,                      // ^ //todo: dit moet anders geimplementeerd, misschien middels ** ?
+        Power,                      // **
         NullableCoalesce,           // ??
         AddAssign,                  // +=
         SubtractAssign,             // -=
         MultiplyAssign,             // *=
         DivideAssign,               // /=
         NullableCoalesceAssign,     // ??=
+        PowerAssign,                // **=
         BooleanInvert,              // !
         Summary,                    ///        
         Comment,                    //
