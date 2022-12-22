@@ -442,7 +442,9 @@ namespace Lexing
                             {
                                 token.TokenType = TokenType.PowerAssign;
                                 token.Value = LexerConstants.POWER_ASSIGN;
+                                return (token, ++cursor, lineCount, ++columnCount);
                             }
+
                             return (token, cursor, lineCount, columnCount);
                         }
 
