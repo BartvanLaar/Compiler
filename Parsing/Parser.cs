@@ -384,14 +384,53 @@ namespace Parsing
                 TokenType.ParanthesesClose => null, // e.g. end of function call..
                 TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.ParanthesesOpen) => ParseFunctionCallExpression(),
                 TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
+                TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.Dot) => ParseMemberAccessExpression(),
+                TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.AddAdd) => ParseRHSAddAddExpression(),//y++;
+                TokenType.Identifier when (peekedTokens[1].TokenType is TokenType.SubtractSubtract) => ParseRHSSubtractSubtractExpression(),//y--;
                 TokenType.Identifier => ParseIdentifierExpression(),
                 TokenType.Value => ParseValueExpressions(),
+                TokenType.AddAdd => ParseLHSAddAddExpression(), // ++y;
+                TokenType.SubtractSubtract => ParseLHSSubtractSubtractExpression(), // --y;
                 TokenType.Add => ParseValueExpressions(), // e.g. var x = +1;
                 TokenType.Subtract => ParseNegativeValueExpression(), // e.g. var x = -1;
                 TokenType.New => ParseObjectInstantiationExpression(),
                 TokenType.ParanthesesOpen => ParseParantheseOpen(),
                 _ => throw new InvalidOperationException($"Encountered an unkown token {currentTokenType}."),// todo: what to do here?                    
             };
+        }
+
+        private ValueExpressionBase? ParseRHSAddAddExpression() //y++
+        {
+            var identifierExpression = ParseIdentifierExpression();
+            var addAddTok = ConsumeToken();
+            var tokCopy = new Token(addAddTok) { TokenType = TokenType.Add };
+
+            return new BinaryExpression(tokCopy);
+        }
+        private ValueExpressionBase? ParseLHSAddAddExpression() //++y
+        {
+            var addAddTok = ConsumeToken();
+            var identifierExpression = ParseIdentifierExpression();
+
+            var tokCopy = new Token(addAddTok) { TokenType = TokenType.Add };
+            return new BinaryExpression(tokCopy);
+        }
+
+        private ValueExpressionBase? ParseRHSSubtractSubtractExpression() //y--
+        {
+            var identifierExpression = ParseIdentifierExpression();
+            var subSubTok = ConsumeToken();
+            var tokCopy = new Token(subSubTok) { TokenType = TokenType.Subtract };
+            return new BinaryExpression(tokCopy);
+        }
+
+        private ValueExpressionBase? ParseLHSSubtractSubtractExpression() // --y
+        {
+            var subSubTok = ConsumeToken();
+            var identifierExpression = ParseIdentifierExpression();
+
+            var tokCopy = new Token(subSubTok) { TokenType = TokenType.Subtract };
+            return new BinaryExpression(tokCopy);
         }
 
         private ValueExpressionBase? ParseValueExpressions()
@@ -416,7 +455,7 @@ namespace Parsing
         private ValueExpressionBase ParseMemberAccessExpression()
         {
             Debug.Assert(PeekToken().TokenType is TokenType.Identifier);
-
+            //todo: refactor to use ParseIdentifierExpression?
             var parent = ConsumeToken();
             Debug.Assert(PeekToken().TokenType is TokenType.Dot, $"{nameof(ParseExpressionResultingInValue)}, should check whether a dot is present! Else its just a normal variable, not an member access...");
             var dot = ConsumeToken();
@@ -897,7 +936,7 @@ namespace Parsing
                 // Expected a function name...
                 throw ParseError(PeekToken(), "a function name", "function call");
             }
-
+            //todo: refactor to use ParseIdentifierExpression
             var functionToken = ConsumeToken();
 
             var functionArguments = ParseArguments(functionToken.Name);
