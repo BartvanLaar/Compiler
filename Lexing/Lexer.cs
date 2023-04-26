@@ -149,7 +149,7 @@ namespace Lexing
         {
             var identifier = string.Empty;
             // todo: is there an easier way than using GetSingleCharToken every time..?
-            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, columnCount, lineCount) is null)
+            while (cursor < _text.Length && !char.IsWhiteSpace(_text[cursor]) && GetSingleCharacterToken(cursor, lineCount, columnCount) is null)
             {
                 identifier += _text[cursor];
                 ++columnCount;
